@@ -20,17 +20,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircleIcon } from 'lucide-react';
 import { Icons } from '@/components/common/icons';
-import { auth } from '@/lib/firebase';
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
+import { useAuth } from '@/providers/auth-context';
 
 export default function Page() {
   const router = useRouter();
+  const { login, signInWithGoogle, isLoading } = useAuth();
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
@@ -42,26 +37,23 @@ export default function Page() {
   });
 
   async function onSubmit(values: any) {
-    setIsProcessing(true);
     setError(null);
 
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/');
+      await login(values.email, values.password);
+      router.push('/app/dashboard');
     } catch (err: any) {
       setError(err.message || 'Sign in failed');
-    } finally {
-      setIsProcessing(false);
     }
   }
 
   const handleGoogleSignin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push('/');
-    } catch (err) {
-      setError('Google sign-in failed');
+      // For signin, we'll use a default role - you might want to add role selection
+      await signInWithGoogle(); // or get role from form/context
+      router.push('/app/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Google sign-in failed');
     }
   };
 
@@ -198,8 +190,8 @@ export default function Page() {
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <Button type="submit" disabled={isProcessing}>
-            {isProcessing ? <LoaderCircleIcon className="size-4 animate-spin" /> : null}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? <LoaderCircleIcon className="size-4 animate-spin" /> : null}
             Continue
           </Button>
         </div>
