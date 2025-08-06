@@ -19,23 +19,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { LoaderCircleIcon } from "lucide-react";
 import { Icons } from "@/components/common/icons";
-import { RecaptchaPopover } from "@/components/common/recaptcha-popover";
-import { auth } from "@/lib/firebase";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
+import { useAuth } from "@/providers/auth-context";
 
 export default function Page() {
   const router = useRouter();
+  const { signup, signInWithGoogle, isLoading } = useAuth();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [passwordConfirmationVisible, setPasswordConfirmationVisible] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean | null>(false);
-  const [showRecaptcha, setShowRecaptcha] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -43,6 +35,7 @@ export default function Page() {
       email: "",
       password: "",
       passwordConfirmation: "",
+      role: "coach" as 'coach' | 'athlete',
       accept: false,
     },
   });
@@ -51,34 +44,25 @@ export default function Page() {
     e.preventDefault();
     const result = await form.trigger();
     if (!result) return;
-    setShowRecaptcha(true);
-  };
-
-  const handleVerifiedSubmit = async (_token: string) => {
+    
     try {
-      const { email, password } = form.getValues();
-      setIsProcessing(true);
+      const { email, password, name} = form.getValues();
       setError(null);
-      setShowRecaptcha(false);
 
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(userCred.user);
-
+      await signup(email, password, name);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Signup failed");
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const handleGoogleSignup = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push("/");
-    } catch (err) {
-      setError("Google sign-in failed");
+      const { role } = form.getValues();
+      await signInWithGoogle();
+      // router.push("/onboarding"); // TODO: Redirect to dashboard after onboarding
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed");
     }
   };
 
@@ -90,7 +74,7 @@ export default function Page() {
         </AlertIcon>
         <AlertTitle>
           You have successfully signed up! Please check your email to verify your account and then {" "}
-          <Link href="/signin/" className="text-primary hover:text-primary-darker">
+          <Link href="/sign-in/" className="text-primary hover:text-primary-darker">
             Log in
           </Link>
           .
@@ -227,21 +211,10 @@ export default function Page() {
           </div>
 
           <div className="flex flex-col gap-2.5">
-            <RecaptchaPopover
-              open={showRecaptcha}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setShowRecaptcha(false);
-                }
-              }}
-              onVerify={handleVerifiedSubmit}
-              trigger={
-                <Button type="submit" disabled={isProcessing}>
-                  {isProcessing ? <LoaderCircleIcon className="size-4 animate-spin" /> : null}
-                  Continue
-                </Button>
-              }
-            />
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? <LoaderCircleIcon className="size-4 animate-spin" /> : null}
+              Continue
+            </Button>
           </div>
 
           <div className="text-sm text-muted-foreground text-center">
