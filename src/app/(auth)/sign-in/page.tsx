@@ -199,7 +199,7 @@ export default function Page() {
         <p className="text-sm text-muted-foreground text-center">
           Don&apos;t have an account?{' '}
           <Link
-            href="/signup"
+            href="/sign-up"
             className="text-sm font-semibold text-foreground hover:text-primary"
           >
             Sign Up

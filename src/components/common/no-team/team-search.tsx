@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Search, Clock, Users, Trophy } from 'lucide-react';
-import { useAuth } from '@/providers/auth-context';
 import { teamApi } from '@/app/services-client/teamApi';
 import { useUser } from '@/providers/user.context';
+import { useTeam } from '@/providers/team-context';
 
 export default function TeamSearchRequest() {
-  const { user } = useAuth();
-  const { setPendingJoinRequest } = useUser();
+  const { user } = useUser();
+  const { pendingJoinRequest, setPendingJoinRequest } = useTeam();
   const [teamCode, setTeamCode] = useState('');
   const [teamInfo, setTeamInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,11 +81,15 @@ export default function TeamSearchRequest() {
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader className="text-center pb-6">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <Users className="w-8 h-8 text-blue-600" />
+      <CardHeader className="pb-6 flex flex-col">
+        <div className="flex items-center gap-2">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Users className="w-8 h-8 text-blue-600" />
+          </div>
+          <div>
+            <CardTitle className="text-2xl font-bold mb-2">Join a Team</CardTitle>
+          </div>
         </div>
-        <CardTitle className="text-2xl font-bold mb-2">Join a Team</CardTitle>
         <p className="text-muted-foreground">
           Enter the team code provided by your coach to join their team
         </p>
@@ -132,13 +136,13 @@ export default function TeamSearchRequest() {
                   <p className="text-sm text-blue-600 font-medium">Team Found</p>
                 </div>
               </div>
-              
+
               <p className="text-gray-700 mb-4">
                 {teamInfo.description || "Join this team to start collaborating with your teammates and coach."}
               </p>
-              
+
               <div className="space-y-2">
-                <Button 
+                <Button
                   onClick={handleJoinTeam}
                   disabled={isLoading}
                   className="w-full bg-blue-600 hover:bg-blue-700"
@@ -155,7 +159,7 @@ export default function TeamSearchRequest() {
                     </>
                   )}
                 </Button>
-                
+
                 <p className="text-xs text-gray-500 text-center">
                   Your request will be sent to the team coach for approval
                 </p>

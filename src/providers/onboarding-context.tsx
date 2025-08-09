@@ -10,6 +10,7 @@ import { teamApi } from '@/app/services-client/teamApi';
 import { organizationApi } from '@/app/services-client/organizationApi';
 import { teamMemberApi } from '@/app/services-client/teamMemberApi';
 import { useRouter } from 'next/navigation';
+import { useUser } from './user.context';
 
 // Type definitions
 export type OnboardingContextType = {
@@ -33,7 +34,8 @@ const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
 // Provider component
 export const OnboardingProvider = ({ children }: { children: React.ReactNode }) => {
-  const { userFromFirebase, setUser} = useAuth();
+  const { userFromFirebase} = useAuth();
+  const { setUser } = useUser();
   const router = useRouter();
   const [userData, setUserData] = useState<Partial<User> | null>(null);
   

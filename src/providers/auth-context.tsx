@@ -20,20 +20,22 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from "next/navigation";
 
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
+  // Firebase authentication only
+  userFromFirebase: FirebaseUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   token: string | null;
   isOnboardingComplete: boolean;
-  userFromFirebase: FirebaseUser | null;
+  
+  // Auth methods
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  // updateUser: (userData: Partial<User>) => void;
   refreshToken: () => Promise<string | null>;
+  
+  // Firebase user management
   setUserFromFirebase: (user: FirebaseUser | null) => void;
-  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,22 +90,25 @@ const setOnboardingComplete = () => {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [userFromFirebase, setUserFromFirebase] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  
   // Listen for auth state and token changes
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Always set the Firebase user state first
+      setUserFromFirebase(firebaseUser);
+      
       if (firebaseUser) {
         try {
           const idToken = await getIdToken(firebaseUser, true);
           setToken(idToken);
           saveToken(idToken);
-  
+
           // Check if user exists in your DB
           let user = null;
           try {
@@ -113,27 +118,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               throw err; // Only ignore 404, rethrow other errors
             }
           }
-  
+
           if (user) {
-            setUser(user);
+            // User exists in DB - navigate to dashboard if on auth pages
             if (pathname === "/login" || pathname === "/onboarding") {
               router.push("/app/dashboard");
             } else {
               router.push(pathname)
             }
           } else {
-            // User not found, go to onboarding
-            setUser(null);
+            // User not found in DB - go to onboarding
             router.push("/onboarding");
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
-          setUser(null);
           setToken(null);
           clearTokens();
         }
       } else {
-        setUser(null);
+        // No Firebase user - clear everything
         setToken(null);
         clearTokens();
         setOnboardingCompleteState(false);
@@ -162,10 +165,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribeToken();
     };
   }, []);
-
-  useEffect(() => {
-    console.log("userFromFirebase", userFromFirebase);
-  }, [userFromFirebase]);
 
   const navigateAfterLogin = async(userFromFirebase: FirebaseUser) => {
     try {
@@ -205,17 +204,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
+      // ADD THIS LINE - Dispatch logout event to clear all provider data
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+      
+      // Keep all your existing logout logic exactly the same
       await signOut(auth);
-      setToken(null);
-      clearTokens();
-      setOnboardingCompleteState(false);
-    } catch (error) {
-      console.error('Logout failed:', error);
-      throw error;
-    } finally {
+      setUserFromFirebase(null);
       setIsLoading(false);
+      setToken(null);
+      setOnboardingCompleteState(false);
+      router.push('/sign-in');
+    } catch (error) {
+      console.error('Error during logout:', error);
     }
   };
 
@@ -290,10 +291,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // };
 
   const value = {
-    user,
     userFromFirebase,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!userFromFirebase,
     token,
     isOnboardingComplete: onboardingComplete,
     setUserFromFirebase,
@@ -303,7 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     // updateUser,
     refreshToken,
-    setUser,
+    // setUser, // This line is removed as per the new AuthContext
   };
 
   return (
