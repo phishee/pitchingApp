@@ -3,15 +3,13 @@
 
 import { Separator } from '@/components/ui/separator';
 import { UserDropdownMenu } from './user-drop-down-menu';
-import { toAbsoluteUrl } from '@/lib/helpers';
-import { useAuth } from '@/providers/auth-context';
+import { useUser } from '@/providers/user.context';
 
 export function SidebarFooter() {
-  const { user } = useAuth();
+  const { user } = useUser();
   return (
-    <div className="flex flex-col justify-center items-center">
-      <Separator className="bg-gray-300 mb-3  w-11/12" />
-      <div className="flex flex-center justify-between shrink-0 ps-4 pe-3.5 bottom-0 bg-white p-2 m-2 rounded-3xl shadow-md hover:cursor-pointer">
+    <div className="flex flex-col justify-center items-center w-full">
+      <div className="flex flex-center justify-between shrink-0 ps-4 pe-3.5 bg-white p-2 m-2 rounded-3xl shadow-md hover:cursor-pointer w-10/12">
         <UserDropdownMenu
           trigger={
             <div className="flex gap-2">

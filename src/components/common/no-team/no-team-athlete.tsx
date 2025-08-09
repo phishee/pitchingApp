@@ -1,11 +1,16 @@
 import React from 'react'
-import { useUser } from '@/providers/user.context';
 import PendingRequest from './pending-request';
 import TeamInvitation from './team-invitation';
 import TeamSearchRequest from './team-search';
+import { useTeam } from '@/providers/team-context';
+import { LoadingSpinner } from '../loading-spinner';
 
 function NoTeamAthlete() {
-    const { userTeamStatus, currentTeam, currentTeamMember, pendingInvitation, pendingJoinRequest, teamToJoin, setTeamToJoin, searchTeamByCode, isLoading, error, loadUserData, joinTeam, acceptInvitation, rejectInvitation, clearError } = useUser();
+    const { pendingJoinRequest, pendingInvitation, isLoading } = useTeam();
+
+    if (isLoading) {
+        return <LoadingSpinner message="Loading team data..." />;
+    }
     
     return (
         <div className='h-full w-full flex items-center justify-center'>

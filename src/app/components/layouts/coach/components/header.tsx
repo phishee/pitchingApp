@@ -3,21 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu } from 'lucide-react';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetHeader,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { Container } from '@/components/common/container';
-// import { SidebarFooter } from './sidebar-footer';
-// import { SidebarHeader } from './sidebar-header';
-// import { SidebarMenu } from './sidebar-menu';
 
 export function Header() {
   const isMobile = useIsMobile();

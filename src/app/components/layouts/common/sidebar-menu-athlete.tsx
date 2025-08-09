@@ -1,10 +1,8 @@
 // src/app/components/layouts/common/sidebar-menu-athlete.tsx
 'use client';
 
-import { Home, Dumbbell, Users, BarChart } from 'lucide-react';
-import { AccordionMenu, AccordionMenuGroup, AccordionMenuItem } from '@/components/ui/accordion-menu';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Home, Dumbbell, Users, BarChart, Settings } from 'lucide-react';
+import { SidebarMenu } from './sidebar-menu';
 
 const ATHLETE_MENU = [
   {
@@ -19,7 +17,7 @@ const ATHLETE_MENU = [
   },
   {
     title: 'My Team',
-    path: '/app/my-team',
+    path: '/app/users',
     icon: Users,
   },
   {
@@ -27,28 +25,13 @@ const ATHLETE_MENU = [
     path: '/app/progress',
     icon: BarChart,
   },
+  {
+    title: 'Settings',
+    path: '/app/settings',
+    icon: Settings,
+  },
 ];
 
 export function SidebarMenuAthlete() {
-  const pathname = usePathname();
-
-  return (
-    <AccordionMenu
-      type="single"
-      selectedValue={pathname}
-      collapsible
-      classNames={{ root: 'space-y-2.5 px-3.5' }}
-    >
-      <AccordionMenuGroup>
-        {ATHLETE_MENU.map((item, idx) => (
-          <AccordionMenuItem key={idx} value={item.path}>
-            <Link href={item.path}>
-              {item.icon && <item.icon className="mr-2" />}
-              {item.title}
-            </Link>
-          </AccordionMenuItem>
-        ))}
-      </AccordionMenuGroup>
-    </AccordionMenu>
-  );
+  return <SidebarMenu menuItems={ATHLETE_MENU} />;
 }

@@ -24,7 +24,7 @@ export class TeamService {
   }
 
   async getTeamById(id: string): Promise<Team | null> {
-    return this.teamRepo.findOne(this.teamCollection, { _id: id });
+    return this.teamRepo.findById(this.teamCollection, id);
   }
 
   async updateTeam(id: string, data: Partial<Team>): Promise<Team | null> {

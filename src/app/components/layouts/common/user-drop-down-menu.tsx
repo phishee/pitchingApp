@@ -16,12 +16,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 import { Moon, Settings, User, CreditCard } from 'lucide-react';
+import { useUser } from '@/providers/user.context';
 import { useAuth } from '@/providers/auth-context';
 
 export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
 //   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
  
 

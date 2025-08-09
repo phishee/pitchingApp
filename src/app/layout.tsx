@@ -6,6 +6,7 @@ import { OrganizationProvider } from '@/providers/organization-context';
 import { AuthProvider } from '@/providers/auth-context';
 import { OnboardingProvider } from '@/providers/onboarding-context';
 import { UserProvider } from '@/providers/user.context';
+import { TeamProvider } from '@/providers/team-context';
 
 export default function RootLayout({
   children,
@@ -22,13 +23,13 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserProvider>
-          <OnboardingProvider>
             <OrganizationProvider>
+              <TeamProvider>
               <ThemeProvider>
                 {children}
               </ThemeProvider>
+              </TeamProvider>
             </OrganizationProvider>
-          </OnboardingProvider>
           </UserProvider>
         </AuthProvider>
       </body>
