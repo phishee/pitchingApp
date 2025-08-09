@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useUser } from './user.context';
-import { Team, TeamMember, TeamInvitation, TeamJoinRequest } from '@/models';
+import { Team, TeamMember, TeamInvitation, TeamJoinRequest, TeamMemberWithUser, TeamJoinRequestWithTeamUserInfo } from '@/models';
 import { teamMemberApi } from '@/app/services-client/teamMemberApi';
 import { teamApi } from '@/app/services-client/teamApi';
 import { usePathname } from 'next/navigation';
@@ -13,13 +13,13 @@ interface TeamContextType {
   // Team state
   userTeamStatus: UserTeamStatus;
   currentTeam: Team | null;
-  currentTeamMember: TeamMember | null;
+  currentTeamMember: Partial<TeamMemberWithUser> | null;
   allTeams: Team[]; // All teams the user is part of (for coaches)
-  allTeamMembers: TeamMember[]; // All team memberships (for coaches)
+  allTeamMembers: Partial<TeamMemberWithUser>[]; // All team memberships (for coaches)
   pendingInvitation: TeamInvitation | null;
-  pendingJoinRequest: TeamJoinRequest | null;
+  pendingJoinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null;
   teamToJoin: Team | null;
-  setPendingJoinRequest: (joinRequest: TeamJoinRequest | null) => void;
+  setPendingJoinRequest: (joinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null) => void;
   
   // Team actions
   loadTeamData: () => Promise<void>;
@@ -44,11 +44,11 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   
   const [userTeamStatus, setUserTeamStatus] = useState<UserTeamStatus>('no-team');
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
-  const [currentTeamMember, setCurrentTeamMember] = useState<TeamMember | null>(null);
+  const [currentTeamMember, setCurrentTeamMember] = useState<Partial<TeamMemberWithUser> | null>(null);
   const [allTeams, setAllTeams] = useState<Team[]>([]);
-  const [allTeamMembers, setAllTeamMembers] = useState<TeamMember[]>([]);
+  const [allTeamMembers, setAllTeamMembers] = useState<Partial<TeamMemberWithUser>[]>([]);
   const [pendingInvitation, setPendingInvitation] = useState<TeamInvitation | null>(null);
-  const [pendingJoinRequest, setPendingJoinRequest] = useState<TeamJoinRequest | null>(null);
+  const [pendingJoinRequest, setPendingJoinRequest] = useState<Partial<TeamJoinRequestWithTeamUserInfo> | null>(null);
   const [teamToJoin, setTeamToJoin] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -113,6 +113,12 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
         const pendingRequest = joinRequests?.find(request => request.status === 'pending');
         
         if (pendingRequest) {
+          // const team = await teamApi.getTeam(pendingRequest.teamId);
+          // const pendingRequestWithTeamUserInfo = {
+          //   ...pendingRequest,
+          //   team: team,
+          //   user: user
+          // }
           setPendingJoinRequest(pendingRequest);
           setUserTeamStatus('pending-request');
           return;
@@ -226,6 +232,12 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
       resetTeamState();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (pendingJoinRequest) {
+      console.log('pendingJoinRequest***', pendingJoinRequest);
+    }
+  }, [pendingJoinRequest]);
 
   // ... keep all your existing loadTeamData, functions, context value, etc. exactly the same
 

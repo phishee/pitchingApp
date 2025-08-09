@@ -4,6 +4,7 @@ import { TeamJoinRequest } from '@/models/TeamJoinRequest';
 import { DBProviderFactory } from '../factories/DBFactory';
 import { inject, injectable } from 'inversify';
 import { DB_TYPES } from '../symbols/Symbols';
+import { TeamJoinRequestWithTeamUserInfo } from '@/models';
 
 @injectable()
 export class TeamJoinRequestService {
@@ -36,8 +37,27 @@ export class TeamJoinRequestService {
     return allRequests.filter(req => req.teamId === teamId);
   }
 
-  async getJoinRequestsByUser(userId: string): Promise<TeamJoinRequest[]> {
-    const pendingRequest = await this.joinRequestRepo.findQuery(this.collectionName, { requestedBy: userId, status: 'pending' });
+  async getJoinRequestsByUser(userId: string): Promise<TeamJoinRequestWithTeamUserInfo[]> {
+    // const pendingRequest = await this.joinRequestRepo.findQuery(this.collectionName, { requestedBy: userId, status: 'pending' });
+    // return pendingRequest;
+    const pendingRequest = await this.joinRequestRepo.findWithPopulate(this.collectionName, { requestedBy: userId, status: 'pending' }, 
+      [
+        {
+          path: 'teamId',
+          from: 'teams',
+          foreignField: '_id',
+          select: ['name', 'description', 'logoUrl'],
+          as: 'team'
+        },
+        {
+          path: 'requestedBy',
+          from: 'users',
+          foreignField: 'userId',
+          select: ['name', 'email', 'profileImageUrl'],
+          as: 'user'
+        }
+      ]
+    );
     return pendingRequest;
   }
 

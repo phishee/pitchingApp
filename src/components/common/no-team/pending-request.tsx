@@ -27,9 +27,9 @@ function PendingRequest() {
 
   const handleCancelRequest = async () => {
     try {
-      if (pendingJoinRequest) {
+      if (pendingJoinRequest?._id && pendingJoinRequest?.teamId) {
         setIsLoading(true);
-        await teamApi.deleteJoinRequest(pendingJoinRequest?._id, pendingJoinRequest?.teamId);
+        await teamApi.deleteJoinRequest(pendingJoinRequest._id, pendingJoinRequest.teamId);
         setPendingJoinRequest(null);
         setIsLoading(false);
         setShowConfirmDialog(false);
@@ -57,6 +57,15 @@ function PendingRequest() {
       </CardHeader>
 
       <CardContent className="">
+        {/* //add team name and logo if available */}
+        {pendingJoinRequest?.team && (
+          <div className="flex items-center justify-center mb-4 gap-4">
+            {pendingJoinRequest.team.logoUrl && (
+              <img src={pendingJoinRequest.team.logoUrl} alt={pendingJoinRequest.team.name} className="w-10 h-10 rounded-full" />
+            )}
+            <div className="text-black text-center font-semibold text-xl">{pendingJoinRequest.team.name}</div>
+          </div>
+        )}
         <p className="text-gray-600 text-center mb-4">
           Your join request is waiting for approval from the team coach or admin
         </p>
