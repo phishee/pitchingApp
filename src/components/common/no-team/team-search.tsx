@@ -10,12 +10,13 @@ import { Search, Clock, Users, Trophy } from 'lucide-react';
 import { teamApi } from '@/app/services-client/teamApi';
 import { useUser } from '@/providers/user.context';
 import { useTeam } from '@/providers/team-context';
+import { Team } from '@/models';
 
 export default function TeamSearchRequest() {
   const { user } = useUser();
   const { pendingJoinRequest, setPendingJoinRequest } = useTeam();
   const [teamCode, setTeamCode] = useState('');
-  const [teamInfo, setTeamInfo] = useState<any>(null);
+  const [teamInfo, setTeamInfo] = useState<Partial<Team> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -65,7 +66,16 @@ export default function TeamSearchRequest() {
         updatedAt: new Date()
       });
 
-      setPendingJoinRequest(joinRequest);
+      const teamRequest = await teamApi.getTeam(teamInfo._id);
+
+
+      const pendingRequestWithTeamUserInfo = {
+        ...joinRequest,
+        team: teamRequest,
+        user: user
+      }
+
+      setPendingJoinRequest(pendingRequestWithTeamUserInfo);
 
       // Optionally redirect or show success message
       // For now, just reset the form
@@ -81,18 +91,18 @@ export default function TeamSearchRequest() {
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader className="pb-6 flex flex-col">
-        <div className="flex items-center gap-2">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Users className="w-8 h-8 text-blue-600" />
+      <CardHeader className="p-2 flex ">
+        <div className="flex items-center gap-2 mt-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Users className="w-6 h-6 text-blue-600" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold mb-2">Join a Team</CardTitle>
           </div>
         </div>
-        <p className="text-muted-foreground">
+        {/* <p className="text-muted-foreground">
           Enter the team code provided by your coach to join their team
-        </p>
+        </p> */}
       </CardHeader>
 
       <CardContent className="space-y-6 px-8 pb-6">
@@ -121,6 +131,9 @@ export default function TeamSearchRequest() {
               )}
             </Button>
           </div>
+          <p className="text-muted-foreground">
+            Enter the team code provided by your coach to join their team
+          </p>
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
 
@@ -128,8 +141,15 @@ export default function TeamSearchRequest() {
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-blue-600" />
+                <div className="flex items-center justify-center">
+                  {teamInfo.logoUrl && (
+                    <img src={teamInfo.logoUrl} alt={teamInfo.name} className="w-20 h-20 rounded-full" />
+                  )}
+                  {!teamInfo.logoUrl && (
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Trophy className="w-5 h-5 text-blue-600" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{teamInfo.name}</h3>

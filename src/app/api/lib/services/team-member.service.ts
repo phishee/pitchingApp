@@ -1,6 +1,6 @@
 // src/app/api/lib/services/team-member.service.ts
 
-import { TeamMember } from '@/models';
+import { TeamMember, TeamMemberWithUser } from '@/models';
 import { DBProviderFactory } from '../factories/DBFactory';
 import { inject, injectable } from 'inversify';
 import { DB_TYPES } from '../symbols/Symbols';
@@ -36,18 +36,54 @@ export class TeamMemberService {
     return this.teamMemberRepo.delete(this.collectionName, id);
   }
 
-  async getTeamMembersByTeam(teamId: string): Promise<TeamMember[]> {
-    const allMembers = await this.teamMemberRepo.findAll(this.collectionName);
-    return allMembers.filter(member => member.teamId === teamId);
+  async getTeamMembersByTeam(teamId: string): Promise<TeamMemberWithUser[]> {
+    // const allMembers = await this.teamMemberRepo.findAll(this.collectionName);
+    // return allMembers.filter(member => member.teamId === teamId);
+    const teamMembers = await this.teamMemberRepo.findWithPopulate('teammember',
+      { teamId: 'team123' },
+      {
+        path: 'userId',
+        from: 'User',
+        foreignField: 'userId',
+        select: ['name', 'email', 'profileImageUrl', 'userId'],
+        as: 'user'
+      }
+    );
+    return teamMembers;
   }
 
-  async getTeamMembersByUser(userId: string): Promise<TeamMember[]> {
-    const allMembers = await this.teamMemberRepo.findAll(this.collectionName);
-    return allMembers.filter(member => member.userId === userId);
+  async getTeamMembersByUser(userId: string): Promise<TeamMemberWithUser[]> {
+
+    const members = await this.teamMemberRepo.findWithPopulate(
+      this.collectionName,
+      { userId },
+      {
+        path: 'userId',
+        from: 'users',
+        foreignField: 'userId',
+        select: ['name', 'email', 'profileImageUrl'],
+        as: 'user'
+      }
+
+    );
+    return members;
   }
 
   async getTeamMembersByStatus(status: 'active' | 'inactive'): Promise<TeamMember[]> {
     const allMembers = await this.teamMemberRepo.findAll(this.collectionName);
     return allMembers.filter(member => member.status === status);
+  }
+
+  // Add this method to your TeamMemberService class
+
+  private transformToTeamMemberWithUser(member: any): TeamMemberWithUser {
+    return {
+      ...member,
+      user: {
+        userId: member.userId.userId || member.userId,
+        name: member.userId.name || 'Unknown User',
+        profileImageUrl: member.userId.profileImageUrl
+      }
+    };
   }
 }
