@@ -1,4 +1,4 @@
-import { UserProfile } from "./User";
+import { User, UserProfile } from "./User";
 
 export interface Team {
   _id: string;
@@ -21,22 +21,13 @@ export interface TeamMember {
   createdAt: Date;
   updatedAt: Date;
   role?: 'coach' | 'athlete';
+  programIds?: string[];
 }
 
 // Populated TeamMember (for API responses with user data)
-export interface PopulatedTeamMember {
-  _id: string;
-  teamId: string;
-  user: {
-    userId: string;
-    name: string;
-    profileImageUrl?: string;
-  };
-  status: 'active' | 'inactive';
-  joinedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  role?: 'coach' | 'athlete';
+export interface PopulatedTeamMember extends TeamMember {
+  user?: Partial<User>;
+  team?: Partial<Team>;
 }
 
 // Union type for flexibility
@@ -45,7 +36,10 @@ export type TeamMemberWithUser = TeamMember | PopulatedTeamMember;
 export interface TeamInvitation { // invite a user to a team
   _id: string;
   teamId: string;
-  invitedUserId: string;
+  invitedUserId?: string;
+  invitedEmail: string;
+  role?: 'coach' | 'athlete';
+  comment?: string;
   invitedBy: string; 
   invitedAt: Date;
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
@@ -55,28 +49,27 @@ export interface TeamInvitation { // invite a user to a team
   updatedAt: Date;
 }
 
+export interface TeamInvitationWithTeamUserInfo extends TeamInvitation {
+  user?: Partial<User>;
+  team?: Partial<Team>;
+}
+
 export interface TeamJoinRequest { // request to join a team
   _id: string;
   teamId: string;
   requestedBy: string; 
   requestedAt: Date;
+  role?: 'coach' | 'athlete';
   status: 'pending' | 'approved' | 'rejected';
-  reviewedBy: string | null; 
-  reviewedAt: Date | null;
-  message: string | null; 
+  reviewedBy?: string | null; 
+  reviewedAt?: Date | null;
+  comment?: string | null; 
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface TeamJoinRequestWithTeamUserInfo extends TeamJoinRequest {
-  user: {
-    userId: string;
-    name: string;
-    profileImageUrl?: string;
-  };
-  team: {
-    name: string;
-    logoUrl?: string;
-  };
+  user?: Partial<User>;
+  team?: Partial<Team>;
 }
 

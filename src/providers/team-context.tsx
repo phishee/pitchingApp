@@ -6,6 +6,7 @@ import { Team, TeamMember, TeamInvitation, TeamJoinRequest, TeamMemberWithUser, 
 import { teamMemberApi } from '@/app/services-client/teamMemberApi';
 import { teamApi } from '@/app/services-client/teamApi';
 import { usePathname } from 'next/navigation';
+// import { Partial<TeamInvitation>, Partial<TeamJoinRequest> } from '@/models';
 
 export type UserTeamStatus = 'no-team' | 'pending-request' | 'pending-invitation' | 'team-member';
 
@@ -34,6 +35,12 @@ interface TeamContextType {
   isLoading: boolean;
   error: string;
   clearError: () => void;
+  
+  // New properties
+  teamInvitations: Partial<TeamInvitation>[];
+  teamRequests: Partial<TeamJoinRequest>[];
+  setTeamInvitations: (invitations: Partial<TeamInvitation>[]) => void;
+  setTeamRequests: (requests: Partial<TeamJoinRequest>[]) => void;
 }
 
 const TeamContext = createContext<TeamContextType | null>(null);
@@ -52,6 +59,8 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   const [teamToJoin, setTeamToJoin] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [teamInvitations, setTeamInvitations] = useState<Partial<TeamInvitation>[]>([]);
+  const [teamRequests, setTeamRequests] = useState<Partial<TeamJoinRequest>[]>([]);
 
   const loadTeamData = useCallback(async () => {
     if (!user?.userId) return;
@@ -239,30 +248,34 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [pendingJoinRequest]);
 
-  // ... keep all your existing loadTeamData, functions, context value, etc. exactly the same
+  const value = {
+    userTeamStatus,
+    currentTeam,
+    currentTeamMember,
+    allTeams,
+    allTeamMembers,
+    pendingInvitation,
+    pendingJoinRequest,
+    teamToJoin,
+    loadTeamData,
+    joinTeam,
+    acceptInvitation,
+    rejectInvitation,
+    searchTeamByCode,
+    switchTeam,
+    leaveTeam,
+    isLoading,
+    error,
+    clearError,
+    setPendingJoinRequest,
+    teamInvitations,
+    teamRequests,
+    setTeamInvitations,
+    setTeamRequests,
+  };
 
   return (
-    <TeamContext.Provider value={{
-      userTeamStatus,
-      currentTeam,
-      currentTeamMember,
-      allTeams,
-      allTeamMembers,
-      pendingInvitation,
-      pendingJoinRequest,
-      teamToJoin,
-      loadTeamData,
-      joinTeam,
-      acceptInvitation,
-      rejectInvitation,
-      searchTeamByCode,
-      switchTeam,
-      leaveTeam,
-      isLoading,
-      error,
-      clearError,
-      setPendingJoinRequest,
-    }}>
+    <TeamContext.Provider value={value}>
       {children}
     </TeamContext.Provider>
   );
