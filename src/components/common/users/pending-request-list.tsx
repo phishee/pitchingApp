@@ -35,14 +35,17 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { teamMemberApi } from '@/app/services-client/teamMemberApi';
+import { useTeam } from '@/providers/team-context';
+import { formatDateWithOrdinal } from '@/lib/helpers';
 
 interface PendingRequestListProps {
-  data: TeamJoinRequestWithTeamUserInfo[];
+  data: Partial<TeamJoinRequestWithTeamUserInfo>[];
   isLoading?: boolean;
 }
 
-const PendingRequestList = ({ 
-  data, 
+const PendingRequestList = ({
+  data,
   isLoading = false
 }: PendingRequestListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,16 +55,17 @@ const PendingRequestList = ({
   const [rejectComment, setRejectComment] = useState('');
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [requestToReject, setRequestToReject] = useState<TeamJoinRequestWithTeamUserInfo | null>(null);
+  const { loadTeamMembers, loadTeamRequests } = useTeam();
 
   const filteredData = useMemo(() => {
     if (!searchQuery) return data;
-    
+
     return data.filter(item => {
       const name = item?.user?.name || '';
       const email = item?.user?.email || '';
-      
+
       return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             email.toLowerCase().includes(searchQuery.toLowerCase());
+        email.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [data, searchQuery]);
 
@@ -77,19 +81,31 @@ const PendingRequestList = ({
     console.log('Bulk reject requests:', selectedRows);
   };
 
-  const handleAccept = (request: TeamJoinRequestWithTeamUserInfo) => {
-    console.log('Accept request:', request._id);
+  const reloadTeamMembersAndRequests = async (teamId: string) => {
+    await loadTeamMembers(teamId);
+    await loadTeamRequests(teamId);
+  }
+
+  const handleAccept = async (request: TeamJoinRequestWithTeamUserInfo) => {
+    const response = await teamMemberApi.acceptTeamRequest(request._id, request.teamId);
+    if (response) {
+      reloadTeamMembersAndRequests(request.teamId);
+    }
   };
 
-  const handleReject = (request: TeamJoinRequestWithTeamUserInfo) => {
+  const handleReject = async (request: TeamJoinRequestWithTeamUserInfo) => {
     setRequestToReject(request);
     setIsRejectDialogOpen(true);
   };
 
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async () => {
     if (requestToReject) {
-      console.log('Reject request:', requestToReject._id, 'with comment:', rejectComment);
+      const response = await teamMemberApi.rejectTeamRequest(requestToReject._id, { comment: rejectComment, rejectedBy: requestToReject.requestedBy });
+      if (response) {
+        reloadTeamMembersAndRequests(requestToReject.teamId);
+      }
       setRejectComment('');
+      reloadTeamMembersAndRequests(requestToReject.teamId);
       setIsRejectDialogOpen(false);
       setRequestToReject(null);
     }
@@ -102,7 +118,7 @@ const PendingRequestList = ({
 
   const getFakeAverage = (position?: string) => {
     if (!position) return 'N/A';
-    
+
     const averages: Record<string, string> = {
       pitcher: '87.5 mph',
       catcher: '2.1 sec pop time',
@@ -114,11 +130,11 @@ const PendingRequestList = ({
       center_field: '0.93 fielding %',
       right_field: '0.90 fielding %'
     };
-    
+
     return averages[position] || 'N/A';
   };
 
-  const columns = useMemo<ColumnDef<TeamJoinRequestWithTeamUserInfo>[]>(() => [
+  const columns = useMemo<ColumnDef<Partial<TeamJoinRequestWithTeamUserInfo>>[]>(() => [
     {
       id: 'select',
       header: ({ table }: { table: any }) => (
@@ -201,9 +217,9 @@ const PendingRequestList = ({
       cell: ({ row }) => {
         const request = row.original;
         const role = request.role;
-        
+
         if (!role) return '-';
-        
+
         return (
           <Badge variant="outline" className="capitalize">
             {role}
@@ -231,18 +247,12 @@ const PendingRequestList = ({
       cell: ({ row }) => {
         const request = row.original;
         const date = request.requestedAt;
-        
+
         if (!date) return '-';
-        
-        const formattedDate = new Date(date).toLocaleDateString('en-US', {
-          month: '2-digit',
-          day: '2-digit',
-          year: '2-digit'
-        });
-        
+
         return (
           <span className="text-sm text-muted-foreground">
-            {formattedDate}
+            {formatDateWithOrdinal(date)}
           </span>
         );
       },
@@ -266,7 +276,7 @@ const PendingRequestList = ({
       size: 150,
       cell: ({ row }: { row: any }) => {
         const request = row.original;
-        
+
         return (
           <div className="flex gap-2 justify-center">
             <Button
@@ -302,11 +312,11 @@ const PendingRequestList = ({
       header: '',
       cell: ({ row }: { row: any }) => {
         const request = row.original;
-        
+
         return (
           <div className="flex items-center justify-center px-4">
-            <ChevronRight 
-              className="text-muted-foreground/70 size-4 hover:text-muted-foreground hover:cursor-pointer" 
+            <ChevronRight
+              className="text-muted-foreground/70 size-4 hover:text-muted-foreground hover:cursor-pointer"
               onClick={() => handleViewDetails(request)}
             />
           </div>
@@ -372,7 +382,7 @@ const PendingRequestList = ({
                     </Button>
                   )}
                 </div>
-                
+
                 {selectedRows.length > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
@@ -422,7 +432,7 @@ const PendingRequestList = ({
               Review user information before making a decision
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedRequest && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -444,7 +454,7 @@ const PendingRequestList = ({
                   )}
                 </div>
               </div>
-              
+
               {selectedRequest.user?.position && (
                 <div className="bg-muted/50 rounded-lg p-3">
                   <Label className="text-sm font-medium">Performance Metrics</Label>
@@ -456,7 +466,7 @@ const PendingRequestList = ({
                   </p>
                 </div>
               )}
-              
+
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={() => {
@@ -495,7 +505,7 @@ const PendingRequestList = ({
               Please provide a reason for rejecting this request
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div>
               <Label htmlFor="reject-comment">Rejection Reason</Label>
@@ -508,7 +518,7 @@ const PendingRequestList = ({
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button
               variant="outline"

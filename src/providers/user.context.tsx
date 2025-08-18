@@ -6,7 +6,8 @@ import { User } from '@/models';
 import { userApi } from '@/app/services-client/userApi';
 
 interface UserContextType {
-  user: User | null;
+  user: Partial<User> | null;
+  setUser: (user: Partial<User> | null) => void; // Partial<User> is used to allow partial updates
   isLoading: boolean;
   error: string;
   loadUserData: () => Promise<void>;
@@ -16,7 +17,7 @@ const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { userFromFirebase, token } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Partial<User> | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Start with true
   const [error, setError] = useState('');
 
@@ -86,6 +87,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     error,
     loadUserData,
+    setUser
   };
 
   return (

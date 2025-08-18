@@ -13,6 +13,41 @@ interface TeamSwitcherProps {
   showIcon?: boolean;
 }
 
+// Helper function to render team logo or fallback icon
+const TeamLogoOrIcon = ({ 
+  team, 
+  icon: Icon, 
+  iconSize = "w-3.5 h-3.5",
+  containerSize = "w-7 h-7",
+  containerBgColor = "bg-blue-100",
+  iconColor = "text-blue-600"
+}: {
+  team: any;
+  icon: React.ComponentType<{ className?: string }>;
+  iconSize?: string;
+  containerSize?: string;
+  containerBgColor?: string;
+  iconColor?: string;
+}) => {
+  if (team.logoUrl && team.logoUrl.trim() !== '') {
+    return (
+      <div className={cn("flex items-center justify-center", containerSize, containerBgColor, "rounded-full overflow-hidden")}>
+        <img
+          src={team.logoUrl}
+          alt={`${team.name} logo`}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+  
+  return (
+    <div className={cn("flex items-center justify-center", containerSize, "rounded-full", containerBgColor, iconColor, "flex-shrink-0")}>
+      <Icon className={iconSize} />
+    </div>
+  );
+};
+
 export function TeamSwitcher({ 
   className = '', 
   showIcon = true
@@ -45,9 +80,14 @@ export function TeamSwitcher({
         className
       )}>
         {showIcon && (
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex-shrink-0">
-            <Trophy className="w-3.5 h-3.5" />
-          </div>
+          <TeamLogoOrIcon 
+            team={currentTeam}
+            icon={Trophy}
+            iconSize="w-3.5 h-3.5"
+            containerSize="w-7 h-7"
+            containerBgColor="bg-blue-100"
+            iconColor="text-blue-600"
+          />
         )}
         <div className="flex flex-col min-w-0 flex-1">
           <span className="font-semibold text-sm text-gray-900 truncate">
@@ -74,9 +114,14 @@ export function TeamSwitcher({
         className
       )}>
         {showIcon && (
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-600 flex-shrink-0">
-            <Users className="w-3.5 h-3.5" />
-          </div>
+          <TeamLogoOrIcon 
+            team={currentTeam}
+            icon={Users}
+            iconSize="w-3.5 h-3.5"
+            containerSize="w-7 h-7"
+            containerBgColor="bg-purple-100"
+            iconColor="text-purple-600"
+          />
         )}
         <Select
           value={currentTeam._id}
@@ -118,14 +163,14 @@ export function TeamSwitcher({
                     )}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={cn(
-                        "flex items-center justify-center w-6 h-6 rounded-full flex-shrink-0",
-                        isCurrentTeam 
-                          ? "bg-blue-100 text-blue-600" 
-                          : "bg-gray-100 text-gray-600"
-                      )}>
-                        <Building className="w-3 h-3" />
-                      </div>
+                      <TeamLogoOrIcon 
+                        team={team}
+                        icon={Building}
+                        iconSize="w-3 h-3"
+                        containerSize="w-6 h-6"
+                        containerBgColor={isCurrentTeam ? "bg-blue-100" : "bg-gray-100"}
+                        iconColor={isCurrentTeam ? "text-blue-600" : "text-gray-600"}
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className={cn(
@@ -167,9 +212,14 @@ export function TeamSwitcher({
       className
     )}>
       {showIcon && (
-        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex-shrink-0">
-          <Trophy className="w-3.5 h-3.5" />
-        </div>
+        <TeamLogoOrIcon 
+          team={currentTeam}
+          icon={Trophy}
+          iconSize="w-3.5 h-3.5"
+          containerSize="w-7 h-7"
+          containerBgColor="bg-blue-100"
+          iconColor="text-blue-600"
+        />
       )}
       <span className="font-semibold text-sm text-gray-900">{currentTeam.name}</span>
     </div>

@@ -115,3 +115,24 @@ export function formatDateTime(input: Date | string | number): string {
     hour12: true,
   });
 }
+
+export function formatDateWithOrdinal(input: Date | string | number): string {
+  const date = new Date(input);
+  
+  const month = date.toLocaleDateString('en-US', { month: 'long' });
+  const day = date.getDate();
+  const year = date.getFullYear();
+  
+  // Function to get ordinal suffix
+  const getOrdinalSuffix = (day: number): string => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+  
+  return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
+}

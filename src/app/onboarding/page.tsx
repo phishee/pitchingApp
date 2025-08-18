@@ -7,7 +7,7 @@ import { OnboardingProvider } from '@/providers/onboarding-context';
 
 export default function OnboardingPage() {
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-screen">  {/* Remove overflow-hidden, use min-h-screen */}
       <OnboardingProvider>
         <OnboardingFlow />
       </OnboardingProvider>

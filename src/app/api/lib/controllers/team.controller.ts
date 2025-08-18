@@ -30,9 +30,10 @@ export class TeamController {
     }
   }
 
-  async getTeamById(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getTeamById(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const team = await this.teamService.getTeamById(params.id);
+      const { id } = await params;
+      const team = await this.teamService.getTeamById(id);
       if (!team) {
         return NextResponse.json({ error: 'Team not found' }, { status: 404 });
       }
@@ -42,10 +43,11 @@ export class TeamController {
     }
   }
 
-  async updateTeam(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async updateTeam(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
+      const { id } = await params;
       const body = await req.json();
-      const team = await this.teamService.updateTeam(params.id, body);
+      const team = await this.teamService.updateTeam(id, body);
       if (!team) {
         return NextResponse.json({ error: 'Team not found' }, { status: 404 });
       }
@@ -55,9 +57,10 @@ export class TeamController {
     }
   }
 
-  async deleteTeam(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async deleteTeam(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const success = await this.teamService.deleteTeam(params.id);
+      const { id } = await params;
+      const success = await this.teamService.deleteTeam(id);
       if (!success) {
         return NextResponse.json({ error: 'Team not found' }, { status: 404 });
       }
@@ -67,27 +70,30 @@ export class TeamController {
     }
   }
 
-  async getTeamsByOrganization(req: NextRequest, { params }: { params: { organizationId: string } }): Promise<NextResponse> {
+  async getTeamsByOrganization(req: NextRequest, { params }: { params: Promise<{ organizationId: string }> }): Promise<NextResponse> {
     try {
-      const teams = await this.teamService.getTeamsByOrganization(params.organizationId);
+      const { organizationId } = await params;
+      const teams = await this.teamService.getTeamsByOrganization(organizationId);
       return NextResponse.json(teams);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async getTeamMembers(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getTeamMembers(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const members = await this.teamService.getTeamMembers(params.id);
+      const { id } = await params;
+      const members = await this.teamService.getTeamMembers(id);
       return NextResponse.json(members);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async getTeamByCode(req: NextRequest, { params }: { params: { code: string } }): Promise<NextResponse> {
+  async getTeamByCode(req: NextRequest, { params }: { params: Promise<{ code: string }> }): Promise<NextResponse> {
     try {
-      const team = await this.teamService.getTeamByCode(params.code);
+      const { code } = await params;
+      const team = await this.teamService.getTeamByCode(code);
       return NextResponse.json(team);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });

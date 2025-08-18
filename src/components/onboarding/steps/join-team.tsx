@@ -10,20 +10,20 @@ import { Check, X } from 'lucide-react';
 import { teamApi } from '@/app/services-client/teamApi';
 import { Team } from '@/models';
 import { useOnboarding } from '@/providers/onboarding-context';
+import Image from 'next/image';
 
-// interface JoinTeamProps {
-//   setJoinRequestData: any;
-//   userData: any;
-//   joinRequestData: any;
-// }
+interface JoinTeamProps {
+  onNext?: () => void;
+}
 
 interface TeamInfo {
   _id: string;
   name: string;
   description: string;
+  logoUrl?: string;
 }
 
-export function JoinTeam() {
+export function JoinTeam({ onNext }: JoinTeamProps) {
   const [teamCode, setTeamCode] = useState('');
   const [teamInfo, setTeamInfo] = useState<TeamInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,12 +37,11 @@ export function JoinTeam() {
       setTeamInfo({
         _id: teamToJoin._id || '',
         name: teamToJoin.name || '',
-        description: teamToJoin.description || ''
+        description: teamToJoin.description || '',
+        logoUrl: teamToJoin.logoUrl || ''
       });
     }
   }, []);
-
-
 
   const handleFetchTeam = async () => {
     setIsLoading(true);
@@ -66,15 +65,18 @@ export function JoinTeam() {
 
   const handleJoinRequest = () => {
     if (teamInfo && userData) {
-      setJoinRequestData({
+      const joinRequest = {
         teamId: teamInfo._id || '',
         requestedBy: userData.userId,
         requestedAt: new Date(),
-        status: 'pending',
-        message: null,
+        status: 'pending' as const,
+        comment: null,
+        role: userData.role || 'athlete',
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      };
+      
+      setJoinRequestData(joinRequest);
       setHasRequested(true);
     }
   };
@@ -119,7 +121,12 @@ export function JoinTeam() {
           {teamInfo && (
             <Card className={hasRequested ? "border-green-500 bg-green-50" : "border-primary"}>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-2">{teamInfo?.name}</h3>
+                <div className="flex items-center gap-2">
+                  {teamInfo?.logoUrl && (
+                    <img src={teamInfo.logoUrl} alt={teamInfo?.name} width={40} height={40} className="rounded-full" />
+                  )}
+                  <h3 className="text-lg font-semibold mb-2">{teamInfo?.name}</h3>
+                </div>
                 <p className="text-gray-600 mb-4">{teamInfo?.description}</p>
 
                 {!joinRequestData ? (

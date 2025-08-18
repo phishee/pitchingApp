@@ -39,11 +39,11 @@ export class TeamMemberService {
   async getTeamMembersByTeam(teamId: string): Promise<TeamMemberWithUser[]> {
     // const allMembers = await this.teamMemberRepo.findAll(this.collectionName);
     // return allMembers.filter(member => member.teamId === teamId);
-    const teamMembers = await this.teamMemberRepo.findWithPopulate('teammember',
-      { teamId: 'team123' },
+    const teamMembers = await this.teamMemberRepo.findWithPopulate(this.collectionName,
+      {teamId},
       {
         path: 'userId',
-        from: 'User',
+        from: 'users',
         foreignField: 'userId',
         select: ['name', 'email', 'profileImageUrl', 'userId'],
         as: 'user'

@@ -6,12 +6,12 @@ import { toAbsoluteUrl } from '@/lib/helpers';
 
 export function SidebarHeader() {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5 mb-4">
       <div className="flex items-center justify-between gap-2.5 px-3.5 h-[70px]">
         <Link href="/">
           <img
             src={'https://keenthemes.com/metronic/tailwind/nextjs/demo6/media/app/mini-logo-circle.svg'}
-            className="h-[34px]"
+            className="h-[50px]"
             alt=""
           />
         </Link>

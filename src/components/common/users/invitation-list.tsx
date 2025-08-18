@@ -35,9 +35,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { formatDateWithOrdinal } from '@/lib/helpers';
 
 interface InvitationListProps {
-  data: TeamInvitationWithTeamUserInfo[];
+  data: Partial<TeamInvitationWithTeamUserInfo>[];
   isLoading?: boolean;
 }
 
@@ -48,7 +49,7 @@ const InvitationList = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [invitationToCancel, setInvitationToCancel] = useState<TeamInvitationWithTeamUserInfo | null>(null);
+  const [invitationToCancel, setInvitationToCancel] = useState<Partial<TeamInvitationWithTeamUserInfo> | null>(null);
   const [isBulkCancelDialogOpen, setIsBulkCancelDialogOpen] = useState(false);
 
   const filteredData = useMemo(() => {
@@ -90,7 +91,7 @@ const InvitationList = ({
     setIsBulkCancelDialogOpen(false);
   };
 
-  const columns = useMemo<ColumnDef<TeamInvitationWithTeamUserInfo>[]>(() => [
+  const columns = useMemo<ColumnDef<Partial<TeamInvitationWithTeamUserInfo>>[]>(() => [
     {
       id: 'select',
       header: ({ table }: { table: any }) => (
@@ -227,15 +228,9 @@ const InvitationList = ({
         
         if (!date) return '-';
         
-        const formattedDate = new Date(date).toLocaleDateString('en-US', {
-          month: '2-digit',
-          day: '2-digit',
-          year: '2-digit'
-        });
-        
         return (
           <span className="text-sm text-muted-foreground">
-            {formattedDate}
+            {formatDateWithOrdinal(date)}
           </span>
         );
       },

@@ -11,11 +11,16 @@ import { Users, Building, Trophy, CheckCircle } from 'lucide-react';
 import { useOnboarding } from '@/providers/onboarding-context';
 import { teamApi } from '@/app/services-client/teamApi';
 
-export function CreateTeam() {
+interface CreateTeamProps {
+  onNext?: () => void;
+}
+
+export function CreateTeam({ onNext }: CreateTeamProps) {
   const { teamData, setTeamData, userData, setUserData, setOrganizationData, setTeamMemberData } = useOnboarding();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [generatedCode, setGeneratedCode] = useState<string>('');
+  const [isStepComplete, setIsStepComplete] = useState(false);
 
   const generateTeamCode = async (): Promise<string> => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -148,6 +153,9 @@ export function CreateTeam() {
       console.log('Team data setup completed successfully');
       console.log('teamMemberData in context after setting:', teamMemberData);
 
+      // Mark step as complete
+      setIsStepComplete(true);
+
     } catch (error) {
       console.error('Error setting up team data:', error);
       setError('Failed to set up team data. Please try again.');
@@ -156,109 +164,133 @@ export function CreateTeam() {
     }
   };
 
+  // Auto-advance to next step when team is created successfully
+  useEffect(() => {
+    if (isStepComplete && onNext) {
+      // Small delay to show success state
+      const timer = setTimeout(() => {
+        onNext();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isStepComplete, onNext]);
+
   return (
-    <div className="flex flex-col justify-start py-4">
-      <div className="w-full space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold">Create Your Team</h2>
-          <p className="text-gray-600">Set up your team</p>
-        </div>
+    <div className="space-y-6 ">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold">Create Your Team</h2>
+        <p className="text-gray-600">Set up your team</p>
+      </div>
 
-        <div className="space-y-4 max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                Team Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Team Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter team name"
-                  value={teamData?.name || ''}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  disabled={isLoading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  This will create your team
+      <div className="space-y-4 max-w-2xl mx-auto">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Building className="w-5 h-5" />
+              Team Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="name">Team Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter team name"
+                value={teamData?.name || ''}
+                onChange={(e) => handleNameChange(e.target.value)}
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                This will create your team
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe your team"
+                value={teamData?.description || ''}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
+                rows={2}
+                disabled={isLoading}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Team Code Display */}
+        {generatedCode && (
+          <Card className="bg-blue-50 border-2 border-dashed border-blue-200">
+            <CardContent className="pt-4">
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
+                  <Trophy className="w-4 h-4" />
+                  <span>Your team code will be:</span>
+                </div>
+                <div className="bg-white border border-blue-300 rounded-lg px-4 py-2 inline-block">
+                  <span className="text-xl font-mono font-bold text-blue-800 tracking-wider">
+                    {generatedCode}
+                  </span>
+                </div>
+                <p className="text-xs text-blue-600">
+                  Share this code with athletes to join your team
                 </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe your team"
-                  value={teamData?.description || ''}
-                  onChange={(e) => handleDescriptionChange(e.target.value)}
-                  rows={3}
-                  disabled={isLoading}
-                />
               </div>
             </CardContent>
           </Card>
+        )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
+        <div className="flex justify-center">
+          <Button
+            onClick={handleCreateTeam}
+            disabled={isLoading || !teamData?.name || isStepComplete}
+            className="px-6 py-2"
+            size="md"
+          >
+            {isLoading ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
+                Setting Up...
+              </>
+            ) : isStepComplete ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                Team Created Successfully!
+              </>
+            ) : (
+              <>
+                <Trophy className="w-4 h-4 mr-2" />
+                Set Up Team
+              </>
+            )}
+          </Button>
+        </div>
 
-          {/* Team Code Display - Before submit button */}
-          {generatedCode && (
-            <Card className="bg-blue-50 border-2 border-dashed border-blue-200">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-3">
-                  <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
-                    <Trophy className="w-4 h-4" />
-                    <span>Your team code will be:</span>
-                  </div>
-                  <div className="bg-white border border-blue-300 rounded-lg px-6 py-3 inline-block">
-                    <span className="text-2xl font-mono font-bold text-blue-800 tracking-wider">
-                      {generatedCode}
-                    </span>
-                  </div>
-                  <p className="text-xs text-blue-600">
-                    Share this code with athletes to join your team
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="flex justify-center">
-            <Button
-              onClick={handleCreateTeam}
-              disabled={isLoading || !teamData?.name}
-              className="px-8 py-3"
-              size="lg"
-            >
-              {isLoading ? (
-                <>
-                  <CheckCircle className="w-5 h-5 mr-2 animate-spin" />
-                  Setting Up...
-                </>
-              ) : (
-                <>
-                  <Trophy className="w-5 h-5 mr-2" />
-                  Set Up Team
-                </>
-              )}
-            </Button>
-          </div>
-
+        {isStepComplete && (
           <div className="text-center space-y-2">
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Users className="w-4 h-4" />
-              <span>You'll become the team coach</span>
+            <div className="flex items-center justify-center gap-2 text-sm text-green-600">
+              <CheckCircle className="w-4 h-4" />
+              <span>Team created successfully! Moving to next step...</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              This will automatically create your team and make you the coach
-            </p>
           </div>
+        )}
+
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Users className="w-4 h-4" />
+            <span>You'll become the team coach</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            This will automatically create your team and make you the coach
+          </p>
         </div>
       </div>
     </div>

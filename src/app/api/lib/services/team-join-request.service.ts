@@ -1,10 +1,9 @@
 // src/app/api/lib/services/team-join-request.service.ts
 
-import { TeamJoinRequest } from '@/models/TeamJoinRequest';
+import { TeamJoinRequest, TeamJoinRequestWithTeamUserInfo } from '@/models';
 import { DBProviderFactory } from '../factories/DBFactory';
 import { inject, injectable } from 'inversify';
 import { DB_TYPES } from '../symbols/Symbols';
-import { TeamJoinRequestWithTeamUserInfo } from '@/models';
 
 @injectable()
 export class TeamJoinRequestService {
@@ -32,9 +31,19 @@ export class TeamJoinRequestService {
     return this.joinRequestRepo.delete(this.collectionName, id);
   }
 
-  async getJoinRequestsByTeam(teamId: string): Promise<TeamJoinRequest[]> {
-    const allRequests = await this.joinRequestRepo.findAll(this.collectionName);
-    return allRequests.filter(req => req.teamId === teamId);
+  async getJoinRequestsByTeam(teamId: string): Promise<TeamJoinRequestWithTeamUserInfo[]> {
+    const allRequests = await this.joinRequestRepo.findWithPopulate(this.collectionName, { teamId, status: 'pending' }, 
+      [
+        {
+          path: 'requestedBy',
+          from: 'users',
+          foreignField: 'userId',
+          select: ['name', 'email', 'profileImageUrl'],
+          as: 'user'
+        }
+      ]
+    );
+    return allRequests;
   }
 
   async getJoinRequestsByUser(userId: string): Promise<TeamJoinRequestWithTeamUserInfo[]> {
@@ -67,16 +76,20 @@ export class TeamJoinRequestService {
   }
 
   async approveJoinRequest(id: string): Promise<TeamJoinRequest | null> {
-    return this.joinRequestRepo.update(this.collectionName, id, { 
+    const updatedRequest = await this.joinRequestRepo.update(this.collectionName, id, { 
       status: 'approved', 
       approvedAt: new Date() 
     });
+
+    return updatedRequest;
   }
 
-  async rejectJoinRequest(id: string): Promise<TeamJoinRequest | null> {
+  async rejectJoinRequest(id: string, data: { comment?: string; rejectedBy?: string }): Promise<TeamJoinRequest | null> {
     return this.joinRequestRepo.update(this.collectionName, id, { 
       status: 'rejected', 
-      rejectedAt: new Date() 
+      rejectedAt: new Date(),
+      comment: data.comment || null,
+      rejectedBy: data.rejectedBy || null
     });
   }
 }

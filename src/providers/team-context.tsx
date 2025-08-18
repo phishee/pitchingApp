@@ -17,11 +17,15 @@ interface TeamContextType {
   currentTeamMember: Partial<TeamMemberWithUser> | null;
   allTeams: Team[]; // All teams the user is part of (for coaches)
   allTeamMembers: Partial<TeamMemberWithUser>[]; // All team memberships (for coaches)
+  teamMembers: Partial<TeamMemberWithUser>[]; // Team members for the current team
   pendingInvitation: TeamInvitation | null;
   pendingJoinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null;
   teamToJoin: Team | null;
   setPendingJoinRequest: (joinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null) => void;
-  
+  setTeamMembers: (members: Partial<TeamMemberWithUser>[]) => void;
+  loadTeamMembers: (teamId?: string) => Promise<void>;
+  loadTeamRequests: (teamId?: string) => Promise<void>;
+
   // Team actions
   loadTeamData: () => Promise<void>;
   joinTeam: (teamCode: string) => Promise<void>;
@@ -30,17 +34,17 @@ interface TeamContextType {
   searchTeamByCode: (code: string) => Promise<void>;
   leaveTeam: () => Promise<void>;
   switchTeam: (teamId: string) => Promise<void>; // Switch current team (for coaches)
-  
+
   // State management
   isLoading: boolean;
   error: string;
   clearError: () => void;
-  
+
   // New properties
   teamInvitations: Partial<TeamInvitation>[];
-  teamRequests: Partial<TeamJoinRequest>[];
+  teamRequests: Partial<TeamJoinRequestWithTeamUserInfo>[];
   setTeamInvitations: (invitations: Partial<TeamInvitation>[]) => void;
-  setTeamRequests: (requests: Partial<TeamJoinRequest>[]) => void;
+  setTeamRequests: (requests: Partial<TeamJoinRequestWithTeamUserInfo>[]) => void;
 }
 
 const TeamContext = createContext<TeamContextType | null>(null);
@@ -48,7 +52,7 @@ const TeamContext = createContext<TeamContextType | null>(null);
 export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
   const pathname = usePathname();
-  
+
   const [userTeamStatus, setUserTeamStatus] = useState<UserTeamStatus>('no-team');
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
   const [currentTeamMember, setCurrentTeamMember] = useState<Partial<TeamMemberWithUser> | null>(null);
@@ -60,7 +64,9 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [teamInvitations, setTeamInvitations] = useState<Partial<TeamInvitation>[]>([]);
-  const [teamRequests, setTeamRequests] = useState<Partial<TeamJoinRequest>[]>([]);
+  const [teamRequests, setTeamRequests] = useState<Partial<TeamJoinRequestWithTeamUserInfo>[]>([]);
+  const [teamMembers, setTeamMembers] = useState<Partial<TeamMemberWithUser>[]>([]);
+
 
   const loadTeamData = useCallback(async () => {
     if (!user?.userId) return;
@@ -72,10 +78,10 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
       // Get all team memberships for the user
       const teamMembers = await teamMemberApi.getTeamMembersByUser(user.userId);
       const activeTeamMembers = teamMembers?.filter(member => member.status === 'active') || [];
-      
+
       if (activeTeamMembers.length > 0) {
         setAllTeamMembers(activeTeamMembers);
-        
+
         // Load all teams for the user
         const teams = await Promise.all(
           activeTeamMembers.map(async (member) => {
@@ -87,30 +93,34 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
             }
           })
         );
-        
+
         const validTeams = teams.filter(team => team !== null) as Team[];
         setAllTeams(validTeams);
-        
+
         if (user.role === 'athlete') {
           // Athletes can only have one active team
           const athleteTeam = validTeams[0];
           const athleteMember = activeTeamMembers[0];
-          
+
           if (athleteTeam && athleteMember) {
             setCurrentTeam(athleteTeam);
             setCurrentTeamMember(athleteMember);
             setUserTeamStatus('team-member');
+            loadTeamMembers(athleteTeam._id);
+            loadTeamRequests(athleteTeam._id);
             return;
           }
         } else if (user.role === 'coach') {
           // Coaches can have multiple teams - set the first one as current
           const coachTeam = validTeams[0];
           const coachMember = activeTeamMembers[0];
-          
+
           if (coachTeam && coachMember) {
             setCurrentTeam(coachTeam);
             setCurrentTeamMember(coachMember);
             setUserTeamStatus('team-member');
+            loadTeamMembers(coachTeam._id);
+            loadTeamRequests(coachTeam._id);
             return;
           }
         }
@@ -120,7 +130,7 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const joinRequests = await teamApi.getJoinRequestsByUser(user.userId);
         const pendingRequest = joinRequests?.find(request => request.status === 'pending');
-        
+
         if (pendingRequest) {
           // const team = await teamApi.getTeam(pendingRequest.teamId);
           // const pendingRequestWithTeamUserInfo = {
@@ -148,6 +158,30 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     }
   }, [user?.userId]);
+
+  const loadTeamMembers = async (teamId?: string) => {
+    const targetTeamId = teamId || currentTeam?._id;
+    if (targetTeamId) {
+      const teamMembers = await teamMemberApi.getTeamMembersByTeam(targetTeamId);
+      console.log('teamMembers***Ha', teamMembers);
+      setTeamMembers(teamMembers);
+    }
+  }
+
+  const loadTeamInvitations = async (teamId: string) => {
+    const teamInvitations = await teamMemberApi.getTeamInvitationsByTeam(teamId);
+    console.log('teamInvitations***Ha', teamInvitations);
+    setTeamInvitations(teamInvitations);
+  }
+
+  const loadTeamRequests = async (teamId?: string) => {
+    const targetTeamId = teamId || currentTeam?._id;
+    if (targetTeamId) {
+      const teamRequests = await teamMemberApi.getTeamRequestsByTeam(targetTeamId);
+      console.log('teamRequests***Ha', teamRequests);
+      setTeamRequests(teamRequests);
+    }
+  }
 
   useEffect(() => {
     if (user?.userId) {
@@ -177,7 +211,12 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
       // Switch to this team
       setCurrentTeam(team);
       setCurrentTeamMember(teamMember);
-      
+
+      // load team info
+      // await loadTeamData();
+      loadTeamMembers(teamId);
+      loadTeamInvitations(teamId);
+      loadTeamRequests(teamId);
     } catch (error) {
       console.error('Error switching team:', error);
       setError('Failed to switch team');
@@ -272,6 +311,10 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
     teamRequests,
     setTeamInvitations,
     setTeamRequests,
+    teamMembers,
+    setTeamMembers,
+    loadTeamMembers,
+    loadTeamRequests,
   };
 
   return (
