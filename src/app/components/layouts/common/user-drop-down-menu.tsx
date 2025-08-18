@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Moon, Settings, User, CreditCard } from 'lucide-react';
 import { useUser } from '@/providers/user.context';
 import { useAuth } from '@/providers/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
 //   const { data: session } = useSession();
@@ -31,24 +32,32 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
     setTheme(checked ? 'dark' : 'light');
   };
 
+  console.log('user', user); 
+
+  const getInitials = (name?: string) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent className="w-64" side="bottom" align="end">
         {/* Header */}
         <div className="flex items-center gap-2 p-3">
-          <img
-            className="w-9 h-9 rounded-full border border-border"
-            src={user?.profileImageUrl}
-            alt="User avatar"
-          />
+          <Avatar className="w-9 h-9">
+            {user?.profileImageUrl && user.profileImageUrl.trim() !== '' && (
+              <AvatarImage src={user.profileImageUrl} alt="User avatar" />
+            )}
+            <AvatarFallback className="text-sm font-semibold">
+              {getInitials(user?.name)}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex flex-col">
             <span className="text-sm text-mono font-semibold">
-              {/* {session?.user.name || ''} */}
               {user?.name}
             </span>
             <span className="text-xs text-muted-foreground">
-              {/* {session?.user.email || ''} */}
               {user?.email}
             </span>
           </div>

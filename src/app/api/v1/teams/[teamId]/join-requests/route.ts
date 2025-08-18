@@ -5,14 +5,13 @@ import container from "@/app/api/lib/container";
 import { TEAM_JOIN_REQUEST_TYPES } from "@/app/api/lib/symbols/Symbols";
 import { TeamJoinRequestController } from "@/app/api/lib/controllers/team-join-request.controller";
 
-export async function POST(req: NextRequest, context: { params: { teamId: string } }) {
-    const { params } = await context;
+export async function POST(req: NextRequest, params: { params: Promise<{ teamId: string }> }) {
+    // const { params } = await context;
     const joinRequestController = container.get<TeamJoinRequestController>(TEAM_JOIN_REQUEST_TYPES.TeamJoinRequestController);
-    return joinRequestController.createJoinRequest(req, { params });
+    return joinRequestController.createJoinRequest(req, params);
 }
 
-export async function GET(req: NextRequest, context: { params: { teamId: string } }) {
-    const { params } = await context;
+export async function GET(req: NextRequest, params: { params: Promise<{ teamId: string }> }) {
     const joinRequestController = container.get<TeamJoinRequestController>(TEAM_JOIN_REQUEST_TYPES.TeamJoinRequestController);
-    return joinRequestController.getJoinRequestsByTeam(req, { params });
+    return joinRequestController.getJoinRequestsByTeam(req, params);
 }

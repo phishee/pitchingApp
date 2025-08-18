@@ -15,23 +15,50 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
   const [profile, setProfile] = useState({
     position: userData?.position || '',
     dateOfBirth: userData?.dateOfBirth || '',
-    height: userData?.height || '',
+    heightFeet: userData?.heightFeet || '',
+    heightInches: userData?.heightInches || '',
     weight: userData?.weight || '',
     throwingHand: userData?.throwingHand || '',
     battingStance: userData?.battingStance || '',
-    jerseyNumber: userData?.jerseyNumber || '',
-    experienceLevel: userData?.experienceLevel || '',
+    phoneNumber: userData?.phoneNumber || '',
   });
 
-  // Remove the useEffect that was causing the infinite loop
-  // Instead, update userData when the form is submitted or when moving to next step
+  const [errors, setErrors] = useState({
+    position: false,
+    dateOfBirth: false,
+    throwingHand: false,
+    phoneNumber: false,
+  });
 
   const handleProfileChange = (field: string, value: string) => {
     const newProfile = { ...profile, [field]: value };
     setProfile(newProfile);
+    
+    // Clear error when field is filled
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field]: false }));
+    }
+    
     // Update userData immediately
     setUserData({ ...userData, ...newProfile });
   };
+
+  const validateRequiredFields = () => {
+    const newErrors = {
+      position: !profile.position,
+      dateOfBirth: !profile.dateOfBirth,
+      throwingHand: !profile.throwingHand,
+      // phoneNumber: !profile.phoneNumber,
+    };
+    
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error);
+  };
+
+  // Validate on mount and when required fields change
+  useEffect(() => {
+    validateRequiredFields();
+  }, [profile.position, profile.dateOfBirth, profile.throwingHand, profile.phoneNumber]);
 
   return (
     <div className="h-full flex flex-col justify-center">
@@ -43,61 +70,124 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
           <div className="space-y-2">
-            <Label htmlFor="position">Primary Position</Label>
-            <Select value={profile.position} onValueChange={(value) => handleProfileChange('position', value)}>
-              <SelectTrigger>
+            <Label htmlFor="position" className="flex items-center gap-1">
+              Primary Position
+              <span className="text-red-500">*</span>
+            </Label>
+            <Select 
+              value={profile.position} 
+              onValueChange={(value) => handleProfileChange('position', value)}
+            >
+              <SelectTrigger className={errors.position ? "border-red-500 focus:border-red-500" : ""}>
                 <SelectValue placeholder="Select position" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pitcher">Pitcher</SelectItem>
-                <SelectItem value="catcher">Catcher</SelectItem>
-                <SelectItem value="first-base">First Base</SelectItem>
-                <SelectItem value="second-base">Second Base</SelectItem>
-                <SelectItem value="third-base">Third Base</SelectItem>
-                <SelectItem value="shortstop">Shortstop</SelectItem>
-                <SelectItem value="left-field">Left Field</SelectItem>
-                <SelectItem value="center-field">Center Field</SelectItem>
-                <SelectItem value="right-field">Right Field</SelectItem>
+                <SelectItem disabled value="catcher">Catcher</SelectItem>
+                <SelectItem disabled value="first-base">First Base</SelectItem>
+                <SelectItem disabled value="second-base">Second Base</SelectItem>
+                <SelectItem disabled value="third-base">Third Base</SelectItem>
+                <SelectItem disabled value="shortstop">Shortstop</SelectItem>
+                <SelectItem disabled value="left-field">Left Field</SelectItem>
+                <SelectItem disabled value="center-field">Center Field</SelectItem>
+                <SelectItem disabled value="right-field">Right Field</SelectItem>
               </SelectContent>
             </Select>
+            {errors.position && (
+              <p className="text-sm text-red-500">Position is required</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dob">Date of Birth</Label>
+            <Label htmlFor="dob" className="flex items-center gap-1">
+              Date of Birth
+              <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="dob"
               type="date"
               value={profile.dateOfBirth}
               onChange={(e) => handleProfileChange('dateOfBirth', e.target.value)}
+              className={errors.dateOfBirth ? "border-red-500 focus:border-red-500" : ""}
+              required
             />
+            {errors.dateOfBirth && (
+              <p className="text-sm text-red-500">Date of birth is required</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="height">Height (cm)</Label>
+            <Label htmlFor="phone" className="flex items-center gap-1">
+              Phone Number
+              <span className="text-red-500">*</span>
+            </Label>
             <Input
-              id="height"
-              type="number"
-              placeholder="180"
-              value={profile.height}
-              onChange={(e) => handleProfileChange('height', e.target.value)}
+              id="phone"
+              type="tel"
+              placeholder="(555) 123-4567"
+              value={profile.phoneNumber}
+              onChange={(e) => handleProfileChange('phoneNumber', e.target.value)}
+              className={errors.phoneNumber ? "border-red-500 focus:border-red-500" : ""}
+              required
             />
+            {errors.phoneNumber && (
+              <p className="text-sm text-red-500">Phone number is required</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="weight">Weight (kg)</Label>
+            <Label htmlFor="height">Height</Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  id="heightFeet"
+                  type="number"
+                  placeholder="5"
+                  min="3"
+                  max="8"
+                  value={profile.heightFeet}
+                  onChange={(e) => handleProfileChange('heightFeet', e.target.value)}
+                />
+                <Label htmlFor="heightFeet" className="text-xs text-gray-500">ft</Label>
+              </div>
+              <div className="flex-1">
+                <Input
+                  id="heightInches"
+                  type="number"
+                  placeholder="10"
+                  min="0"
+                  max="11"
+                  value={profile.heightInches}
+                  onChange={(e) => handleProfileChange('heightInches', e.target.value)}
+                />
+                <Label htmlFor="heightInches" className="text-xs text-gray-500">in</Label>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="weight">Weight (lbs)</Label>
             <Input
               id="weight"
               type="number"
-              placeholder="75"
+              placeholder="180"
+              min="50"
+              max="400"
               value={profile.weight}
               onChange={(e) => handleProfileChange('weight', e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="throwing">Throwing Hand</Label>
-            <Select value={profile.throwingHand} onValueChange={(value) => handleProfileChange('throwingHand', value)}>
-              <SelectTrigger>
+            <Label htmlFor="throwing" className="flex items-center gap-1">
+              Throwing Hand
+              <span className="text-red-500">*</span>
+            </Label>
+            <Select 
+              value={profile.throwingHand} 
+              onValueChange={(value) => handleProfileChange('throwingHand', value)}
+            >
+              <SelectTrigger className={errors.throwingHand ? "border-red-500 focus:border-red-500" : ""}>
                 <SelectValue placeholder="Select hand" />
               </SelectTrigger>
               <SelectContent>
@@ -105,6 +195,9 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
                 <SelectItem value="left">Left</SelectItem>
               </SelectContent>
             </Select>
+            {errors.throwingHand && (
+              <p className="text-sm text-red-500">Throwing hand is required</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -117,32 +210,6 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
                 <SelectItem value="right">Right</SelectItem>
                 <SelectItem value="left">Left</SelectItem>
                 <SelectItem value="switch">Switch</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="jersey">Jersey Number</Label>
-            <Input
-              id="jersey"
-              type="number"
-              placeholder="00"
-              value={profile.jerseyNumber}
-              onChange={(e) => handleProfileChange('jerseyNumber', e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="experience">Experience Level</Label>
-            <Select value={profile.experienceLevel} onValueChange={(value) => handleProfileChange('experienceLevel', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="beginner">Beginner (0-2 years)</SelectItem>
-                <SelectItem value="intermediate">Intermediate (3-5 years)</SelectItem>
-                <SelectItem value="advanced">Advanced (6+ years)</SelectItem>
-                <SelectItem value="professional">Professional</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -44,7 +44,7 @@ const getStepsForRole = (role: string, isAdmin: boolean): Step[] => {
       return [
         { id: 'role', title: 'Role Selection', description: 'Choose your role', icon: User },
         { id: 'profile', title: 'Athlete Profile', description: 'Complete your profile', icon: User },
-        { id: 'team', title: 'Join Team', description: 'Join your team', icon: Users },
+        { id: 'team', title: 'Join Team', description: 'Join your team', icon: Users }, // This is 'team', not 'join-team'
         { id: 'review', title: 'Review & Finish', description: 'You\'re all set!', icon: Check },
       ];
     case 'coach':
@@ -78,11 +78,9 @@ export default function OnboardingFlow() {
   } = useOnboarding();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [steps, setSteps] = useState<Step[]>(getStepsForRole('', false).map(step => ({
-    ...step,
-    component: step.id === 'role' ? RoleSelection : undefined
-  })));
+  const [steps, setSteps] = useState<Step[]>(getStepsForRole('', false));
   const [teamAction, setTeamAction] = useState(''); // 'create' or 'join'
+  const [currentStepValid, setCurrentStepValid] = useState(false);
 
   // Update steps when role changes
   useEffect(() => {
@@ -123,7 +121,17 @@ export default function OnboardingFlow() {
     });
     
     setSteps(newSteps);
-  }, [userData?.role, userData?.isAdmin, teamAction]);
+    
+    // Reset current step if we're now on an invalid step
+    if (currentStepIndex >= newSteps.length) {
+      setCurrentStepIndex(newSteps.length - 1);
+    }
+  }, [userData?.role, userData?.isAdmin, teamAction, currentStepIndex]);
+
+  // Reset validation when step changes
+  useEffect(() => {
+    setCurrentStepValid(false);
+  }, [currentStepIndex]);
 
   const CurrentStepComponent = steps[currentStepIndex]?.component;
   const isFirstStep = currentStepIndex === 0;
@@ -131,7 +139,7 @@ export default function OnboardingFlow() {
   const showWelcomeSidebar = currentStepIndex === 0; // Show welcome on role selection
 
   const handleNext = () => {
-    if (!isLastStep) {
+    if (!isLastStep && currentStepValid) {
       setCurrentStepIndex(currentStepIndex + 1);
     }
   };
@@ -145,10 +153,77 @@ export default function OnboardingFlow() {
   const handleStepComplete = () => {
     if (isLastStep) {
       handleFinish();
-    } else {
+    } else if (currentStepValid) {
       handleNext();
     }
   };
+
+  // Function to validate current step
+  const validateCurrentStep = () => {
+    const currentStep = steps[currentStepIndex];
+    if (!currentStep) return false;
+
+    let isValid = false;
+    switch (currentStep.id) {
+      case 'role':
+        isValid = !!(userData?.role);
+        break;
+      case 'profile':
+        if (userData?.role === 'athlete') {
+          isValid = !!(userData?.position && userData?.dateOfBirth && userData?.throwingHand);
+        } else if (userData?.role === 'coach') {
+          isValid = !!(userData?.coachingExperience && userData?.phoneNumber);
+        }
+        break;
+      case 'team-choice':
+        isValid = !!teamAction;
+        break;
+      case 'create-team':
+        isValid = !!(teamData?.name && teamData?.teamCode);
+        break;
+      case 'team':
+        // This handles both join-team and team-choice scenarios
+        if (userData?.role === 'athlete') {
+          // For athletes, check if join request is set up
+          isValid = !!(joinRequestData?.teamId && joinRequestData?.requestedBy);
+        } else if (userData?.role === 'coach') {
+          // For coaches, check if team action is selected
+          isValid = !!teamAction;
+        }
+        break;
+      case 'join-team':
+        isValid = !!(joinRequestData?.teamId && joinRequestData?.requestedBy);
+        break;
+      case 'organization':
+        isValid = true;
+        break;
+      case 'review':
+        isValid = true;
+        break;
+      default:
+        isValid = false;
+    }
+
+    return isValid;
+  };
+
+  // Update validation when relevant data changes
+  useEffect(() => {
+    const isValid = validateCurrentStep();
+    setCurrentStepValid(isValid);
+  }, [userData, teamAction, currentStepIndex, joinRequestData, teamData]);
+
+  // Force validation check when joinRequestData changes
+  useEffect(() => {
+    if (steps[currentStepIndex]?.id === 'team' && userData?.role === 'athlete') {
+      const timer = setTimeout(() => {
+        const isValid = validateCurrentStep();
+        setCurrentStepValid(isValid);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [joinRequestData]);
 
   return (
     <div className="h-screen w-full bg-gray-50 flex">
@@ -163,37 +238,40 @@ export default function OnboardingFlow() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full">
-        <div className="flex-1 p-4 lg:p-8">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Mobile Progress Bar - Visible only on mobile */}
+        <div className="lg:hidden p-4 bg-white border-b">
+          <MobileProgressBar steps={steps} currentStepIndex={currentStepIndex} />
+        </div>
+
+        {/* Content Area with fixed height */}
+        <div className="flex-1 p-4 lg:p-8 overflow-hidden">
           <div className="max-w-4xl mx-auto h-full flex flex-col">
-            {/* Mobile Progress Bar - Visible only on mobile */}
-            <div className="lg:hidden mb-6">
-              <MobileProgressBar steps={steps} currentStepIndex={currentStepIndex} />
+            {/* Step Content - This will scroll if content is too tall */}
+            <div className="flex-1 bg-white rounded-lg shadow-lg overflow-y-auto">
+              <div className="p-6 lg:p-8 min-h-full flex flex-col justify-center">
+                {CurrentStepComponent && (
+                  <CurrentStepComponent
+                    userData={userData}
+                    setUserData={setUserData}
+                    organizationData={organizationData}
+                    setOrganizationData={setOrganizationData}
+                    teamData={teamData}
+                    setTeamData={setTeamData}
+                    teamMemberData={teamMemberData}
+                    setTeamMemberData={setTeamMemberData}
+                    joinRequestData={joinRequestData}
+                    setJoinRequestData={setJoinRequestData}
+                    teamAction={teamAction}
+                    setTeamAction={setTeamAction}
+                    onNext={handleNext}
+                  />
+                )}
+              </div>
             </div>
 
-            {/* Step Content */}
-            <div className="flex-1 bg-white rounded-lg shadow-lg p-6 lg:p-8 overflow-hidden">
-              {CurrentStepComponent && (
-                <CurrentStepComponent
-                  userData={userData}
-                  setUserData={setUserData}
-                  organizationData={organizationData}
-                  setOrganizationData={setOrganizationData}
-                  teamData={teamData}
-                  setTeamData={setTeamData}
-                  teamMemberData={teamMemberData}
-                  setTeamMemberData={setTeamMemberData}
-                  joinRequestData={joinRequestData}
-                  setJoinRequestData={setJoinRequestData}
-                  teamAction={teamAction}
-                  setTeamAction={setTeamAction}
-                  onNext={handleNext}
-                />
-              )}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-6">
+            {/* Navigation Buttons - Always visible at bottom */}
+            <div className="flex justify-between pt-6 flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={handleBack}
@@ -206,6 +284,7 @@ export default function OnboardingFlow() {
               
               <Button
                 onClick={handleStepComplete}
+                disabled={!currentStepValid}
                 className="flex items-center gap-2"
               >
                 {isLastStep ? 'Finish' : 'Next'}

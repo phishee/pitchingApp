@@ -44,7 +44,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface PlayerListProps {
-  data: PopulatedTeamMember[];
+  data: Partial<PopulatedTeamMember>[];
   isLoading?: boolean;
   isCoach?: boolean;
 }
@@ -57,9 +57,9 @@ const PlayerList = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isAssignProgramModalOpen, setIsAssignProgramModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<PopulatedTeamMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Partial<PopulatedTeamMember> | null>(null);
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<PopulatedTeamMember | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<Partial<PopulatedTeamMember> | null>(null);
   const [isBulkRemoveDialogOpen, setIsBulkRemoveDialogOpen] = useState(false);
 
   const filteredData = useMemo(() => {
@@ -116,7 +116,7 @@ const PlayerList = ({
     setIsAssignProgramModalOpen(true);
   };
 
-  const columns = useMemo<ColumnDef<PopulatedTeamMember>[]>(() => [
+  const columns = useMemo<ColumnDef<Partial<PopulatedTeamMember>>[]>(() => [
     ...(isCoach ? [{
       id: 'select',
       header: ({ table }: { table: any }) => (
@@ -235,7 +235,7 @@ const PlayerList = ({
         };
         
         return (
-          <Badge className={`capitalize ${statusColors[member.status]}`}>
+          <Badge className={`capitalize ${statusColors[member.status as keyof typeof statusColors]}`}>
             {member.status}
           </Badge>
         );
@@ -276,7 +276,7 @@ const PlayerList = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleAssignProgram(member.userId)}
+              onClick={() => member.userId && handleAssignProgram(member.userId)}
               className="h-7 px-2 text-xs"
             >
               <Plus className="size-3 mr-1" />

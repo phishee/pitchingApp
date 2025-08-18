@@ -30,9 +30,10 @@ export class TeamMemberController {
     }
   }
 
-  async getTeamMemberById(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getTeamMemberById(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const teamMember = await this.teamMemberService.getTeamMemberById(params.id);
+      const { id } = await params;
+      const teamMember = await this.teamMemberService.getTeamMemberById(id);
       if (!teamMember) {
         return NextResponse.json({ error: 'Team member not found' }, { status: 404 });
       }
@@ -42,10 +43,11 @@ export class TeamMemberController {
     }
   }
 
-  async updateTeamMember(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async updateTeamMember(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
+      const { id } = await params;
       const body = await req.json();
-      const teamMember = await this.teamMemberService.updateTeamMember(params.id, body);
+      const teamMember = await this.teamMemberService.updateTeamMember(id, body);
       if (!teamMember) {
         return NextResponse.json({ error: 'Team member not found' }, { status: 404 });
       }
@@ -55,9 +57,10 @@ export class TeamMemberController {
     }
   }
 
-  async deleteTeamMember(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async deleteTeamMember(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const success = await this.teamMemberService.deleteTeamMember(params.id);
+      const { id } = await params;
+      const success = await this.teamMemberService.deleteTeamMember(id);
       if (!success) {
         return NextResponse.json({ error: 'Team member not found' }, { status: 404 });
       }
@@ -67,9 +70,10 @@ export class TeamMemberController {
     }
   }
 
-  async getTeamMembersByTeam(req: NextRequest, { params }: { params: { teamId: string } }): Promise<NextResponse> {
+  async getTeamMembersByTeam(req: NextRequest, { params }: { params: Promise<{ teamId: string }> }): Promise<NextResponse> {
     try {
-      const teamMembers = await this.teamMemberService.getTeamMembersByTeam(params.teamId);
+      const { teamId } = await params;
+      const teamMembers = await this.teamMemberService.getTeamMembersByTeam(teamId);
       return NextResponse.json(teamMembers);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });

@@ -9,7 +9,7 @@ import { UserService } from '@/app/api/lib/services/user.service';
 export class UserController {
   constructor(
     @inject(USER_TYPES.UserService) private userService: UserService
-  ) {}
+  ) { }
 
   async createUser(req: NextRequest): Promise<NextResponse> {
     try {
@@ -30,9 +30,11 @@ export class UserController {
     }
   }
 
-  async getUserByUserId(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getUserByUserId(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const user = await this.userService.getUserByUserId(params.id);
+      const { id } = await params;
+      const user = await this.userService.getUserByUserId(id);
+
       if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
@@ -42,10 +44,11 @@ export class UserController {
     }
   }
 
-  async updateUser(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async updateUser(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
+      const { id } = await params;
       const body = await req.json();
-      const user = await this.userService.updateUser(params.id, body);
+      const user = await this.userService.updateUser(id, body);
       if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
@@ -55,9 +58,10 @@ export class UserController {
     }
   }
 
-  async deleteUser(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async deleteUser(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const success = await this.userService.deleteUser(params.id);
+      const { id } = await params;
+      const success = await this.userService.deleteUser(id);
       if (!success) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }

@@ -30,9 +30,10 @@ export class OrganizationController {
     }
   }
 
-  async getOrganizationById(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getOrganizationById(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const organization = await this.organizationService.getOrganizationById(params.id);
+      const { id } = await params;
+      const organization = await this.organizationService.getOrganizationById(id);
       if (!organization) {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
@@ -42,10 +43,11 @@ export class OrganizationController {
     }
   }
 
-  async updateOrganization(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async updateOrganization(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
+      const { id } = await params;
       const body = await req.json();
-      const organization = await this.organizationService.updateOrganization(params.id, body);
+      const organization = await this.organizationService.updateOrganization(id, body);
       if (!organization) {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
@@ -55,9 +57,10 @@ export class OrganizationController {
     }
   }
 
-  async deleteOrganization(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async deleteOrganization(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const success = await this.organizationService.deleteOrganization(params.id);
+      const { id } = await params;
+      const success = await this.organizationService.deleteOrganization(id);
       if (!success) {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
@@ -67,35 +70,39 @@ export class OrganizationController {
     }
   }
 
-  async getOrganizationsByCreator(req: NextRequest, { params }: { params: { createdBy: string } }): Promise<NextResponse> {
+  async getOrganizationsByCreator(req: NextRequest, { params }: { params: Promise<{ createdBy: string }> }): Promise<NextResponse> {
     try {
-      const organizations = await this.organizationService.getOrganizationsByCreator(params.createdBy);
+      const { createdBy } = await params;
+      const organizations = await this.organizationService.getOrganizationsByCreator(createdBy);
       return NextResponse.json(organizations);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async getOrganizationTeams(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getOrganizationTeams(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const teams = await this.organizationService.getOrganizationTeams(params.id);
+      const { id } = await params;
+      const teams = await this.organizationService.getOrganizationTeams(id);
       return NextResponse.json(teams);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async getOrganizationMembers(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async getOrganizationMembers(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
-      const members = await this.organizationService.getOrganizationMembers(params.id);
+      const { id } = await params;
+      const members = await this.organizationService.getOrganizationMembers(id);
       return NextResponse.json(members);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async updateOrganizationLogo(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+  async updateOrganizationLogo(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
     try {
+      const { id } = await params;
       const body = await req.json();
       const { logoUrl } = body;
       
@@ -103,7 +110,7 @@ export class OrganizationController {
         return NextResponse.json({ error: 'Logo URL is required' }, { status: 400 });
       }
 
-      const organization = await this.organizationService.updateOrganizationLogo(params.id, logoUrl);
+      const organization = await this.organizationService.updateOrganizationLogo(id, logoUrl);
       if (!organization) {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }

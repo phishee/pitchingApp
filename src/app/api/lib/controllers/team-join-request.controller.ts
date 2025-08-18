@@ -2,20 +2,23 @@
 
 import { inject, injectable } from 'inversify';
 import { NextRequest, NextResponse } from 'next/server';
-import { TEAM_JOIN_REQUEST_TYPES } from '@/app/api/lib/symbols/Symbols';
+import { TEAM_JOIN_REQUEST_TYPES, TEAM_MEMBER_TYPES } from '@/app/api/lib/symbols/Symbols';
 import { TeamJoinRequestService } from '@/app/api/lib/services/team-join-request.service';
+import { TeamMemberService } from '../services/team-member.service';
 
 @injectable()
 export class TeamJoinRequestController {
   constructor(
-    @inject(TEAM_JOIN_REQUEST_TYPES.TeamJoinRequestService) private joinRequestService: TeamJoinRequestService
-  ) {}
+    @inject(TEAM_JOIN_REQUEST_TYPES.TeamJoinRequestService) private joinRequestService: TeamJoinRequestService,
+    @inject(TEAM_MEMBER_TYPES.TeamMemberService) private teamMemberService: TeamMemberService
+  ) { }
 
-  async createJoinRequest(req: NextRequest, { params }: { params: { teamId: string } }): Promise<NextResponse> {
+  async createJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string }> }): Promise<NextResponse> {
     try {
+      const { teamId } = await params;
       const body = await req.json();
       // Automatically set the teamId from the URL params
-      const joinRequestData = { ...body, teamId: params.teamId };
+      const joinRequestData = { ...body, teamId };
       const joinRequest = await this.joinRequestService.createJoinRequest(joinRequestData);
       return NextResponse.json(joinRequest, { status: 201 });
     } catch (err: any) {
@@ -23,23 +26,25 @@ export class TeamJoinRequestController {
     }
   }
 
-  async getJoinRequestsByTeam(req: NextRequest, { params }: { params: { teamId: string } }): Promise<NextResponse> {
+  async getJoinRequestsByTeam(req: NextRequest, { params }: { params: Promise<{ teamId: string }> }): Promise<NextResponse> {
     try {
-      const joinRequests = await this.joinRequestService.getJoinRequestsByTeam(params.teamId);
+      const { teamId } = await params;
+      const joinRequests = await this.joinRequestService.getJoinRequestsByTeam(teamId);
       return NextResponse.json(joinRequests);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async getJoinRequestById(req: NextRequest, { params }: { params: { teamId: string; id: string } }): Promise<NextResponse> {
+  async getJoinRequestById(req: NextRequest, { params }: { params: Promise<{ teamId: string; id: string }> }): Promise<NextResponse> {
     try {
-      const joinRequest = await this.joinRequestService.getJoinRequestById(params.id);
+      const { teamId, id } = await params;
+      const joinRequest = await this.joinRequestService.getJoinRequestById(id);
       if (!joinRequest) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
       // Validate that the join request belongs to the specified team
-      if (joinRequest.teamId !== params.teamId) {
+      if (joinRequest.teamId !== teamId) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
       return NextResponse.json(joinRequest);
@@ -48,69 +53,80 @@ export class TeamJoinRequestController {
     }
   }
 
-  async updateJoinRequest(req: NextRequest, { params }: { params: { teamId: string; id: string } }): Promise<NextResponse> {
+  async updateJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string; id: string }> }): Promise<NextResponse> {
     try {
+      const { teamId, id } = await params;
       const body = await req.json();
-      const joinRequest = await this.joinRequestService.getJoinRequestById(params.id);
+      const joinRequest = await this.joinRequestService.getJoinRequestById(id);
       if (!joinRequest) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
       // Validate that the join request belongs to the specified team
-      if (joinRequest.teamId !== params.teamId) {
+      if (joinRequest.teamId !== teamId) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
-      const updatedJoinRequest = await this.joinRequestService.updateJoinRequest(params.id, body);
+      const updatedJoinRequest = await this.joinRequestService.updateJoinRequest(id, body);
       return NextResponse.json(updatedJoinRequest);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async deleteJoinRequest(req: NextRequest, { params }: { params: { teamId: string; id: string } }): Promise<NextResponse> {
+  async deleteJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string; id: string }> }): Promise<NextResponse> {
     try {
-      const joinRequest = await this.joinRequestService.getJoinRequestById(params.id);
+      const { teamId, id } = await params;
+      const joinRequest = await this.joinRequestService.getJoinRequestById(id);
       if (!joinRequest) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
       // Validate that the join request belongs to the specified team
-      if (joinRequest.teamId !== params.teamId) {
+      if (joinRequest.teamId !== teamId) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
-      const success = await this.joinRequestService.deleteJoinRequest(params.id);
+      const success = await this.joinRequestService.deleteJoinRequest(id);
       return NextResponse.json({ message: 'Join request deleted successfully' });
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async approveJoinRequest(req: NextRequest, { params }: { params: { teamId: string; id: string } }): Promise<NextResponse> {
+  async approveJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string; requestId: string }> }): Promise<NextResponse> {
     try {
-      const joinRequest = await this.joinRequestService.getJoinRequestById(params.id);
-      if (!joinRequest) {
-        return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
+      const { teamId, requestId } = await params;
+      const updatedJoinRequest = await this.joinRequestService.approveJoinRequest(requestId);
+      if (!updatedJoinRequest) {
+        return NextResponse.json({ error: 'Failed to approve join request' }, { status: 500 });
       }
-      // Validate that the join request belongs to the specified team
-      if (joinRequest.teamId !== params.teamId) {
-        return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
+
+      const teamMember = await this.teamMemberService.createTeamMember({
+        teamId: teamId,
+        userId: updatedJoinRequest.requestedBy,
+        role: updatedJoinRequest.role || 'athlete',
+        status: 'active',
+        joinedAt: new Date(),
+      });
+
+
+      if (!teamMember) {
+        return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 });
       }
-      const updatedJoinRequest = await this.joinRequestService.approveJoinRequest(params.id);
-      return NextResponse.json(updatedJoinRequest);
+
+      return NextResponse.json(teamMember);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
 
-  async rejectJoinRequest(req: NextRequest, { params }: { params: { teamId: string; id: string } }): Promise<NextResponse> {
+  async rejectJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string; requestId: string }> }): Promise<NextResponse> {
     try {
-      const joinRequest = await this.joinRequestService.getJoinRequestById(params.id);
-      if (!joinRequest) {
-        return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
+      const { teamId, requestId } = await params;
+      const body = await req.json();
+
+      const updatedJoinRequest = await this.joinRequestService.rejectJoinRequest(requestId, body);
+      if (!updatedJoinRequest) {
+        return NextResponse.json({ error: 'Failed to reject join request' }, { status: 500 });
       }
-      // Validate that the join request belongs to the specified team
-      if (joinRequest.teamId !== params.teamId) {
-        return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
-      }
-      const updatedJoinRequest = await this.joinRequestService.rejectJoinRequest(params.id);
+
       return NextResponse.json(updatedJoinRequest);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
@@ -125,5 +141,5 @@ export class TeamJoinRequestController {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   }
-  
+
 }
