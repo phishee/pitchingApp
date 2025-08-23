@@ -111,7 +111,6 @@ export function CreateTeam({ onNext }: CreateTeamProps) {
         updatedAt: new Date()
       };
 
-      console.log('Setting organization data:', organizationData);
       setOrganizationData(organizationData);
 
       // 2. Update team data with organization reference and generated code
@@ -123,7 +122,6 @@ export function CreateTeam({ onNext }: CreateTeamProps) {
         updatedAt: new Date()
       };
 
-      console.log('Setting team data:', updatedTeamData);
       setTeamData(updatedTeamData);
 
       // 3. Update user to be admin
@@ -133,7 +131,6 @@ export function CreateTeam({ onNext }: CreateTeamProps) {
         currentOrganizationId: '' // Will be set when organization is created in handleFinish
       };
 
-      console.log('Updating user data:', updatedUserData);
       setUserData(updatedUserData);
 
       // 4. Set team member data - IMPORTANT: This is where the team member is created
@@ -147,11 +144,7 @@ export function CreateTeam({ onNext }: CreateTeamProps) {
         updatedAt: new Date()
       };
 
-      console.log('Setting team member data:', teamMemberData);
       setTeamMemberData(teamMemberData);
-
-      console.log('Team data setup completed successfully');
-      console.log('teamMemberData in context after setting:', teamMemberData);
 
       // Mark step as complete
       setIsStepComplete(true);

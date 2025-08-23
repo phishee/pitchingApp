@@ -58,8 +58,8 @@ export const teamMemberApi = {
   },
 
   // Get team invitations by team ID
-  async getTeamInvitationsByTeam(teamId: string): Promise<TeamInvitation[]> {
-    const res = await axios.get<TeamInvitation[]>(`${TEAM_API_BASE}/${teamId}/invitations`);
+  async getTeamInvitationsByTeam(teamId: string): Promise<TeamInvitationWithTeamUserInfo[]> {
+    const res = await axios.get<TeamInvitationWithTeamUserInfo[]>(`${TEAM_API_BASE}/${teamId}/invitations`);
     return res.data;
   },
 

@@ -4,7 +4,6 @@ import '@/css/styles.css';
 import { cn } from '@/lib/utils'; // Utility for className merging (optional)
 import { OrganizationProvider } from '@/providers/organization-context';
 import { AuthProvider } from '@/providers/auth-context';
-import { OnboardingProvider } from '@/providers/onboarding-context';
 import { UserProvider } from '@/providers/user.context';
 import { TeamProvider } from '@/providers/team-context';
 

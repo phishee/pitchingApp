@@ -9,7 +9,7 @@ import {
   useReactTable,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Search, X, Check, XCircle, ChevronRight, UserCheck, UserX } from 'lucide-react';
+import { Search, X, ChevronRight, UserCheck, UserX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

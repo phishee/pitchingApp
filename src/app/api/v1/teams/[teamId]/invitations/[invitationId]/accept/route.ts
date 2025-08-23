@@ -5,8 +5,7 @@ import container from "@/app/api/lib/container";
 import { TEAM_INVITATION_TYPES } from "@/app/api/lib/symbols/Symbols";
 import { TeamInvitationController } from "@/app/api/lib/controllers/teamInvitation.controller";
 
-export async function POST(req: NextRequest, context: { params: { teamId: string; invitationId: string } }) {
-    const { params } = await context;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ teamId: string; invitationId: string }> }) {
     const invitationController = container.get<TeamInvitationController>(TEAM_INVITATION_TYPES.TeamInvitationController);
     return invitationController.acceptInvitation(req, { params });
 }

@@ -4,7 +4,7 @@ import React, { useState, createContext, useContext, useEffect } from 'react';
 import { useAuth } from './auth-context';
 import { User } from '@/models/User';
 import { Organization } from '@/models/Organization';
-import { Team, TeamMember, TeamJoinRequest, TeamInvitation } from '@/models';
+import { Team, TeamMember, TeamJoinRequest } from '@/models';
 import { userApi } from '@/app/services-client/userApi';
 import { teamApi } from '@/app/services-client/teamApi';
 import { organizationApi } from '@/app/services-client/organizationApi';
@@ -65,23 +65,13 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
   
   const handleFinish = async () => {
     try {
-      console.log('Starting handleFinish with data:', {
-        organizationData,
-        teamData,
-        userData,
-        teamMemberData,
-        joinRequestData
-      });
-
       let createdUser: User | null = null;
       let createdOrganization: Organization | null = null;
       let createdTeam: Team | null = null;
 
       // 1. Create organization first (if exists)
       if (organizationData) {
-        console.log('Creating organization:', organizationData);
-        createdOrganization = await organizationApi.createOrganization(organizationData);
-        console.log('Created organization:', createdOrganization);
+        createdOrganization = await organizationApi.createOrganization(organizationData);  
       }
 
       // 2. Create team (if exists) - needs organizationId if organization was created
@@ -90,9 +80,7 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
           ...teamData,
           organizationId: createdOrganization?._id || teamData.organizationId
         };
-        console.log('Creating team:', teamDataWithOrg);
         createdTeam = await teamApi.createTeam(teamDataWithOrg);
-        console.log('Created team:', createdTeam);
       }
 
       // 3. Create user - needs organizationId and teamId if they exist
@@ -101,9 +89,7 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
           ...userData,
           currentOrganizationId: createdOrganization?._id || userData.currentOrganizationId
         };
-        console.log('Creating user:', userDataWithRefs);
         createdUser = await userApi.createUser(userDataWithRefs);
-        console.log('Created user:', createdUser);
       }
 
       // 4. Create team member (if exists) - needs teamId and userId
@@ -113,16 +99,8 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
           teamId: createdTeam._id,
           userId: createdUser.userId
         };
-        console.log('Creating team member:', teamMemberWithRefs);
         const createdTeamMember = await teamMemberApi.createTeamMember(teamMemberWithRefs);
-        console.log('Created team member:', createdTeamMember);
-      } else {
-        console.log('Skipping team member creation:', {
-          hasTeamMemberData: !!teamMemberData,
-          hasCreatedTeam: !!createdTeam,
-          hasCreatedUser: !!createdUser
-        });
-      }
+      } 
 
       // 5. Create join request (if exists) - needs teamId and userId
       if (joinRequestData && createdUser) {
@@ -130,7 +108,6 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
           ...joinRequestData,
           requestedBy: createdUser.userId
         };
-        console.log('Creating join request:', joinRequestWithRefs);
         await teamApi.createJoinRequest(joinRequestWithRefs);
       }
 
@@ -144,7 +121,6 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
 
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      // Handle error (show toast, etc.)
     }
   };
   

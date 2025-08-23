@@ -6,7 +6,7 @@ import { useTeam } from '@/providers/team-context';
 import { LoadingSpinner } from '../loading-spinner';
 
 function NoTeamAthlete() {
-    const { pendingJoinRequest, pendingInvitation, isLoading } = useTeam();
+    const { pendingJoinRequest, currentUserPendingInvitations, isLoading } = useTeam();
 
     if (isLoading) {
         return <LoadingSpinner message="Loading team data..." />;
@@ -16,8 +16,8 @@ function NoTeamAthlete() {
         <div className='h-full w-full flex items-center justify-center'>
             <div className='flex flex-col gap-4'>
                 {pendingJoinRequest && <PendingRequest />}
-                {pendingInvitation && <TeamInvitation />}
-                {(!pendingJoinRequest && !pendingInvitation) && <TeamSearchRequest />}
+                {currentUserPendingInvitations && currentUserPendingInvitations.length > 0 && <TeamInvitation />}
+                {(!pendingJoinRequest && (!currentUserPendingInvitations || currentUserPendingInvitations.length === 0)) && <TeamSearchRequest />}
             </div>
         </div>
     )

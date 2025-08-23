@@ -1,128 +1,194 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from './user.context';
-import { Team, TeamMember, TeamInvitation, TeamJoinRequest, TeamMemberWithUser, TeamJoinRequestWithTeamUserInfo } from '@/models';
+import { Team, TeamInvitation, TeamMemberWithUser, TeamJoinRequestWithTeamUserInfo, TeamInvitationWithTeamUserInfo } from '@/models';
 import { teamMemberApi } from '@/app/services-client/teamMemberApi';
 import { teamApi } from '@/app/services-client/teamApi';
-import { usePathname } from 'next/navigation';
-// import { Partial<TeamInvitation>, Partial<TeamJoinRequest> } from '@/models';
+import { teamInvitationApi } from '@/app/services-client/teamInvitationApi';
 
 export type UserTeamStatus = 'no-team' | 'pending-request' | 'pending-invitation' | 'team-member';
 
-interface TeamContextType {
-  // Team state
+interface TeamState {
+  // User team status
   userTeamStatus: UserTeamStatus;
-  currentTeam: Team | null;
-  currentTeamMember: Partial<TeamMemberWithUser> | null;
-  allTeams: Team[]; // All teams the user is part of (for coaches)
-  allTeamMembers: Partial<TeamMemberWithUser>[]; // All team memberships (for coaches)
-  teamMembers: Partial<TeamMemberWithUser>[]; // Team members for the current team
-  pendingInvitation: TeamInvitation | null;
+  currentUserPendingInvitations: Partial<TeamInvitationWithTeamUserInfo>[] | null;
   pendingJoinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null;
   teamToJoin: Team | null;
-  setPendingJoinRequest: (joinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null) => void;
-  setTeamMembers: (members: Partial<TeamMemberWithUser>[]) => void;
-  loadTeamMembers: (teamId?: string) => Promise<void>;
-  loadTeamRequests: (teamId?: string) => Promise<void>;
 
-  // Team actions
-  loadTeamData: () => Promise<void>;
-  joinTeam: (teamCode: string) => Promise<void>;
-  acceptInvitation: (invitationId: string) => Promise<void>;
-  rejectInvitation: (invitationId: string) => Promise<void>;
-  searchTeamByCode: (code: string) => Promise<void>;
-  leaveTeam: () => Promise<void>;
-  switchTeam: (teamId: string) => Promise<void>; // Switch current team (for coaches)
+  // Current team
+  currentTeam: Team | null;
+  currentTeamMember: Partial<TeamMemberWithUser> | null;
+  teamMembers: Partial<TeamMemberWithUser>[];
+  teamInvitations: Partial<TeamInvitationWithTeamUserInfo>[];
+  teamRequests: Partial<TeamJoinRequestWithTeamUserInfo>[];
 
-  // State management
+  // All teams (for coaches)
+  allTeams: Team[];
+  allTeamMembers: Partial<TeamMemberWithUser>[];
+
+  // Loading states
   isLoading: boolean;
   error: string;
-  clearError: () => void;
+}
 
-  // New properties
-  teamInvitations: Partial<TeamInvitation>[];
-  teamRequests: Partial<TeamJoinRequestWithTeamUserInfo>[];
-  setTeamInvitations: (invitations: Partial<TeamInvitation>[]) => void;
-  setTeamRequests: (requests: Partial<TeamJoinRequestWithTeamUserInfo>[]) => void;
+interface TeamContextType extends TeamState {
+  // Actions
+  loadTeamData: () => Promise<void>;
+  joinTeam: (teamCode: string) => Promise<void>;
+  acceptInvitation: (invitationId: string, teamId: string) => Promise<void>;
+  rejectInvitation: (invitationId: string, teamId: string) => Promise<void>;
+  searchTeamByCode: (code: string) => Promise<void>;
+  leaveTeam: () => Promise<void>;
+  switchTeam: (teamId: string) => Promise<void>;
+  sendTeamInvitations: (invitations: Partial<TeamInvitationWithTeamUserInfo>[]) => Promise<TeamInvitationWithTeamUserInfo[]>;
+  clearError: () => void;
+  
+  // Team data loading functions
+  loadTeamMembers: (teamId?: string) => Promise<void>;
+  loadTeamRequests: (teamId?: string) => Promise<void>;
+  
+  // State setters (only expose what's needed)
+  setPendingJoinRequest: (joinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null) => void;
+  setCurrentUserPendingInvitations: (invitations: Partial<TeamInvitationWithTeamUserInfo>[] | null) => void;
 }
 
 const TeamContext = createContext<TeamContextType | null>(null);
 
+const initialState: TeamState = {
+  userTeamStatus: 'no-team',
+  currentUserPendingInvitations: null,
+  pendingJoinRequest: null,
+  teamToJoin: null,
+  currentTeam: null,
+  currentTeamMember: null,
+  teamMembers: [],
+  teamInvitations: [],
+  teamRequests: [],
+  allTeams: [],
+  allTeamMembers: [],
+  isLoading: true,
+  error: '',
+};
+
 export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
-  const pathname = usePathname();
+  const [state, setState] = useState<TeamState>(initialState);
+  
+  // Use ref to track if data is being loaded to prevent duplicate calls
+  const loadingRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
-  const [userTeamStatus, setUserTeamStatus] = useState<UserTeamStatus>('no-team');
-  const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
-  const [currentTeamMember, setCurrentTeamMember] = useState<Partial<TeamMemberWithUser> | null>(null);
-  const [allTeams, setAllTeams] = useState<Team[]>([]);
-  const [allTeamMembers, setAllTeamMembers] = useState<Partial<TeamMemberWithUser>[]>([]);
-  const [pendingInvitation, setPendingInvitation] = useState<TeamInvitation | null>(null);
-  const [pendingJoinRequest, setPendingJoinRequest] = useState<Partial<TeamJoinRequestWithTeamUserInfo> | null>(null);
-  const [teamToJoin, setTeamToJoin] = useState<Team | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [teamInvitations, setTeamInvitations] = useState<Partial<TeamInvitation>[]>([]);
-  const [teamRequests, setTeamRequests] = useState<Partial<TeamJoinRequestWithTeamUserInfo>[]>([]);
-  const [teamMembers, setTeamMembers] = useState<Partial<TeamMemberWithUser>[]>([]);
+  // Centralized state updater
+  const updateState = useCallback((updates: Partial<TeamState>) => {
+    setState(prev => ({ ...prev, ...updates }));
+  }, []);
 
+  // Helper function to load team-specific data
+  const loadTeamSpecificData = useCallback(async (teamId: string) => {
+    try {
+      const [members, invitations, requests] = await Promise.all([
+        teamMemberApi.getTeamMembersByTeam(teamId).catch(() => []),
+        teamMemberApi.getTeamInvitationsByTeam(teamId).catch(() => []),
+        teamMemberApi.getTeamRequestsByTeam(teamId).catch(() => [])
+      ]);
 
-  const loadTeamData = useCallback(async () => {
-    if (!user?.userId) return;
+      updateState({
+        teamMembers: members,
+        teamInvitations: invitations,
+        teamRequests: requests,
+      });
+    } catch (error) {
+      console.error('Error loading team specific data:', error);
+    }
+  }, [updateState]);
+
+  // Load user's pending invitations
+  const loadUserInvitations = useCallback(async (userId: string) => {
+    try {
+      const invitations = await teamInvitationApi.getInvitationsByUser(userId);
+      const pendingInvitations = invitations?.filter(inv => inv.status === 'pending') || [];
+      
+      updateState({ 
+        currentUserPendingInvitations: pendingInvitations,
+        userTeamStatus: pendingInvitations.length > 0 ? 'pending-invitation' : 'no-team'
+      });
+    } catch (error) {
+      console.error('Error loading user invitations:', error);
+    }
+  }, [updateState]);
+
+  // Load team members for a specific team
+  const loadTeamMembers = useCallback(async (teamId?: string) => {
+    const targetTeamId = teamId || state.currentTeam?._id;
+    if (!targetTeamId) return;
 
     try {
-      setIsLoading(true);
-      setError('');
+      const members = await teamMemberApi.getTeamMembersByTeam(targetTeamId);
+      updateState({ teamMembers: members });
+    } catch (error) {
+      console.error('Error loading team members:', error);
+    }
+  }, [state.currentTeam, updateState]);
+
+  // Load team requests for a specific team
+  const loadTeamRequests = useCallback(async (teamId?: string) => {
+    const targetTeamId = teamId || state.currentTeam?._id;
+    if (!targetTeamId) return;
+
+    try {
+      const requests = await teamMemberApi.getTeamRequestsByTeam(targetTeamId);
+      updateState({ teamRequests: requests });
+    } catch (error) {
+      console.error('Error loading team requests:', error);
+    }
+  }, [state.currentTeam, updateState]);
+
+  // Main data loading function
+  const loadTeamData = useCallback(async () => {
+    if (!user?.userId || loadingRef.current) return;
+
+    // Prevent duplicate calls
+    loadingRef.current = true;
+    
+    try {
+      updateState({ isLoading: true, error: '' });
 
       // Get all team memberships for the user
       const teamMembers = await teamMemberApi.getTeamMembersByUser(user.userId);
       const activeTeamMembers = teamMembers?.filter(member => member.status === 'active') || [];
 
       if (activeTeamMembers.length > 0) {
-        setAllTeamMembers(activeTeamMembers);
-
-        // Load all teams for the user
-        const teams = await Promise.all(
-          activeTeamMembers.map(async (member) => {
-            try {
-              return await teamApi.getTeam(member.teamId);
-            } catch (error) {
-              console.error(`Error loading team ${member.teamId}:`, error);
-              return null;
-            }
+        // Load all teams for active memberships
+        const teamPromises = activeTeamMembers.map(member => 
+          teamApi.getTeam(member.teamId).catch(error => {
+            console.error(`Error loading team ${member.teamId}:`, error);
+            return null;
           })
         );
 
-        const validTeams = teams.filter(team => team !== null) as Team[];
-        setAllTeams(validTeams);
+        const teams = await Promise.all(teamPromises);
+        const validTeams = teams.filter(Boolean) as Team[];
 
-        if (user.role === 'athlete') {
-          // Athletes can only have one active team
-          const athleteTeam = validTeams[0];
-          const athleteMember = activeTeamMembers[0];
+        updateState({
+          allTeams: validTeams,
+          allTeamMembers: activeTeamMembers,
+        });
 
-          if (athleteTeam && athleteMember) {
-            setCurrentTeam(athleteTeam);
-            setCurrentTeamMember(athleteMember);
-            setUserTeamStatus('team-member');
-            loadTeamMembers(athleteTeam._id);
-            loadTeamRequests(athleteTeam._id);
-            return;
-          }
-        } else if (user.role === 'coach') {
-          // Coaches can have multiple teams - set the first one as current
-          const coachTeam = validTeams[0];
-          const coachMember = activeTeamMembers[0];
+        // Set current team based on user role
+        const currentTeam = validTeams[0];
+        const currentTeamMember = activeTeamMembers[0];
 
-          if (coachTeam && coachMember) {
-            setCurrentTeam(coachTeam);
-            setCurrentTeamMember(coachMember);
-            setUserTeamStatus('team-member');
-            loadTeamMembers(coachTeam._id);
-            loadTeamRequests(coachTeam._id);
-            return;
-          }
+        if (currentTeam && currentTeamMember) {
+          updateState({
+            currentTeam,
+            currentTeamMember,
+            userTeamStatus: 'team-member',
+          });
+
+          // Load team-specific data
+          await loadTeamSpecificData(currentTeam._id);
+          return;
         }
       }
 
@@ -132,170 +198,222 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
         const pendingRequest = joinRequests?.find(request => request.status === 'pending');
 
         if (pendingRequest) {
-          // const team = await teamApi.getTeam(pendingRequest.teamId);
-          // const pendingRequestWithTeamUserInfo = {
-          //   ...pendingRequest,
-          //   team: team,
-          //   user: user
-          // }
-          setPendingJoinRequest(pendingRequest);
-          setUserTeamStatus('pending-request');
+          updateState({
+            pendingJoinRequest: pendingRequest,
+            userTeamStatus: 'pending-request',
+          });
           return;
         }
       } catch (error) {
         console.error('Error loading join requests:', error);
-        // Continue to next step if join requests fail
       }
 
       // Check for pending invitations
-      // ... invitation logic ...
+      await loadUserInvitations(user.userId);
 
-      setUserTeamStatus('no-team');
     } catch (error) {
       console.error('Error loading team data:', error);
-      setError('Failed to load team data');
+      updateState({ error: 'Failed to load team data' });
     } finally {
-      setIsLoading(false);
+      updateState({ isLoading: false });
+      loadingRef.current = false;
     }
-  }, [user?.userId]);
+  }, [user?.userId, updateState, loadTeamSpecificData, loadUserInvitations]);
 
-  const loadTeamMembers = async (teamId?: string) => {
-    const targetTeamId = teamId || currentTeam?._id;
-    if (targetTeamId) {
-      const teamMembers = await teamMemberApi.getTeamMembersByTeam(targetTeamId);
-      console.log('teamMembers***Ha', teamMembers);
-      setTeamMembers(teamMembers);
-    }
-  }
-
-  const loadTeamInvitations = async (teamId: string) => {
-    const teamInvitations = await teamMemberApi.getTeamInvitationsByTeam(teamId);
-    console.log('teamInvitations***Ha', teamInvitations);
-    setTeamInvitations(teamInvitations);
-  }
-
-  const loadTeamRequests = async (teamId?: string) => {
-    const targetTeamId = teamId || currentTeam?._id;
-    if (targetTeamId) {
-      const teamRequests = await teamMemberApi.getTeamRequestsByTeam(targetTeamId);
-      console.log('teamRequests***Ha', teamRequests);
-      setTeamRequests(teamRequests);
-    }
-  }
-
-  useEffect(() => {
-    if (user?.userId) {
-      loadTeamData();
-    }
-  }, [user?.userId, loadTeamData]); // Only run when user changes or on mount
-
-  const switchTeam = async (teamId: string) => {
+  // Switch team (for coaches)
+  const switchTeam = useCallback(async (teamId: string) => {
     if (!user || user.role !== 'coach') return;
 
     try {
-      setIsLoading(true);
-      setError('');
+      updateState({ isLoading: true, error: '' });
 
-      // Find the team member record for this team
-      const teamMember = allTeamMembers.find(member => member.teamId === teamId);
-      if (!teamMember) {
-        throw new Error('Team member not found');
+      const teamMember = state.allTeamMembers.find(member => member.teamId === teamId);
+      const team = state.allTeams.find(t => t._id === teamId);
+
+      if (!teamMember || !team) {
+        throw new Error('Team or team member not found');
       }
 
-      // Find the team
-      const team = allTeams.find(t => t._id === teamId);
-      if (!team) {
-        throw new Error('Team not found');
-      }
+      updateState({
+        currentTeam: team,
+        currentTeamMember: teamMember,
+      });
 
-      // Switch to this team
-      setCurrentTeam(team);
-      setCurrentTeamMember(teamMember);
-
-      // load team info
-      // await loadTeamData();
-      loadTeamMembers(teamId);
-      loadTeamInvitations(teamId);
-      loadTeamRequests(teamId);
+      await loadTeamSpecificData(teamId);
     } catch (error) {
       console.error('Error switching team:', error);
-      setError('Failed to switch team');
+      updateState({ error: 'Failed to switch team' });
     } finally {
-      setIsLoading(false);
+      updateState({ isLoading: false });
     }
-  };
+  }, [user, state.allTeamMembers, state.allTeams, updateState, loadTeamSpecificData]);
 
-  const joinTeam = async (teamCode: string) => {
-    // ... join team logic ...
-  };
+  // Send team invitations
+  const sendTeamInvitations = useCallback(async (invitations: Partial<TeamInvitation>[]): Promise<TeamInvitationWithTeamUserInfo[]> => {
+    if (!state.currentTeam?._id) {
+      throw new Error('No current team selected');
+    }
 
-  const acceptInvitation = async (invitationId: string) => {
-    // ... accept invitation logic ...
-  };
+    try {
+      const createdInvitations = await Promise.all(
+        invitations.map(invitation => {
+          const invitationData = {
+            ...invitation,
+            teamId: state.currentTeam!._id,
+            invitedAt: new Date(),
+            status: 'pending' as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          return teamInvitationApi.createInvitation(state.currentTeam!._id, invitationData);
+        })
+      );
 
-  const rejectInvitation = async (invitationId: string) => {
-    // ... reject invitation logic ...
-  };
+      // Refresh team invitations to get the latest data with user info
+      const refreshedInvitations = await teamMemberApi.getTeamInvitationsByTeam(state.currentTeam._id);
+      
+      // Update local state with refreshed data
+      updateState({
+        teamInvitations: refreshedInvitations,
+      });
 
-  const searchTeamByCode = async (code: string) => {
-    const team = await teamApi.getTeamByCode(code);
-    setTeamToJoin(team);
-  };
+      return createdInvitations;
+    } catch (error) {
+      console.error('Error sending team invitations:', error);
+      throw error;
+    }
+  }, [state.currentTeam, updateState]);
 
-  const leaveTeam = async () => {
-    // ... leave team logic ...
-  };
-
-  const clearError = () => setError('');
-
-  // Add this to your existing TeamProvider, keep everything else unchanged
-
-  // ADD THIS - Reset function
-  const resetTeamState = () => {
-    setUserTeamStatus('no-team');
-    setCurrentTeam(null);
-    setCurrentTeamMember(null);
-    setAllTeams([]);
-    setAllTeamMembers([]);
-    setPendingInvitation(null);
-    setPendingJoinRequest(null);
-    setTeamToJoin(null);
-    setIsLoading(true); // Change from false to true
-    setError('');
-  };
-
-  // ADD THIS - Listen for logout event
-  useEffect(() => {
-    const handleLogout = () => {
-      resetTeamState();
-    };
-
-    window.addEventListener('auth:logout', handleLogout);
-    return () => window.removeEventListener('auth:logout', handleLogout);
+  // Placeholder functions for incomplete implementations
+  const joinTeam = useCallback(async (teamCode: string) => {
+    // TODO: Implement join team logic
   }, []);
 
-  // ADD THIS - Also reset when user becomes null (backup)
-  useEffect(() => {
-    if (!user) {
-      resetTeamState();
+  const acceptInvitation = useCallback(async (invitationId: string, teamId: string) => {
+    if (!teamId) {
+      throw new Error('No current team selected');
     }
-  }, [user]);
 
-  useEffect(() => {
-    if (pendingJoinRequest) {
-      console.log('pendingJoinRequest***', pendingJoinRequest);
+    try {
+      updateState({ isLoading: true, error: '' });
+
+      // Accept the invitation
+      await teamInvitationApi.acceptInvitation(teamId, invitationId);
+
+      // Remove the accepted invitation from pending invitations
+      if (state.currentUserPendingInvitations) {
+        const updatedPendingInvitations = state.currentUserPendingInvitations.filter(
+          inv => inv._id !== invitationId
+        );
+        
+        updateState({ 
+          currentUserPendingInvitations: updatedPendingInvitations.length > 0 
+            ? updatedPendingInvitations 
+            : null 
+        });
+      }
+
+      // Refresh team data to get the new member and updated invitations
+      await loadTeamData();
+
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      updateState({ error: 'Failed to accept invitation' });
+      throw error;
+    } finally {
+      updateState({ isLoading: false });
     }
-  }, [pendingJoinRequest]);
+  }, [state.currentTeam, updateState, loadTeamData, loadTeamSpecificData]);
 
-  const value = {
-    userTeamStatus,
-    currentTeam,
-    currentTeamMember,
-    allTeams,
-    allTeamMembers,
-    pendingInvitation,
-    pendingJoinRequest,
-    teamToJoin,
+  const rejectInvitation = useCallback(async (invitationId: string, teamId: string) => {
+    if (!teamId) {
+      throw new Error('No current team selected');
+    }
+
+    try {
+      updateState({ isLoading: true, error: '' });
+
+      // Reject the invitation
+      await teamInvitationApi.rejectInvitation(teamId, invitationId);
+
+      // Remove the rejected invitation from pending invitations
+      if (state.currentUserPendingInvitations) {
+        const updatedPendingInvitations = state.currentUserPendingInvitations.filter(
+          inv => inv._id !== invitationId
+        );
+        
+        updateState({ 
+          currentUserPendingInvitations: updatedPendingInvitations.length > 0 
+            ? updatedPendingInvitations 
+            : null 
+        });
+      }
+
+      // Refresh team data to get the updated invitations
+      await loadTeamData();
+
+    } catch (error) {
+      console.error('Error rejecting invitation:', error);
+      updateState({ error: 'Failed to reject invitation' });
+      throw error;
+    } finally {
+      updateState({ isLoading: false });
+    }
+  }, [state.currentUserPendingInvitations, updateState, loadTeamData]);
+
+  const searchTeamByCode = useCallback(async (code: string) => {
+    try {
+      const team = await teamApi.getTeamByCode(code);
+      updateState({ teamToJoin: team });
+    } catch (error) {
+      console.error('Error searching team by code:', error);
+      updateState({ error: 'Team not found' });
+    }
+  }, [updateState]);
+
+  const leaveTeam = useCallback(async () => {
+    // TODO: Implement leave team logic
+  }, []);
+
+  const clearError = useCallback(() => {
+    updateState({ error: '' });
+  }, [updateState]);
+
+  // Reset state helper
+  const resetState = useCallback(() => {
+    setState(initialState);
+    loadingRef.current = false;
+    lastUserIdRef.current = null;
+  }, []);
+
+  // Effect for user changes - only reload if user actually changed
+  useEffect(() => {
+    if (user?.userId && user.userId !== lastUserIdRef.current) {
+      lastUserIdRef.current = user.userId;
+      loadTeamData();
+    } else if (!user) {
+      resetState();
+    }
+  }, [user?.userId, loadTeamData, resetState]);
+
+  // Logout event listener
+  useEffect(() => {
+    const handleLogout = () => resetState();
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, [resetState]);
+
+  // Simple setters for external state updates
+  const setPendingJoinRequest = useCallback((joinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null) => {
+    updateState({ pendingJoinRequest: joinRequest });
+  }, [updateState]);
+
+  const setCurrentUserPendingInvitations = useCallback((invitations: Partial<TeamInvitationWithTeamUserInfo>[] | null) => {
+    updateState({ currentUserPendingInvitations: invitations });
+  }, [updateState]);
+
+  const contextValue: TeamContextType = {
+    ...state,
     loadTeamData,
     joinTeam,
     acceptInvitation,
@@ -303,22 +421,16 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
     searchTeamByCode,
     switchTeam,
     leaveTeam,
-    isLoading,
-    error,
+    sendTeamInvitations,
     clearError,
-    setPendingJoinRequest,
-    teamInvitations,
-    teamRequests,
-    setTeamInvitations,
-    setTeamRequests,
-    teamMembers,
-    setTeamMembers,
     loadTeamMembers,
     loadTeamRequests,
+    setPendingJoinRequest,
+    setCurrentUserPendingInvitations,
   };
 
   return (
-    <TeamContext.Provider value={value}>
+    <TeamContext.Provider value={contextValue}>
       {children}
     </TeamContext.Provider>
   );

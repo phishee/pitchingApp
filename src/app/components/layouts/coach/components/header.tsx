@@ -4,12 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { toAbsoluteUrl } from '@/lib/helpers';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
 import { Container } from '@/components/common/container';
 
 export function Header() {
-  const isMobile = useIsMobile();
   const pathname = usePathname();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
