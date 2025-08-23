@@ -30,6 +30,12 @@ export const userApi = {
     return res.data;
   },
 
+  // Search users by email
+  async searchUsersByEmail(email: string): Promise<User[]> {
+    const res = await axios.get<User[]>(`${API_BASE}?email=${encodeURIComponent(email)}`);
+    return res.data;
+  },
+
   // Update a user by ID
   async updateUser(id: string, data: Partial<User>): Promise<User> {
     const res = await axios.put<User>(`${API_BASE}/${id}`, data);

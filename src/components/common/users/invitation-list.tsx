@@ -9,7 +9,7 @@ import {
   useReactTable,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Search, X, XCircle, ChevronRight } from 'lucide-react';
+import { Search, X, XCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,14 +79,12 @@ const InvitationList = ({
 
   const handleCancelConfirm = () => {
     if (invitationToCancel) {
-      console.log('Cancel invitation:', invitationToCancel._id);
       setIsCancelDialogOpen(false);
       setInvitationToCancel(null);
     }
   };
 
   const handleBulkCancelConfirm = () => {
-    console.log('Bulk cancel invitations:', selectedRows);
     setRowSelection({});
     setIsBulkCancelDialogOpen(false);
   };

@@ -118,13 +118,17 @@ export class MongoDBProvider implements IDatabase {
         // Handle _id field conversion
         if (processedQuery._id) {
             if (typeof processedQuery._id === 'string' && ObjectId.isValid(processedQuery._id)) {
+                // Create a fresh ObjectId instance
                 processedQuery._id = new ObjectId(processedQuery._id);
+            } else if (processedQuery._id && typeof processedQuery._id === 'object' && processedQuery._id._bsontype === 'ObjectID') {
+                // If it's already an ObjectId, ensure it's properly formatted
+                processedQuery._id = new ObjectId(processedQuery._id.toString());
             }
         }
 
         // Handle nested objects (for complex queries)
         for (const [key, value] of Object.entries(processedQuery)) {
-            if (value && typeof value === 'object' && !Array.isArray(value)) {
+            if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof ObjectId)) {
                 processedQuery[key] = this.processQuery(value);
             }
         }

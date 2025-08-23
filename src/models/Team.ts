@@ -52,6 +52,7 @@ export interface TeamInvitation { // invite a user to a team
 export interface TeamInvitationWithTeamUserInfo extends TeamInvitation {
   user?: Partial<User>;
   team?: Partial<Team>;
+  invitedByUser?: Partial<User>;
 }
 
 export interface TeamJoinRequest { // request to join a team

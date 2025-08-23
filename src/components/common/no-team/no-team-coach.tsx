@@ -66,7 +66,7 @@ function CoachOptions() {
 
 function NoTeamAthlete() {
     const { user } = useUser()
-    const { pendingInvitation, pendingJoinRequest, isLoading } = useTeam();
+    const { currentUserPendingInvitations: pendingInvitation, pendingJoinRequest, isLoading } = useTeam();
 
     const isCoach = user?.role === 'coach'; // Adjust this based on your user role structure
 

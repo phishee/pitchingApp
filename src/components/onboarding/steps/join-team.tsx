@@ -8,9 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, X } from 'lucide-react';
 import { teamApi } from '@/app/services-client/teamApi';
-import { Team } from '@/models';
 import { useOnboarding } from '@/providers/onboarding-context';
-import Image from 'next/image';
 
 interface JoinTeamProps {
   onNext?: () => void;

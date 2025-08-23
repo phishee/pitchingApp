@@ -23,6 +23,16 @@ export class UserController {
 
   async getUsers(req: NextRequest): Promise<NextResponse> {
     try {
+      const { searchParams } = new URL(req.url);
+      const email = searchParams.get('email');
+      
+      if (email) {
+        // Handle search by email
+        const users = await this.userService.searchUsersByEmail(email.trim());
+        return NextResponse.json(users);
+      }
+      
+      // Handle regular GET all users
       const users = await this.userService.listUsers();
       return NextResponse.json(users);
     } catch (err: any) {

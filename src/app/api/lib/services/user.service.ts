@@ -34,4 +34,14 @@ export class UserService {
   async deleteUser(id: string): Promise<boolean> {
     return this.userRepo.delete(this.userCollection, id);
   }
+
+  async searchUsersByEmail(email: string): Promise<Partial<User>[]> {
+    try {
+      const users = await this.userRepo.findQuery(this.userCollection, { email: { $regex: email, $options: 'i' } });
+      return users;
+    } catch (error) {
+      console.error('Error searching users by email:', error);
+      throw error;
+    }
+  }
 }

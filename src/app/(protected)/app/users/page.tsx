@@ -1,8 +1,7 @@
 'use client'
 import UserList from '@/components/common/users/user-list'
-import React, { useContext, useState, useMemo } from 'react'
-import { teamMembers, pendingRequests, teamInvitations } from '@/data/fakeUser'
-import { PopulatedTeamMember, TeamInvitation } from '@/models';
+import React, { useState, useMemo } from 'react'
+import {  TeamInvitation } from '@/models';
 import { useTeam } from '@/providers/team-context';
 import { PlusIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,15 +13,12 @@ import InviteUserModal from '@/components/common/users/invite-user-modal';
 
 function UserPage() {
   //get the json ready to be used as a list of team members
-  const { currentTeamMember, teamInvitations, setTeamInvitations, teamMembers, teamRequests } = useTeam();
+  const { currentTeamMember, teamInvitations, teamMembers, teamRequests, sendTeamInvitations, currentTeam } = useTeam();
   const [activeTab, setActiveTab] = useState('all');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
-  const handleInviteUser = (invitation: Partial<TeamInvitation>) => {
-    console.log('Inviting user:', invitation);
-    // Here you would make the API call to send the invitation
-    // For now, just add it to the local state
-    setTeamInvitations([...teamInvitations, invitation]);
+  const handleInviteUser = async (invitation: Partial<TeamInvitation>[]) => {
+    await sendTeamInvitations(invitation);
     setIsInviteModalOpen(false);
   };
 
@@ -59,7 +55,6 @@ function UserPage() {
             <Button
               className='rounded-full'
               onClick={() => setIsInviteModalOpen(true)}
-              disabled
             >
               <PlusIcon className="w-4 h-4" />
               Add Member
@@ -67,12 +62,6 @@ function UserPage() {
           )}
         </div>
       </div>
-
-      {/* {currentTeamMember?.role === 'coach' && (
-        <div className="flex flex-col gap-4">
-          <CoachFilter />
-        </div>
-      )} */}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex w-auto bg-transparent border-b border-border/20">
@@ -153,7 +142,7 @@ function UserPage() {
         existingInvitations={teamInvitations}
         existingMembers={teamMembers.filter(m => m.userId).map(m => m.userId!)}
         onInviteUser={handleInviteUser}
-        teamId="your-team-id" // Replace with actual team ID
+        teamId={currentTeam?._id || ''} // Replace with actual team ID
         invitedBy={currentTeamMember?.userId || ''}
       />
     </div>

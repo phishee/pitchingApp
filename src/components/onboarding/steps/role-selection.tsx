@@ -17,11 +17,6 @@ export function RoleSelection({ userData, setUserData, onNext }: RoleSelectionPr
     onNext();
   };
 
-  const handleAdminSelect = () => {
-    setUserData({ ...userData, role: 'coach', isAdmin: true });
-    onNext();
-  };
-
   return (
     <div className="h-full flex flex-col justify-center">
       <div className="w-full space-y-8">

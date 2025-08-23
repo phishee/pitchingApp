@@ -94,14 +94,12 @@ const PlayerList = ({
 
   const handleRemoveConfirm = () => {
     if (memberToRemove) {
-      console.log('Remove user:', memberToRemove.userId);
       setIsRemoveDialogOpen(false);
       setMemberToRemove(null);
     }
   };
 
   const handleBulkRemoveConfirm = () => {
-    console.log('Bulk remove users:', selectedRows);
     setRowSelection({});
     setIsBulkRemoveDialogOpen(false);
   };

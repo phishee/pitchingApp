@@ -32,8 +32,6 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
     setTheme(checked ? 'dark' : 'light');
   };
 
-  console.log('user', user); 
-
   const getInitials = (name?: string) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();

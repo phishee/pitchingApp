@@ -45,10 +45,6 @@ const UserList = ({
 }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Add console.log to debug
-  console.log('UserList data:', data);
-  console.log('UserList type:', type);
-
   const filteredData = useMemo(() => {
     if (!searchQuery) return data;
     
