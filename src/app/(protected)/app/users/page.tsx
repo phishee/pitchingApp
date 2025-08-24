@@ -19,9 +19,8 @@ function UserPage() {
 
   const handleInviteUser = async (invitations: Partial<TeamInvitation>[]) => {
     console.log('🎯 UserPage: handleInviteUser called with:', invitations.length, 'invitations');
-    console.log('🔍 UserPage call stack:', new Error().stack); // ✅ Add this
-    
-    const result = await sendTeamInvitations(invitations);
+    console.log('🔍 UserPage call stack:', new Error().stack);
+    await sendTeamInvitations(invitations);
     console.log('✅ UserPage: sendTeamInvitations completed');
     setIsInviteModalOpen(false);
   };
