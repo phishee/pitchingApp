@@ -1,5 +1,3 @@
-import { Collection, Document } from "mongodb";
-
 export interface IDatabase {
     findAll(collection: string): Promise<any[]>;
     findQuery(collection: string, query: any): Promise<any[]>;

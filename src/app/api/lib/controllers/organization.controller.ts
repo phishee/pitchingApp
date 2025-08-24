@@ -16,17 +16,19 @@ export class OrganizationController {
       const body = await req.json();
       const organization = await this.organizationService.createOrganization(body);
       return NextResponse.json(organization, { status: 201 });
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
-  async getOrganizations(req: NextRequest): Promise<NextResponse> {
+  async getOrganizations(_req: NextRequest): Promise<NextResponse> { // Fix: Prefix unused param with underscore
     try {
       const organizations = await this.organizationService.listOrganizations();
       return NextResponse.json(organizations);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -38,8 +40,9 @@ export class OrganizationController {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
       return NextResponse.json(organization);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -52,8 +55,9 @@ export class OrganizationController {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
       return NextResponse.json(organization);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -65,8 +69,9 @@ export class OrganizationController {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
       return NextResponse.json({ message: 'Organization deleted successfully' });
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -75,8 +80,9 @@ export class OrganizationController {
       const { createdBy } = await params;
       const organizations = await this.organizationService.getOrganizationsByCreator(createdBy);
       return NextResponse.json(organizations);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -85,8 +91,9 @@ export class OrganizationController {
       const { id } = await params;
       const teams = await this.organizationService.getOrganizationTeams(id);
       return NextResponse.json(teams);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -95,8 +102,9 @@ export class OrganizationController {
       const { id } = await params;
       const members = await this.organizationService.getOrganizationMembers(id);
       return NextResponse.json(members);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -115,8 +123,9 @@ export class OrganizationController {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
       return NextResponse.json(organization);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 }

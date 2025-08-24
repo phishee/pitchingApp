@@ -1,13 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './auth-context';
 import { User } from '@/models';
 import { userApi } from '@/app/services-client/userApi';
 
 interface UserContextType {
   user: Partial<User> | null;
-  setUser: (user: Partial<User> | null) => void; // Partial<User> is used to allow partial updates
+  setUser: (user: Partial<User> | null) => void;
   isLoading: boolean;
   error: string;
   loadUserData: () => Promise<void>;
@@ -16,34 +16,36 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { userFromFirebase, token } = useAuth();
+  const { userFromFirebase } = useAuth();
   const [user, setUser] = useState<Partial<User> | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Start with true
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Add ref to track if we're already loading to prevent duplicate calls
+  const loadingRef = useRef(false);
+  const lastFirebaseUidRef = useRef<string | null>(null);
 
-  // Reset function for logout
-  const resetUserState = () => {
+  // Reset function for logout - make it stable with useCallback
+  const resetUserState = useCallback(() => {
     setUser(null);
-    setIsLoading(true); // Reset to loading when clearing
+    setIsLoading(true);
     setError('');
-  };
-
-  // Listen for logout event
-  useEffect(() => {
-    const handleLogout = () => {
-      resetUserState();
-    };
-
-    window.addEventListener('auth:logout', handleLogout);
-    return () => window.removeEventListener('auth:logout', handleLogout);
+    loadingRef.current = false;
+    lastFirebaseUidRef.current = null;
   }, []);
 
-  const loadUserData = async () => {
-    if (!userFromFirebase?.uid) {
-      setUser(null);
-      setIsLoading(false); // No Firebase user, stop loading
+  // Make loadUserData stable with useCallback and proper dependencies
+  const loadUserData = useCallback(async () => {
+    if (!userFromFirebase?.uid || loadingRef.current) {
+      if (!userFromFirebase?.uid) {
+        setUser(null);
+        setIsLoading(false);
+      }
       return;
     }
+
+    // Prevent duplicate calls
+    loadingRef.current = true;
 
     try {
       setIsLoading(true);
@@ -55,33 +57,50 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (error.response?.status === 404) {
         // User doesn't exist in DB yet (probably in onboarding)
         setUser(null);
+      } else if (error.code === 'ERR_NETWORK') {
+        // Network error - don't retry, just set error state
+        console.error('Network error loading user:', error);
+        setError('Network error - please check your connection');
+        setUser(null);
       } else {
         console.error('Error loading user:', error);
         setError('Failed to load user data');
       }
     } finally {
       setIsLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [userFromFirebase?.uid]); // Only depend on the actual UID
 
-  // Load user data when Firebase user changes
+  // Listen for logout event
   useEffect(() => {
-    if (userFromFirebase) {
+    const handleLogout = () => {
+      resetUserState();
+    };
+
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, [resetUserState]);
+
+  // Load user data when Firebase user changes - but only when it actually changes
+  useEffect(() => {
+    const currentUid = userFromFirebase?.uid || null;
+    
+    // Only load if the UID actually changed
+    if (currentUid && currentUid !== lastFirebaseUidRef.current) {
+      lastFirebaseUidRef.current = currentUid;
       loadUserData();
-    } else {
+    } else if (!currentUid && lastFirebaseUidRef.current !== null) {
+      // User logged out
+      lastFirebaseUidRef.current = null;
       setUser(null);
       setIsLoading(false);
+      loadingRef.current = false;
     }
-  }, [userFromFirebase]);
+  }, [userFromFirebase?.uid, loadUserData]);
 
-  // Also reset when userFromFirebase becomes null (backup)
-  useEffect(() => {
-    if (!userFromFirebase) {
-      resetUserState();
-      setIsLoading(false); // Stop loading when no Firebase user
-    }
-  }, [userFromFirebase]);
-
+  // Remove the duplicate effect - it's redundant with the above effect
+  
   const value: UserContextType = {
     user,
     isLoading,

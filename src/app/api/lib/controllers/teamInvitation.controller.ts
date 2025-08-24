@@ -72,7 +72,7 @@ export class TeamInvitationController {
     }
   }
 
-  async deleteInvitation(req: NextRequest, { params }: { params: Promise<{ teamId: string; invitationId: string }> }): Promise<NextResponse> {
+  async deleteInvitation(_req: NextRequest, { params }: { params: Promise<{ teamId: string; invitationId: string }> }): Promise<NextResponse> { // Fix: Prefix unused param with underscore
     try {
       const { teamId, invitationId } = await params;
       const invitation = await this.invitationService.getInvitationById(invitationId);
@@ -83,7 +83,7 @@ export class TeamInvitationController {
       if (invitation.teamId !== teamId) {
         return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
       }
-      const success = await this.invitationService.deleteInvitation(invitationId);
+      await this.invitationService.deleteInvitation(invitationId); 
       return NextResponse.json({ message: 'Invitation deleted successfully' });
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });

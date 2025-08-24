@@ -7,17 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload } from 'lucide-react';
+import { Organization } from '@/models';
 
 interface OrganizationSetupProps {
-  organizationData: any;
-  setOrganizationData: any;
+  organizationData: Partial<Organization> | null;
+  setOrganizationData: (data: Partial<Organization> & { createdAt: Date; updatedAt: Date }) => void;
 }
 
 export function OrganizationSetup({ organizationData, setOrganizationData }: OrganizationSetupProps) {
   const [org, setOrg] = useState({
     name: organizationData?.name || '',
     description: organizationData?.description || '',
-    type: organizationData?.type || '',
+    type: organizationData?.type || 'school' as 'school' | 'club' | 'academy' | 'other',
     logoUrl: organizationData?.logoUrl || '',
   });
 

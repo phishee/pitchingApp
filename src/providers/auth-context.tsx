@@ -14,7 +14,6 @@ import {
   onIdTokenChanged
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { User } from '@/models';
 import { userApi } from '@/app/services-client/userApi';
 import { useRouter } from 'next/navigation';
 import { usePathname } from "next/navigation";
@@ -40,9 +39,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Default profile image path
-const DEFAULT_PROFILE_IMAGE = '/assets/images/default_profile.png';
-
 // Token storage keys
 const TOKEN_KEY = 'firebase_id_token';
 const ONBOARDING_COMPLETE_KEY = 'onboarding_complete';
@@ -53,15 +49,6 @@ const saveToken = (token: string) => {
     localStorage.setItem(TOKEN_KEY, token);
   } catch (error) {
     console.error('Error saving token:', error);
-  }
-};
-
-const getStoredToken = (): string | null => {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch (error) {
-    console.error('Error getting stored token:', error);
-    return null;
   }
 };
 
@@ -81,14 +68,6 @@ const isOnboardingComplete = (): boolean => {
   }
 };
 
-const setOnboardingComplete = () => {
-  try {
-    localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
-  } catch (error) {
-    console.error('Error setting onboarding complete:', error);
-  }
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userFromFirebase, setUserFromFirebase] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,6 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Listen for auth state and token changes
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('Auth state changed:', firebaseUser?.uid);
+      
       // Always set the Firebase user state first
       setUserFromFirebase(firebaseUser);
       
@@ -108,30 +89,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const idToken = await getIdToken(firebaseUser, true);
           setToken(idToken);
           saveToken(idToken);
-
-          // Check if user exists in your DB
-          let user = null;
-          try {
-            user = await userApi.getUser(firebaseUser.uid);
-          } catch (err: any) {
-            if (err.response && err.response.status !== 404) {
-              throw err; // Only ignore 404, rethrow other errors
-            }
-          }
-
-          if (user) {
-            // User exists in DB - navigate to dashboard if on auth pages
-            if (pathname === "/login" || pathname === "/onboarding") {
-              router.push("/app/dashboard");
-            } else {
-              router.push(pathname)
-            }
-          } else {
-            // User not found in DB - go to onboarding
-            router.push("/onboarding");
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+          
+          // Set onboarding status from localStorage
+          const onboardingStatus = isOnboardingComplete();
+          setOnboardingCompleteState(onboardingStatus);
+          
+          // Don't fetch user data here - let UserProvider handle it
+          // Just handle token and basic auth state
+          
+        } catch (error: any) {
+          console.error('Error getting token:', error);
           setToken(null);
           clearTokens();
         }
@@ -164,22 +131,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribeAuth();
       unsubscribeToken();
     };
-  }, []);
+  }, [pathname, router]);
 
-  const navigateAfterLogin = async(userFromFirebase: FirebaseUser) => {
+  // Separate function to handle navigation after login/signup
+  const navigateAfterAuth = async (firebaseUser: FirebaseUser) => {
     try {
-      const user = await userApi.getUser(userFromFirebase?.uid || "");
+      // Check if user exists in database
+      const user = await userApi.getUser(firebaseUser.uid);
       if (user) {
+        // User exists - go to dashboard
         router.push('/app/dashboard');
-      }
-    } catch (error: any) {
-      if(error.status === 404) {
-        setUserFromFirebase(userFromFirebase);
+      } else {
+        // User doesn't exist - go to onboarding
         router.push('/onboarding');
       }
-     
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // User not found - go to onboarding
+        router.push('/onboarding');
+      } else {
+        console.error('Error checking user:', error);
+        // On other errors, still try to go to onboarding
+        router.push('/onboarding');
+      }
     }
-  }
+  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -194,8 +170,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check onboarding status
       const onboardingStatus = isOnboardingComplete();
       setOnboardingCompleteState(onboardingStatus);
-      navigateAfterLogin(userCredential.user);
-    } catch (error) {
+      
+      // Navigate based on user status
+      await navigateAfterAuth(userCredential.user);
+    } catch (error: any) {
       console.error('Login failed:', error);
       throw error;
     } finally {
@@ -205,17 +183,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // ADD THIS LINE - Dispatch logout event to clear all provider data
+      // Dispatch logout event to clear all provider data
       window.dispatchEvent(new CustomEvent('auth:logout'));
       
-      // Keep all your existing logout logic exactly the same
+      // Firebase sign out
       await signOut(auth);
       setUserFromFirebase(null);
       setIsLoading(false);
       setToken(null);
       setOnboardingCompleteState(false);
+      clearTokens();
+      
+      // Navigate to sign-in
       router.push('/sign-in');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during logout:', error);
     }
   };
@@ -234,9 +215,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const idToken = await getIdToken(userCredential.user);
       setToken(idToken);
       saveToken(idToken);
-      navigateAfterLogin(userCredential.user);
+      
       setOnboardingCompleteState(false);
-    } catch (error) {
+      
+      // Navigate based on user status
+      await navigateAfterAuth(userCredential.user);
+    } catch (error: any) {
       console.error('Signup failed:', error);
       throw error;
     } finally {
@@ -255,12 +239,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(idToken);
       saveToken(idToken);
 
-      navigateAfterLogin(userCredential.user);
-      
       // Check if this is a new user (no onboarding complete flag)
       const onboardingStatus = isOnboardingComplete();
       setOnboardingCompleteState(onboardingStatus);
-    } catch (error) {
+      
+      // Navigate based on user status
+      await navigateAfterAuth(userCredential.user);
+    } catch (error: any) {
       console.error('Google sign-in failed:', error);
       throw error;
     } finally {
@@ -278,17 +263,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return idToken;
       }
       return null;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refreshing token:', error);
       return null;
     }
   };
-
-  // const updateUser = (userData: Partial<User>) => {
-  //   // if (user) {
-  //   //   setUser({ ...user, ...userData });
-  //   // }
-  // };
 
   const value = {
     userFromFirebase,
@@ -301,9 +280,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     signup,
     signInWithGoogle,
-    // updateUser,
     refreshToken,
-    // setUser, // This line is removed as per the new AuthContext
   };
 
   return (
@@ -319,4 +296,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}

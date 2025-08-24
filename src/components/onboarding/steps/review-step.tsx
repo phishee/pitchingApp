@@ -3,13 +3,14 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, User, Shield, Check } from 'lucide-react';
+import { Users, User as UserIcon, Shield, Check } from 'lucide-react';
+import { User, Organization, Team, TeamJoinRequest } from '@/models';
 
 interface ReviewStepProps {
-  userData: any;
-  organizationData: any;
-  teamData: any;
-  joinRequestData: any;
+  userData: Partial<User> | null;
+  organizationData: Partial<Organization> | null;
+  teamData: Partial<Team> | null;
+  joinRequestData: Partial<TeamJoinRequest> | null;
 }
 
 export function ReviewStep({ userData, organizationData, teamData, joinRequestData }: ReviewStepProps) {
@@ -26,7 +27,7 @@ export function ReviewStep({ userData, organizationData, teamData, joinRequestDa
           <Card>
             <CardContent className="p-6">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <User className="w-4 h-4" />
+                <UserIcon className="w-4 h-4" />
                 Personal Information
               </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -115,7 +116,7 @@ export function ReviewStep({ userData, organizationData, teamData, joinRequestDa
             <Card>
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <User className="w-4 h-4" />
+                  <UserIcon className="w-4 h-4" />
                   Team Join Request
                 </h3>
                 <div className="flex items-center gap-2">

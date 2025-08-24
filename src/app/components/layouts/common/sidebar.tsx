@@ -4,7 +4,6 @@ import { SidebarFooter } from './sidebar-footer';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarMenu } from '../coach/components/sidebar-menu';
 import { TeamSwitcher } from '@/components/common/team-switcher';
-import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/providers/user.context';
 
 export function Sidebar() {

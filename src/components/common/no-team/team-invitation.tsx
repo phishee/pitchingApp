@@ -19,6 +19,7 @@ import { Mail, CheckCircle, X, User, Trophy } from 'lucide-react';
 import { useTeam } from '@/providers/team-context';
 import { TeamInvitationWithTeamUserInfo, User as UserType } from '@/models';
 import { teamInvitationApi } from '@/app/services-client/teamInvitationApi';
+import Image from 'next/image';
 
 function TeamInvitation() {
   const [isLoading, setIsLoading] = useState(false);
@@ -99,15 +100,12 @@ function TeamInvitation() {
         {team && (
           <div className="flex items-center justify-center mb-6 gap-4">
             {team.logoUrl ? (
-              <img 
-                src={team.logoUrl} 
-                alt={team.name} 
-                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-md" 
-                onError={(e) => {
-                  // Fallback if image fails to load
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
+              <Image
+                src={team.logoUrl}
+                alt={team.name}
+                width={80}
+                height={80}
+                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-md"
               />
             ) : null}
             {/* Fallback text logo if no logo or logo fails to load */}
@@ -128,9 +126,11 @@ function TeamInvitation() {
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-center gap-3 mb-2">
               {invitedByUser.profileImageUrl ? (
-                <img 
-                  src={invitedByUser.profileImageUrl} 
+                <Image
+                  src={invitedByUser.profileImageUrl}
                   alt={`${invitedByUser.name}`}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (

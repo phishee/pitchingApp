@@ -21,6 +21,7 @@ export interface User {
   experience?: string;
   certifications?: string;
   philosophy?: string;
+  phoneNumber?: string;
 }
 
 export interface UserProfile {

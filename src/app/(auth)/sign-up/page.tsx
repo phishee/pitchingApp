@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { AlertCircle, Check, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Alert, AlertIcon, AlertTitle } from "@/components/ui/alert";
@@ -22,7 +21,6 @@ import { Icons } from "@/components/common/icons";
 import { useAuth } from "@/providers/auth-context";
 
 export default function Page() {
-  const router = useRouter();
   const { signup, signInWithGoogle, isLoading } = useAuth();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [passwordConfirmationVisible, setPasswordConfirmationVisible] = useState(false);
@@ -48,21 +46,20 @@ export default function Page() {
     try {
       const { email, password, name} = form.getValues();
       setError(null);
-
       await signup(email, password, name);
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Signup failed");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Signup failed";
+      setError(errorMessage);
     }
   };
 
   const handleGoogleSignup = async () => {
     try {
-      const { role } = form.getValues();
       await signInWithGoogle();
-      // router.push("/onboarding"); // TODO: Redirect to dashboard after onboarding
-    } catch (err: any) {
-      setError(err.message || "Google sign-in failed");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";
+      setError(errorMessage);
     }
   };
 

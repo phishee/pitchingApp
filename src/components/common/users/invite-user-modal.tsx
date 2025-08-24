@@ -178,6 +178,8 @@ const InviteUserModal = ({
   };
 
   const handleSendInvitations = () => {
+    console.log('🚀 InviteUserModal: handleSendInvitations called at:', new Date().toISOString()); // ✅ Add timestamp
+    
     const selectedUsersList = Array.from(selectedUsers);
     const invitations: Partial<TeamInvitation>[] = [];
     
@@ -225,6 +227,8 @@ const InviteUserModal = ({
       }
     });
 
+    console.log('📧 InviteUserModal: Sending invitations:', invitations.length); // ✅ Log count
+    
     // Call the appropriate callback with the entire array
     if (mode === 'onboarding') {
       onAddMember?.(invitations);

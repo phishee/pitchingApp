@@ -9,6 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 export function SidebarFooter() {
   const { user } = useUser();
   
+  // Add this debug log
+  console.log(' SidebarFooter user data:', {
+    profileImageUrl: user?.profileImageUrl,
+    name: user?.name,
+    email: user?.email,
+    fullUser: user
+  });
+
   const getInitials = (name?: string) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -21,9 +29,10 @@ export function SidebarFooter() {
           trigger={
             <div className="flex gap-2">
               <Avatar className="size-9 shrink-0 cursor-pointer">
-                {user?.profileImageUrl && user.profileImageUrl.trim() !== '' && (
-                  <AvatarImage src={user.profileImageUrl} alt="User Avatar" />
-                )}
+                <AvatarImage 
+                  src={user?.profileImageUrl} // Test with a known working image
+                  alt="User Avatar"
+                />
                 <AvatarFallback className="text-sm font-semibold">
                   {getInitials(user?.name)}
                 </AvatarFallback>

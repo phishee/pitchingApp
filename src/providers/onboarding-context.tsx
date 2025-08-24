@@ -99,7 +99,7 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
           teamId: createdTeam._id,
           userId: createdUser.userId
         };
-        const createdTeamMember = await teamMemberApi.createTeamMember(teamMemberWithRefs);
+        await teamMemberApi.createTeamMember(teamMemberWithRefs);
       } 
 
       // 5. Create join request (if exists) - needs teamId and userId
