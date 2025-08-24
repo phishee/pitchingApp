@@ -6,13 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Users, User } from 'lucide-react';
 
 interface RoleSelectionProps {
-  userData: any;
-  setUserData: any;
+  userData: { role?: string; isAdmin?: boolean; [key: string]: any }; // Fix: Replace 'any' with specific type
+  setUserData: (data: { role?: string; isAdmin?: boolean; [key: string]: any }) => void; // Fix: Replace 'any' with specific function type
   onNext: () => void;
 }
 
 export function RoleSelection({ userData, setUserData, onNext }: RoleSelectionProps) {
-  const handleRoleSelect = (role: string) => {
+  const handleRoleSelect = (role: 'athlete' | 'coach') => { // Fix: Make role parameter more specific
     setUserData({ ...userData, role, isAdmin: false });
     onNext();
   };
@@ -21,7 +21,7 @@ export function RoleSelection({ userData, setUserData, onNext }: RoleSelectionPr
     <div className="h-full flex flex-col justify-center">
       <div className="w-full space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold">Welcome! What's your role?</h2>
+          <h2 className="text-3xl font-bold">Welcome! What&apos;s your role?</h2> {/* Fix: Escape apostrophe */}
           <p className="text-gray-600">This helps us customize your experience</p>
         </div>
 

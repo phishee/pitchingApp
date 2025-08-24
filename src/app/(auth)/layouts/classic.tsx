@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Card, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
 
 export function ClassicLayout({ children }: { children: ReactNode }) {
   return (
@@ -19,10 +20,12 @@ export function ClassicLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-col items-center justify-center grow bg-center bg-no-repeat page-bg">
         <div className="m-5">
           <Link href="/">
-            <img
+            <Image
               src={toAbsoluteUrl('/media/app/mini-logo.svg')}
+              alt="Logo"
+              width={35}
+              height={35}
               className="h-[35px] max-w-none"
-              alt=""
             />
           </Link>
         </div>

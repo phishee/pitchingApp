@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Users, Trophy, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface TeamSwitcherProps {
   className?: string;
@@ -32,9 +33,11 @@ const TeamLogoOrIcon = ({
   if (team.logoUrl && team.logoUrl.trim() !== '') {
     return (
       <div className={cn("flex items-center justify-center", containerSize, containerBgColor, "rounded-full overflow-hidden")}>
-        <img
+        <Image
           src={team.logoUrl}
           alt={`${team.name} logo`}
+          width={100}
+          height={100}
           className="w-full h-full object-cover"
         />
       </div>

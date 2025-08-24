@@ -21,8 +21,9 @@ export class TeamJoinRequestController {
       const joinRequestData = { ...body, teamId };
       const joinRequest = await this.joinRequestService.createJoinRequest(joinRequestData);
       return NextResponse.json(joinRequest, { status: 201 });
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -31,8 +32,9 @@ export class TeamJoinRequestController {
       const { teamId } = await params;
       const joinRequests = await this.joinRequestService.getJoinRequestsByTeam(teamId);
       return NextResponse.json(joinRequests);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -48,8 +50,9 @@ export class TeamJoinRequestController {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
       return NextResponse.json(joinRequest);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -67,8 +70,9 @@ export class TeamJoinRequestController {
       }
       const updatedJoinRequest = await this.joinRequestService.updateJoinRequest(id, body);
       return NextResponse.json(updatedJoinRequest);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
@@ -83,7 +87,7 @@ export class TeamJoinRequestController {
       if (joinRequest.teamId !== teamId) {
         return NextResponse.json({ error: 'Join request not found' }, { status: 404 });
       }
-      const success = await this.joinRequestService.deleteJoinRequest(id);
+      await this.joinRequestService.deleteJoinRequest(id); // Remove unused 'success' variable
       return NextResponse.json({ message: 'Join request deleted successfully' });
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 500 });
@@ -106,20 +110,20 @@ export class TeamJoinRequestController {
         joinedAt: new Date(),
       });
 
-
       if (!teamMember) {
         return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 });
       }
 
       return NextResponse.json(teamMember);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
 
   async rejectJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string; requestId: string }> }): Promise<NextResponse> {
     try {
-      const { teamId, requestId } = await params;
+      const { requestId } = await params; // Remove unused 'teamId' variable
       const body = await req.json();
 
       const updatedJoinRequest = await this.joinRequestService.rejectJoinRequest(requestId, body);
@@ -137,9 +141,9 @@ export class TeamJoinRequestController {
     try {
       const joinRequests = await this.joinRequestService.getJoinRequestsByUser(userId);
       return NextResponse.json(joinRequests);
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
-
 }

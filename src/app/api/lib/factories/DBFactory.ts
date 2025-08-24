@@ -2,7 +2,7 @@
 import { injectable, inject } from "inversify";
 import { DB_TYPES } from "../symbols/Symbols";
 import type { IDatabase } from "../interfaces/database/IDatabase";
-import {MongoDBProvider} from "../providers/mongoDb.provider";
+// Remove unused import: MongoDBProvider
 
 @injectable()
 export class DBProviderFactory {
@@ -11,7 +11,7 @@ export class DBProviderFactory {
         this.dbStrategy = process.env.DB_STRATEGY || "mongodb";
     }
 
-    createDBProvider(collectionName?: string): IDatabase {
+    createDBProvider(): IDatabase { // Remove unused collectionName parameter
         switch (this.dbStrategy) {
             case "mongodb":
                 return this.mongoDbProvider;

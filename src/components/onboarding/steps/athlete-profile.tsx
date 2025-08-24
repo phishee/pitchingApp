@@ -18,7 +18,7 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
     heightFeet: userData?.heightFeet || '',
     heightInches: userData?.heightInches || '',
     weight: userData?.weight || '',
-    throwingHand: userData?.throwingHand || '',
+    throwHand: userData?.throwHand || '',
     battingStance: userData?.battingStance || '',
     phoneNumber: userData?.phoneNumber || '',
   });
@@ -26,7 +26,7 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
   const [errors, setErrors] = useState({
     position: false,
     dateOfBirth: false,
-    throwingHand: false,
+    throwHand: false,
     phoneNumber: false,
   });
 
@@ -47,8 +47,8 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
     const newErrors = {
       position: !profile.position,
       dateOfBirth: !profile.dateOfBirth,
-      throwingHand: !profile.throwingHand,
-      // phoneNumber: !profile.phoneNumber,
+      throwHand: !profile.throwHand,
+      phoneNumber: !profile.phoneNumber,
     };
     
     setErrors(newErrors);
@@ -58,7 +58,7 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
   // Validate on mount and when required fields change
   useEffect(() => {
     validateRequiredFields();
-  }, [profile.position, profile.dateOfBirth, profile.throwingHand, profile.phoneNumber]);
+  }, [profile.position, profile.dateOfBirth, profile.throwHand, profile.phoneNumber]);
 
   return (
     <div className="h-full flex flex-col justify-center">
@@ -184,10 +184,10 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
               <span className="text-red-500">*</span>
             </Label>
             <Select 
-              value={profile.throwingHand} 
-              onValueChange={(value) => handleProfileChange('throwingHand', value)}
+              value={profile.throwHand} 
+              onValueChange={(value) => handleProfileChange('throwHand', value)}
             >
-              <SelectTrigger className={errors.throwingHand ? "border-red-500 focus:border-red-500" : ""}>
+              <SelectTrigger className={errors.throwHand ? "border-red-500 focus:border-red-500" : ""}>
                 <SelectValue placeholder="Select hand" />
               </SelectTrigger>
               <SelectContent>
@@ -195,7 +195,7 @@ export function AthleteProfile({ userData, setUserData }: AthleteProfileProps) {
                 <SelectItem value="left">Left</SelectItem>
               </SelectContent>
             </Select>
-            {errors.throwingHand && (
+            {errors.throwHand && (
               <p className="text-sm text-red-500">Throwing hand is required</p>
             )}
           </div>

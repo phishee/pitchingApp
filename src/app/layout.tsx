@@ -6,6 +6,7 @@ import { OrganizationProvider } from '@/providers/organization-context';
 import { AuthProvider } from '@/providers/auth-context';
 import { UserProvider } from '@/providers/user.context';
 import { TeamProvider } from '@/providers/team-context';
+import { AuthRedirectHandler } from '@/providers/auth-redirect-handler-context';
 
 export default function RootLayout({
   children,
@@ -25,7 +26,9 @@ export default function RootLayout({
             <OrganizationProvider>
               <TeamProvider>
               <ThemeProvider>
+                <AuthRedirectHandler>
                 {children}
+                </AuthRedirectHandler>
               </ThemeProvider>
               </TeamProvider>
             </OrganizationProvider>

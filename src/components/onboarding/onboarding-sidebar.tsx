@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { Check } from 'lucide-react';
+import Image from 'next/image';
 
 type Step = {
   id: string;
@@ -27,7 +28,13 @@ export function OnboardingSidebar({ steps, currentStepIndex, userData, showWelco
         <div className="p-6">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-              <img src="/assets/images/logo-3.png" alt="Logo" className="w-6 h-6 rounded" />
+              <Image 
+                src="/assets/images/logo-3.png" 
+                alt="Logo" 
+                width={24} 
+                height={24} 
+                className="w-6 h-6 rounded" 
+              />
             </div>
             <span className="text-xl font-bold text-white">Optimal Throws</span>
           </div>
@@ -43,9 +50,11 @@ export function OnboardingSidebar({ steps, currentStepIndex, userData, showWelco
             </p>
             <div className="mt-8">
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                <img 
+                <Image 
                   src={userData?.profileImageUrl || '/assets/images/default_profile.png'} 
                   alt="Profile" 
+                  width={72}  // ✅ Add width (w-18 = 72px)
+                  height={72} // ✅ Add height (h-18 = 72px)
                   className="w-18 h-18 rounded-full"
                 />
               </div>
@@ -61,7 +70,13 @@ export function OnboardingSidebar({ steps, currentStepIndex, userData, showWelco
       <div className="p-6">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <img src="/assets/images/logo-3.png" alt="Logo" className="w-6 h-6 rounded" />
+            <Image 
+              src="/assets/images/logo-3.png" 
+              alt="Logo" 
+              width={24} 
+              height={24} 
+              className="w-6 h-6 rounded" 
+            />
           </div>
           <span className="text-xl font-bold text-gray-900">Optimal Throws</span>
         </div>

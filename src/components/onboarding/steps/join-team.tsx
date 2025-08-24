@@ -9,9 +9,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Check, X } from 'lucide-react';
 import { teamApi } from '@/app/services-client/teamApi';
 import { useOnboarding } from '@/providers/onboarding-context';
+import Image from 'next/image';
 
 interface JoinTeamProps {
-  onNext?: () => void;
+  onNext: () => void; // Make sure this is required, not optional
 }
 
 interface TeamInfo {
@@ -22,6 +23,7 @@ interface TeamInfo {
 }
 
 export function JoinTeam({ onNext }: JoinTeamProps) {
+  console.log('🔍 JoinTeam props:', { onNext }); // Add this debug log
   const [teamCode, setTeamCode] = useState('');
   const [teamInfo, setTeamInfo] = useState<TeamInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +41,7 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
         logoUrl: teamToJoin.logoUrl || ''
       });
     }
-  }, []);
+  }, [joinRequestData, teamInfo, teamToJoin]);
 
   const handleFetchTeam = async () => {
     setIsLoading(true);
@@ -76,6 +78,7 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
       
       setJoinRequestData(joinRequest);
       setHasRequested(true);
+      onNext();
     }
   };
 
@@ -86,15 +89,35 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
     setTeamInfo(null);
   };
 
+  const handleSkip = () => {
+    console.log('🔄 Skip button clicked'); // Add this debug log
+    
+    // Clear any existing data
+    setJoinRequestData(null);
+    setHasRequested(false);
+    setTeamToJoin(null);
+    setTeamInfo(null);
+    setTeamCode('');
+    
+    console.log('📞 Calling onNext...'); // Add this debug log
+    if (onNext) {
+      onNext();
+    } else {
+      console.error('❌ onNext function is not defined');
+    }
+    console.log('✅ onNext called'); // Add this debug log
+  };
+
   return (
     <div className="h-full flex flex-col justify-center">
       <div className="w-full space-y-8">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold">Join a Team</h2>
-          <p className="text-gray-600">Enter the team code provided by your coach</p>
+          <p className="text-gray-600">Enter the team code provided by your coach, or skip for now</p>
         </div>
 
         <div className="space-y-4 max-w-lg mx-auto">
+          {/* Team code input */}
           <div className="space-y-2">
             <Label htmlFor="code">Team Code</Label>
             <div className="flex gap-2">
@@ -103,12 +126,11 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
                 placeholder="Enter 6-character code"
                 value={teamCode}
                 onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
-                maxLength={6}
                 disabled={hasRequested}
               />
               <Button
                 onClick={handleFetchTeam}
-              // disabled={teamCode.length !== 6 || isLoading || hasRequested}
+                disabled={isLoading || hasRequested}
               >
                 {isLoading ? 'Checking...' : 'Verify'}
               </Button>
@@ -116,21 +138,46 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
             {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
 
+          {/* Skip button - always visible */}
+          <div className="text-center pt-2">
+            <Button 
+              onClick={handleSkip} 
+              variant="outline" 
+              className="w-full bg-gray-500 text-white hover:bg-gray-600"
+            >
+              Skip for Now - I'll join a team later
+            </Button>
+          </div>
+
+          {/* Team info display (only shows after verification) */}
           {teamInfo && (
             <Card className={hasRequested ? "border-green-500 bg-green-50" : "border-primary"}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2">
                   {teamInfo?.logoUrl && (
-                    <img src={teamInfo.logoUrl} alt={teamInfo?.name} width={40} height={40} className="rounded-full" />
+                    <Image src={teamInfo.logoUrl} alt={teamInfo?.name} width={40} height={40} className="rounded-full" />
                   )}
                   <h3 className="text-lg font-semibold mb-2">{teamInfo?.name}</h3>
                 </div>
                 <p className="text-gray-600 mb-4">{teamInfo?.description}</p>
 
                 {!joinRequestData ? (
-                  <Button onClick={handleJoinRequest} className="w-full">
-                    Request to Join
-                  </Button>
+                  <div className="flex gap-3 pt-4">
+                    {teamInfo && (
+                      <Button onClick={handleJoinRequest} className="flex-1">
+                        Request to Join
+                      </Button>
+                    )}
+                    
+                    {/* The original handleSkip button is now moved outside the conditional block */}
+                    {/* <Button 
+                      onClick={handleSkip} 
+                      variant="outline" 
+                      className="flex-1"
+                    >
+                      Skip for Now
+                    </Button> */}
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {/* Success message */}

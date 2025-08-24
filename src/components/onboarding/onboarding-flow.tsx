@@ -170,9 +170,9 @@ export default function OnboardingFlow() {
         break;
       case 'profile':
         if (userData?.role === 'athlete') {
-          isValid = !!(userData?.position && userData?.dateOfBirth && userData?.throwingHand);
+          isValid = !!(userData?.position && userData?.dateOfBirth && userData?.throwHand);
         } else if (userData?.role === 'coach') {
-          isValid = !!(userData?.coachingExperience && userData?.phoneNumber);
+          isValid = !!(userData?.phoneNumber); // ✅ Remove coachingExperience if it doesn't exist
         }
         break;
       case 'team-choice':
@@ -184,15 +184,16 @@ export default function OnboardingFlow() {
       case 'team':
         // This handles both join-team and team-choice scenarios
         if (userData?.role === 'athlete') {
-          // For athletes, check if join request is set up
-          isValid = !!(joinRequestData?.teamId && joinRequestData?.requestedBy);
+          // For athletes, join step is optional - always valid
+          isValid = true; // ✅ Make join step always valid for athletes
         } else if (userData?.role === 'coach') {
           // For coaches, check if team action is selected
           isValid = !!teamAction;
         }
         break;
       case 'join-team':
-        isValid = !!(joinRequestData?.teamId && joinRequestData?.requestedBy);
+        // Join step is optional - always valid
+        isValid = true; // ✅ Make join step always valid
         break;
       case 'organization':
         isValid = true;

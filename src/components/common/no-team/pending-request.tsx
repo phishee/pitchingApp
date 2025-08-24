@@ -18,6 +18,7 @@ import {
 import { Clock, X, CheckCircle } from 'lucide-react';
 import { teamApi } from '@/app/services-client/teamApi';
 import { useTeam } from '@/providers/team-context';
+import Image from 'next/image';
 
 function PendingRequest() {
   const [isLoading, setIsLoading] = useState(false);
@@ -60,9 +61,13 @@ function PendingRequest() {
         {/* //add team name and logo if available */}
         {pendingJoinRequest?.team && (
           <div className="flex items-center justify-center mb-4 gap-4">
-            {pendingJoinRequest.team.logoUrl && (
-              <img src={pendingJoinRequest.team.logoUrl} alt={pendingJoinRequest.team.name} className="w-10 h-10 rounded-full" />
-            )}
+            <Image 
+              src={pendingJoinRequest.team.logoUrl} 
+              alt={pendingJoinRequest.team.name} 
+              width={40} 
+              height={40} 
+              className="w-10 h-10 rounded-full" 
+            />
             <div className="text-black text-center font-semibold text-xl">{pendingJoinRequest.team.name}</div>
           </div>
         )}

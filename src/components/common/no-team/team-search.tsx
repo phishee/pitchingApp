@@ -11,6 +11,7 @@ import { teamApi } from '@/app/services-client/teamApi';
 import { useUser } from '@/providers/user.context';
 import { useTeam } from '@/providers/team-context';
 import { Team } from '@/models';
+import Image from 'next/image';
 
 export default function TeamSearchRequest() {
   const { user } = useUser();
@@ -143,7 +144,13 @@ export default function TeamSearchRequest() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex items-center justify-center">
                   {teamInfo.logoUrl && (
-                    <img src={teamInfo.logoUrl} alt={teamInfo.name} className="w-20 h-20 rounded-full" />
+                    <Image 
+                      src={teamInfo.logoUrl} 
+                      alt={teamInfo.name} 
+                      width={80} 
+                      height={80} 
+                      className="w-20 h-20 rounded-full" 
+                    />
                   )}
                   {!teamInfo.logoUrl && (
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">

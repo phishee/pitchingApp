@@ -6,12 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Users, User } from 'lucide-react';
 
 interface TeamChoiceProps {
-  setTeamAction: any;
+  setTeamAction: (action: 'create' | 'join') => void; 
   onNext: () => void;
 }
 
 export function TeamChoice({ setTeamAction, onNext }: TeamChoiceProps) {
-  const handleChoice = (choice: string) => {
+  const handleChoice = (choice: 'create' | 'join') => {
     setTeamAction(choice);
     onNext();
   };
