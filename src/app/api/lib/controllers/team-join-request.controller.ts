@@ -137,8 +137,9 @@ export class TeamJoinRequestController {
     }
   }
 
-  async getJoinRequestsByUser(req: NextRequest, userId: string): Promise<NextResponse> {
+  async getJoinRequestsByUser(req: NextRequest, context: { params: Promise<{ userId: string }> }): Promise<NextResponse> {
     try {
+      const { userId } = await context.params;
       const joinRequests = await this.joinRequestService.getJoinRequestsByUser(userId);
       return NextResponse.json(joinRequests);
     } catch (err: unknown) { // Fix: Replace 'any' with 'unknown'
