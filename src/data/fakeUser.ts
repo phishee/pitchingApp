@@ -1,5 +1,6 @@
 import { PopulatedTeamMember, TeamInvitationWithTeamUserInfo, TeamJoinRequestWithTeamUserInfo } from '@/models';
 
+//member data for team
 export const teamMembers: PopulatedTeamMember[] = [
   {
     _id: "689281ff9e5253afde54cbc9",
