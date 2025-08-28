@@ -6,7 +6,6 @@ import { TEAM_JOIN_REQUEST_TYPES } from "@/app/api/lib/symbols/Symbols";
 import { TeamJoinRequestController } from "@/app/api/lib/controllers/team-join-request.controller";
 
 export async function POST(req: NextRequest, params: { params: Promise<{ teamId: string }> }) {
-    // const { params } = await context;
     const joinRequestController = container.get<TeamJoinRequestController>(TEAM_JOIN_REQUEST_TYPES.TeamJoinRequestController);
     return joinRequestController.createJoinRequest(req, params);
 }
