@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from './user.context';
-import { Team, TeamInvitation, TeamMemberWithUser, TeamJoinRequestWithTeamUserInfo, TeamInvitationWithTeamUserInfo } from '@/models';
+import { Team, TeamMemberWithUser, TeamJoinRequestWithTeamUserInfo, TeamInvitationWithTeamUserInfo } from '@/models';
 import { teamMemberApi } from '@/app/services-client/teamMemberApi';
 import { teamApi } from '@/app/services-client/teamApi';
 import { teamInvitationApi } from '@/app/services-client/teamInvitationApi';

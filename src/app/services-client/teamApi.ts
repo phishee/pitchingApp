@@ -1,11 +1,11 @@
 // src/services/teamApi.ts
 
 import axios from "axios";
-import { Team, TeamJoinRequest, TeamMember, TeamInvitation } from "@/models";
+import { Team, TeamJoinRequest, TeamInvitation } from "@/models";
 
 
 const API_BASE = "/api/v1/teams";
-const JOIN_REQUEST_BASE = "/api/v1/teams/join-request";
+// const JOIN_REQUEST_BASE = "/api/v1/teams/join-request";
 
 export const teamApi = {
   // Get all teams

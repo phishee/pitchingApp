@@ -5,20 +5,17 @@ import container from "@/app/api/lib/container";
 import { TEAM_MEMBER_TYPES } from "@/app/api/lib/symbols/Symbols";
 import { TeamMemberController } from "@/app/api/lib/controllers/team-member.controller";
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-    const { params } = await context;
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const teamMemberController = container.get<TeamMemberController>(TEAM_MEMBER_TYPES.TeamMemberController);
-    return teamMemberController.getTeamMemberById(req, { params });
+    return teamMemberController.getTeamMemberById(req, context);
 }
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
-    const { params } = await context;
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const teamMemberController = container.get<TeamMemberController>(TEAM_MEMBER_TYPES.TeamMemberController);
-    return teamMemberController.updateTeamMember(req, { params });
+    return teamMemberController.updateTeamMember(req, context);
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
-    const { params } = await context;
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const teamMemberController = container.get<TeamMemberController>(TEAM_MEMBER_TYPES.TeamMemberController);
-    return teamMemberController.deleteTeamMember(req, { params });
+    return teamMemberController.deleteTeamMember(req, context);
 }

@@ -80,8 +80,9 @@ export class TeamMemberController {
     }
   }
 
-  async getTeamMembersByUser(req: NextRequest, userId: string): Promise<NextResponse> {
+  async getTeamMembersByUser(req: NextRequest, { params }: { params: Promise<{ userId: string }> }): Promise<NextResponse> {
     try {
+      const { userId } = await params;
       const teamMembers = await this.teamMemberService.getTeamMembersByUser(userId);
       return NextResponse.json(teamMembers);
     } catch (err: any) {

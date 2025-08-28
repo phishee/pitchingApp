@@ -51,7 +51,10 @@ export function OrganizationSetup({ organizationData, setOrganizationData }: Org
 
           <div className="space-y-2">
             <Label htmlFor="orgType">Organization Type</Label>
-            <Select value={org.type} onValueChange={(value) => setOrg({ ...org, type: value })}>
+            <Select 
+              value={org.type} 
+              onValueChange={(value: string) => setOrg({ ...org, type: value as 'school' | 'club' | 'academy' | 'other' })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>

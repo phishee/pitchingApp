@@ -2,8 +2,7 @@
 import 'reflect-metadata';
 import { ContainerModule, ContainerModuleLoadOptions } from 'inversify';
 import { UserService } from "@/app/api/lib/services/user.service";
-import { DB_TYPES, USER_TYPES } from "@/app/api/lib/symbols/Symbols";
-import { DBProviderFactory } from "@/app/api/lib/factories/DBFactory";
+import { USER_TYPES } from "@/app/api/lib/symbols/Symbols";
 import { UserController } from '../controllers/user.controller';
 
 export const UserModule = new ContainerModule((options: ContainerModuleLoadOptions) => {
