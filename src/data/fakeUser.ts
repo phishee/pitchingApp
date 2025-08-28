@@ -60,7 +60,7 @@ export const teamMembers: PopulatedTeamMember[] = [
     _id: "6894007a5f705049d73af2f3",
     teamId: "6887ecd3f20b2ac66c32307c",
     role: "athlete",
-    status: "pending",
+    status: "inactive", // Change from "pending" to "inactive"
     joinedAt: new Date("2025-01-18T16:45:00.000Z"),
     createdAt: new Date("2025-01-18T16:45:00.000Z"),
     updatedAt: new Date("2025-01-18T16:45:00.000Z"),
@@ -95,7 +95,7 @@ export const teamMembers: PopulatedTeamMember[] = [
   {
     _id: "6894007a5f705049d73af2f5",
     teamId: "6887ecd3f20b2ac66c32307c",
-    role: "admin",
+    role: "coach", // Change from "admin" to "coach"
     status: "active",
     joinedAt: new Date("2025-01-20T13:20:00.000Z"),
     createdAt: new Date("2025-01-20T13:20:00.000Z"),
