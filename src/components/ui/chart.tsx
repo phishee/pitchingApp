@@ -100,6 +100,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: 'line' | 'dot' | 'dashed';
       nameKey?: string;
       labelKey?: string;
+      payload?: any[]; // Add this line to include payload in the type
     }
 >(
   (
