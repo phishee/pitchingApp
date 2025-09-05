@@ -51,8 +51,6 @@ interface UnsplashImagePickerProps {
   selectedImages?: UnsplashImage[];
 }
 
-const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'Q2UXQilKEToocbyzDPc9DiJaF-ly-_kbixPf4voDG8I';
-
 export function UnsplashImagePicker({
   onSelect,
   onClose,
@@ -74,31 +72,20 @@ export function UnsplashImagePicker({
   );
 
   const searchImages = useCallback(async (query: string, pageNum: number = 1, reset = false) => {
-    if (!UNSPLASH_ACCESS_KEY || UNSPLASH_ACCESS_KEY === 'your-unsplash-access-key') {
-      console.warn('Unsplash API key not configured');
-      return;
-    }
-
     setLoading(true);
     try {
+        query = "Chest Workout"
       const params = new URLSearchParams({
         query,
         page: pageNum.toString(),
-        per_page: perPage.toString(),
-        order_by: orderBy,
+        perPage: perPage.toString(),
+        orderBy,
         ...(orientation && { orientation }),
         ...(color && { color })
       });
 
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?${params}`,
-        {
-          headers: {
-            'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
-          }
-        }
-      );
-
+      const response = await fetch(`/api/v1/unsplash?${params}`);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch images');
       }

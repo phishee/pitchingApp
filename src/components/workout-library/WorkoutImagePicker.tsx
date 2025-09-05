@@ -15,9 +15,9 @@ export function WorkoutImagePicker({ value, onChange, className }: WorkoutImageP
       multiple={false}
       placeholder="Select a workout cover image"
       className={className}
-      unsplashSearchQuery="fitness workout gym exercise"
+      unsplashSearchQuery="MaleChest Workout"
       unsplashOrientation="landscape"
-      unsplashColor="blue"
+    //   unsplashColor="blue"
     />
   );
 }
