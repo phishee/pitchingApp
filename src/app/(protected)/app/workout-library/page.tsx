@@ -56,7 +56,7 @@ export default function WorkoutLibraryPage() {
   };
 
   const handleEditWorkout = (workoutId: string) => {
-    console.log('Edit workout:', workoutId);
+    router.push(`/app/workout-library/edit/${workoutId}`);
   };
 
   const handleAssignWorkout = (workoutId: string) => {
@@ -64,19 +64,7 @@ export default function WorkoutLibraryPage() {
   };
 
   const handleCreateWorkout = () => {
-    console.log('Create workout');
-  };
-
-  const handleCreateFromScratch = () => {
-    console.log('Create from scratch');
-  };
-
-  const handleImportTemplate = () => {
-    console.log('Import template');
-  };
-
-  const handleCopyFromTeam = () => {
-    console.log('Copy from team');
+    router.push('/app/workout-library/create');
   };
 
   return (
