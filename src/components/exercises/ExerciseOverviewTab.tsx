@@ -9,23 +9,23 @@ export function ExerciseOverviewTab({ exercise }: ExerciseOverviewTabProps) {
     <div className="space-y-6">
       {/* Exercise Structure */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Exercise Structure</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Exercise Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
+          {/* <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">{exercise.structure}</div>
             <div className="text-sm text-gray-600">Structure Type</div>
-          </div>
+          </div> */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-2xl font-bold text-green-600">
               {exercise.settings?.sets_counting ? 'Yes' : 'No'}
             </div>
-            <div className="text-sm text-gray-600">Sets Counting</div>
+            <div className="text-sm text-gray-600">Multiple Sets</div>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-2xl font-bold text-purple-600">
               {exercise.settings?.reps_counting ? 'Yes' : 'No'}
             </div>
-            <div className="text-sm text-gray-600">Reps Counting</div>
+            <div className="text-sm text-gray-600">Multiple Reps</div>
           </div>
         </div>
       </div>
@@ -47,7 +47,7 @@ export function ExerciseOverviewTab({ exercise }: ExerciseOverviewTabProps) {
       )}
 
       {/* Owner Information */}
-      <div>
+      <div hidden={exercise.owner === 'system'}>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Exercise Information</h3>
         <div className="bg-gray-50 p-4 rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

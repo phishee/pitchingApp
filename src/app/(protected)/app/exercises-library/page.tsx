@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Filter, Dumbbell, Target, Trophy } from 'lucide-react';
-import { fakeExercises } from '@/data/fakeExercises';
+import { exerciseApi } from '@/app/services-client/exerciseApi';
+import { Exercise, ExerciseQueryParams } from '@/models/Exercise';
 import { ExercisesHeader } from '@/components/exercises/ExerciseHeader';
 import { SearchAndFilters } from '@/components/exercises/SearchFilter';
 import { ExerciseCategoryCard } from '@/components/exercises/ExerciseCategoryCard';
@@ -13,38 +14,130 @@ import { useRouter } from 'next/navigation';
 export default function ExercisesLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [exerciseCounts, setExerciseCounts] = useState({
+    strength: 0,
+    cardio: 0,
+    baseball: 0,
+    total: 0
+  });
   const router = useRouter();
 
-  // Filter exercises based on search and type
-  const filteredExercises = fakeExercises.filter(exercise => {
-    const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exercise.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exercise.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Load exercises on component mount
+  useEffect(() => {
+    loadExercises();
+  }, []);
+
+  // Load exercises when search term or type changes
+  useEffect(() => {
+    if (exercises.length > 0) {
+      // If we already have exercises, filter them locally for better UX
+      return;
+    }
+    loadExercises();
+  }, [searchTerm, selectedType]);
+
+  const loadExercises = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Build query parameters
+      const params: ExerciseQueryParams = {
+        search: searchTerm || undefined,
+        type: selectedType === 'all' ? undefined : selectedType,
+        limit: 100 // Get all exercises
+      };
+
+      const response = await exerciseApi.getExercises(params);
+      setExercises(response.data);
+
+      // Calculate exercise counts
+      const counts = {
+        strength: response.filters.availableTypes.includes('strength') 
+          ? response.data.filter(ex => ex.exercise_type === 'strength').length 
+          : 0,
+        cardio: response.filters.availableTypes.includes('cardio') 
+          ? response.data.filter(ex => ex.exercise_type === 'cardio').length 
+          : 0,
+        baseball: response.filters.availableTypes.includes('baseball') 
+          ? response.data.filter(ex => ex.exercise_type === 'baseball').length 
+          : 0,
+        total: response.filters.totalExercises
+      };
+      setExerciseCounts(counts);
+
+    } catch (err) {
+      console.error('Failed to load exercises:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load exercises');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter exercises based on search and type (client-side filtering for better UX)
+  const filteredExercises = exercises.filter(exercise => {
+    const matchesSearch = searchTerm === '' || 
+      exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exercise.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exercise.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesType = selectedType === 'all' || exercise.exercise_type === selectedType;
     
     return matchesSearch && matchesType;
   });
 
-  // Get exercise counts by type
-  const exerciseCounts = {
-    strength: fakeExercises.filter(ex => ex.exercise_type === 'strength').length,
-    cardio: fakeExercises.filter(ex => ex.exercise_type === 'cardio').length,
-    baseball: fakeExercises.filter(ex => ex.exercise_type === 'baseball').length,
-  };
-
   // Event handlers
   const handleAddExercise = () => {
     console.log('Add exercise clicked');
   };
 
-  const handleViewExercise = (exercise: any) => {
+  const handleViewExercise = (exercise: Exercise) => {
     router.push(`/app/exercises-library/exercise/${exercise.id}`);
   };
 
-  const handleEditExercise = (exercise: any) => {
+  const handleEditExercise = (exercise: Exercise) => {
     console.log('Edit exercise:', exercise.name);
   };
+
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+  };
+
+  const handleTypeChange = (newType: string) => {
+    setSelectedType(newType);
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4 md:p-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading exercises...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4 md:p-6">
+        <div className="text-center py-12">
+          <div className="text-red-600 mb-4">Error: {error}</div>
+          <button 
+            onClick={loadExercises}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
@@ -52,7 +145,7 @@ export default function ExercisesLibraryPage() {
       
       <SearchAndFilters
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={handleSearchChange}
       />
 
       {/* Exercise Categories */}
@@ -61,11 +154,11 @@ export default function ExercisesLibraryPage() {
           <ExerciseCategoryCard
             title="All"
             icon={Filter}
-            exerciseCount={fakeExercises.length}
+            exerciseCount={exerciseCounts.total}
             bgColor="bg-gray-100"
             iconColor="text-gray-600"
             isSelected={selectedType === 'all'}
-            onClick={() => setSelectedType('all')}
+            onClick={() => handleTypeChange('all')}
           />
           <ExerciseCategoryCard
             title="Strength"
@@ -74,7 +167,7 @@ export default function ExercisesLibraryPage() {
             bgColor="bg-red-100"
             iconColor="text-red-600"
             isSelected={selectedType === 'strength'}
-            onClick={() => setSelectedType('strength')}
+            onClick={() => handleTypeChange('strength')}
           />
           <ExerciseCategoryCard
             title="Cardio"
@@ -83,7 +176,7 @@ export default function ExercisesLibraryPage() {
             bgColor="bg-green-100"
             iconColor="text-green-600"
             isSelected={selectedType === 'cardio'}
-            onClick={() => setSelectedType('cardio')}
+            onClick={() => handleTypeChange('cardio')}
           />
           <ExerciseCategoryCard
             title="Baseball"
@@ -92,7 +185,7 @@ export default function ExercisesLibraryPage() {
             bgColor="bg-blue-100"
             iconColor="text-blue-600"
             isSelected={selectedType === 'baseball'}
-            onClick={() => setSelectedType('baseball')}
+            onClick={() => handleTypeChange('baseball')}
           />
         </div>
       </div>
@@ -118,7 +211,7 @@ export default function ExercisesLibraryPage() {
           ))}
         </div>
         
-        {filteredExercises.length === 0 && (
+        {filteredExercises.length === 0 && !loading && (
           <div className="text-center py-12 md:py-8 text-gray-500">
             <div className="text-sm md:text-base">No exercises found matching your criteria.</div>
           </div>

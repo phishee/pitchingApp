@@ -39,3 +39,10 @@ export const TEAM_JOIN_REQUEST_TYPES = {
     TeamJoinRequestManager: Symbol.for('TeamJoinRequestManager'),
     TeamJoinRequestController: Symbol.for('TeamJoinRequestController'),
   } as const;
+
+// Add Exercise Types
+export const EXERCISE_TYPES = {
+    ExerciseService: Symbol.for('ExerciseService'),
+    ExerciseManager: Symbol.for('ExerciseManager'),
+    ExerciseController: Symbol.for('ExerciseController'),
+  } as const;
