@@ -31,3 +31,38 @@ export interface Exercise {
     description: string;
   };
 }
+
+// Query parameters interface
+export interface ExerciseQueryParams {
+  search?: string;
+  name?: string;
+  type?: string;
+  tags?: string;
+  page?: number;
+  limit?: number;
+  sort?: 'name' | 'type' | 'created';
+  order?: 'asc' | 'desc';
+  owner?: string;
+  hasVideo?: boolean;
+  hasAnimation?: boolean;
+  minMetrics?: number;
+}
+
+// Response interface
+export interface ExerciseResponse {
+  data: Exercise[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  filters: {
+    availableTypes: string[];
+    availableTags: string[];
+    totalExercises: number;
+  };
+  query: ExerciseQueryParams;
+}

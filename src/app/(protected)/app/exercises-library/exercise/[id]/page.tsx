@@ -10,23 +10,40 @@ import { ExerciseTabs } from '@/components/exercises/ExerciseTabs';
 import { ExerciseOverviewTab } from '@/components/exercises/ExerciseOverviewTab';
 import { ExerciseInstructionsTab } from '@/components/exercises/ExerciseInstructionsTab';
 import { ExerciseMetricsTab } from '@/components/exercises/ExerciseMetricsTab';
+import { exerciseApi } from '@/app/services-client/exerciseApi';
+import { Exercise } from '@/types/exercise';
+
 
 export default function ExerciseDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [exercise, setExercise] = useState<any>(null);
+  const [exercise, setExercise] = useState<Exercise | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Move loadExercise function before useEffect
+  const loadExercise = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const exerciseData = await exerciseApi.getExerciseById(id);
+      setExercise(exerciseData);
+    } catch (err) {
+      console.error('Failed to load exercise:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load exercise');
+      router.push('/app/exercises-library');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (params.id) {
-      const foundExercise = fakeExercises.find(ex => ex.id === params.id);
-      if (foundExercise) {
-        setExercise(foundExercise);
-      } else {
-        router.push('/app/exercises-library');
-      }
+      loadExercise(params.id as string);
     }
   }, [params.id, router]);
 

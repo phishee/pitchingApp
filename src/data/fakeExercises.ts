@@ -4,7 +4,7 @@ import { Workout } from '@/models/Workout';
 export const fakeExercises: Exercise[] = [
   // STRENGTH EXERCISES
   {
-    id: "ex_001",
+    id: "ex_strength_bench_press",
     type: "exercise_template",
     version: "1.0",
     image: "https://plus.unsplash.com/premium_vector-1720626475274-3eb709dad6d3?q=80&w=1760&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
