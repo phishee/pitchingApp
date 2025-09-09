@@ -11,7 +11,7 @@ import { ExerciseOverviewTab } from '@/components/exercises/ExerciseOverviewTab'
 import { ExerciseInstructionsTab } from '@/components/exercises/ExerciseInstructionsTab';
 import { ExerciseMetricsTab } from '@/components/exercises/ExerciseMetricsTab';
 import { exerciseApi } from '@/app/services-client/exerciseApi';
-import { Exercise } from '@/types/exercise';
+import { Exercise } from '@/models/Exercise';
 
 
 export default function ExerciseDetailPage() {
