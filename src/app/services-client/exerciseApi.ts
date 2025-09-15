@@ -368,6 +368,45 @@ export const exerciseApi = {
   clearSearchCache: () => {
     const cache = getCache();
     cache.delete(CACHE_KEYS.EXERCISES_LIBRARY);
+  },
+
+  // Get multiple exercises by their IDs
+  async getExercisesByIds(exerciseIds: string[]): Promise<Exercise[]> {
+    const cache = getCache();
+    const cacheKey = getCacheKey();
+    
+    // 1. Check if we have exercises in cache
+    const cachedData = cache.get(cacheKey) as ExerciseResponse | null;
+    
+    if (cachedData && cachedData.data) {
+      // 2. Filter exercises from cache
+      const foundExercises = cachedData.data.filter(exercise => 
+        exerciseIds.includes(exercise.id)
+      );
+      
+      // 3. If we found all exercises, return them
+      if (foundExercises.length === exerciseIds.length) {
+        // Reset cache expiration on access
+        cache.set(cacheKey, cachedData, { ttl: CACHE_TTL.EXERCISES_LIBRARY });
+        return foundExercises;
+      }
+    }
+    
+    // 4. If not all found in cache, refresh cache by calling getExercises
+    console.log('Some exercises not in cache, refreshing...');
+    await this.getExercises({});
+    
+    // 5. Get the refreshed cache and filter
+    const refreshedCache = cache.get(cacheKey) as ExerciseResponse | null;
+    if (refreshedCache && refreshedCache.data) {
+      return refreshedCache.data.filter(exercise => 
+        exerciseIds.includes(exercise.id)
+      );
+    }
+    
+    // 6. If still not found, return empty array
+    console.warn('Some exercises not found:', exerciseIds);
+    return [];
   }
 };
 

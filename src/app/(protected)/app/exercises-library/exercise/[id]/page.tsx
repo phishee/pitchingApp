@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { BarChart3, Dumbbell, Target, Trophy } from 'lucide-react';
-import { fakeExercises } from '@/data/fakeExercises';
 import { ExerciseDetailHeader } from '@/components/exercises/ExerciseDetailHeader';
 import { ExerciseMediaCard } from '@/components/exercises/ExerciseMediaCard';
 import { ExerciseTabs } from '@/components/exercises/ExerciseTabs';

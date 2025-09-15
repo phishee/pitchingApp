@@ -11,7 +11,9 @@ interface ExerciseDetailCardProps {
 export function ExerciseDetailCard({ exercise, exerciseDetails, index }: ExerciseDetailCardProps) {
   if (!exerciseDetails) return null;
 
-  const exerciseColor = getWorkoutColor([exerciseDetails.exercise_type]);
+  // Handle case where exercise_type might be undefined
+  const exerciseType = exerciseDetails.exercise_type || 'unknown';
+  const exerciseColor = getWorkoutColor([exerciseType]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
@@ -36,7 +38,7 @@ export function ExerciseDetailCard({ exercise, exerciseDetails, index }: Exercis
               {index + 1}. {exerciseDetails.name}
             </span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${exerciseColor}`}>
-              {formatTagName(exerciseDetails.exercise_type)}
+              {formatTagName(exerciseType)}
             </span>
           </div>
           
