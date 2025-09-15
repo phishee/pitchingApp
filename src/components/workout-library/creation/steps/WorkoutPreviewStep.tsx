@@ -5,11 +5,7 @@ import { Clock, Target, Users, FileText, Zap } from 'lucide-react';
 import { getWorkoutIcon, getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
 import { useWorkout } from '@/providers/workout-context';
 
-interface WorkoutPreviewStepProps {
-  // Remove data and onUpdate props since we're using context
-}
-
-export function WorkoutPreviewStep({}: WorkoutPreviewStepProps) {
+export function WorkoutPreviewStep() {
   const { workout, selectedExercises } = useWorkout();
 
   if (!workout) return null;

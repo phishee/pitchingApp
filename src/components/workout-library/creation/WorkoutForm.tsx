@@ -125,17 +125,11 @@ export function WorkoutForm() {
         );
       case 3:
         return (
-          <WorkoutFlowStep
-            data={workout}
-            onUpdate={(data) => setWorkout({ ...workout, ...data })}
-          />
+          <WorkoutFlowStep />
         );
       case 4:
         return (
-          <WorkoutPreviewStep
-            data={workout}
-            onUpdate={(data) => setWorkout({ ...workout, ...data })}
-          />
+          <WorkoutPreviewStep />
         );
       default:
         return null;

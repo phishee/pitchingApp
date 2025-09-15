@@ -7,10 +7,6 @@ import { Plus, X, GripVertical, Clock, Target } from 'lucide-react';
 import { formatTagName } from '@/lib/workoutLibraryUtils';
 import { useWorkout } from '@/providers/workout-context';
 
-interface WorkoutFlowStepProps {
-  // Remove data and onUpdate props since we're using context
-}
-
 const questionnaireTypes = [
   'readiness_to_train',
   'sleep_quality',
@@ -27,7 +23,7 @@ const warmupTypes = [
   'movement_preparation'
 ];
 
-export function WorkoutFlowStep({}: WorkoutFlowStepProps) {
+export function WorkoutFlowStep() {
   const { workout, updateWorkoutField, reorderExercises } = useWorkout();
   const [newQuestionnaire, setNewQuestionnaire] = useState('');
   const [newWarmup, setNewWarmup] = useState('');
