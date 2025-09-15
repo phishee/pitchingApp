@@ -5,11 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, GripVertical, Clock, Target } from 'lucide-react';
 import { formatTagName } from '@/lib/workoutLibraryUtils';
-
-interface WorkoutFlowStepProps {
-  data: any;
-  onUpdate: (data: any) => void;
-}
+import { useWorkout } from '@/providers/workout-context';
 
 const questionnaireTypes = [
   'readiness_to_train',
@@ -27,59 +23,47 @@ const warmupTypes = [
   'movement_preparation'
 ];
 
-export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
+export function WorkoutFlowStep() {
+  const { workout, updateWorkoutField, reorderExercises } = useWorkout();
   const [newQuestionnaire, setNewQuestionnaire] = useState('');
   const [newWarmup, setNewWarmup] = useState('');
 
+  if (!workout) return null;
+
   const handleAddQuestionnaire = (type: string) => {
-    if (!data.flow.questionnaires.includes(type)) {
-      onUpdate({
-        flow: {
-          ...data.flow,
-          questionnaires: [...data.flow.questionnaires, type]
-        }
+    if (!workout.flow.questionnaires.includes(type)) {
+      updateWorkoutField('flow', {
+        ...workout.flow,
+        questionnaires: [...workout.flow.questionnaires, type]
       });
     }
   };
 
   const handleRemoveQuestionnaire = (type: string) => {
-    onUpdate({
-      flow: {
-        ...data.flow,
-        questionnaires: data.flow.questionnaires.filter((q: string) => q !== type)
-      }
+    updateWorkoutField('flow', {
+      ...workout.flow,
+      questionnaires: workout.flow.questionnaires.filter((q: string) => q !== type)
     });
   };
 
   const handleAddWarmup = (type: string) => {
-    if (!data.flow.warmup.includes(type)) {
-      onUpdate({
-        flow: {
-          ...data.flow,
-          warmup: [...data.flow.warmup, type]
-        }
+    if (!workout.flow.warmup.includes(type)) {
+      updateWorkoutField('flow', {
+        ...workout.flow,
+        warmup: [...workout.flow.warmup, type]
       });
     }
   };
 
   const handleRemoveWarmup = (type: string) => {
-    onUpdate({
-      flow: {
-        ...data.flow,
-        warmup: data.flow.warmup.filter((w: string) => w !== type)
-      }
+    updateWorkoutField('flow', {
+      ...workout.flow,
+      warmup: workout.flow.warmup.filter((w: string) => w !== type)
     });
   };
 
-  const handleMoveExercise = (fromIndex: number, toIndex: number) => {
-    const newExercises = [...data.exercises];
-    const [movedExercise] = newExercises.splice(fromIndex, 1);
-    newExercises.splice(toIndex, 0, movedExercise);
-    onUpdate({ exercises: newExercises });
-  };
-
   const calculateTotalTime = () => {
-    return data.exercises.reduce((total: number, exercise: any) => {
+    return (workout.flow.exercises || []).reduce((total: number, exercise: any) => {
       return total + (exercise.sets * exercise.duration) + (exercise.sets * exercise.rest);
     }, 0);
   };
@@ -93,7 +77,7 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {data.flow.questionnaires.map((questionnaire: string) => (
+            {workout.flow.questionnaires.map((questionnaire: string) => (
               <Badge
                 key={questionnaire}
                 variant="secondary"
@@ -112,7 +96,7 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
           
           <div className="flex flex-wrap gap-2">
             {questionnaireTypes
-              .filter(type => !data.flow.questionnaires.includes(type))
+              .filter(type => !workout.flow.questionnaires.includes(type))
               .map(type => (
                 <button
                   key={type}
@@ -133,7 +117,7 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {data.flow.warmup.map((warmup: string) => (
+            {workout.flow.warmup.map((warmup: string) => (
               <Badge
                 key={warmup}
                 variant="secondary"
@@ -152,7 +136,7 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
           
           <div className="flex flex-wrap gap-2">
             {warmupTypes
-              .filter(type => !data.flow.warmup.includes(type))
+              .filter(type => !workout.flow.warmup.includes(type))
               .map(type => (
                 <button
                   key={type}
@@ -178,7 +162,7 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {data.exercises.length === 0 ? (
+          {(workout.flow.exercises || []).length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No exercises in sequence</p>
@@ -186,8 +170,8 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {data.exercises.map((exercise: any, index: number) => (
-                <div key={exercise.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              {(workout.flow.exercises || []).map((exercise: any, index: number) => (
+                <div key={exercise.id || exercise.exercise_id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
                     <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
@@ -198,10 +182,10 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{exercise.name}</h4>
                     <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                      <span>{exercise.sets} sets</span>
-                      <span>{exercise.reps} reps</span>
-                      <span>{exercise.duration}s duration</span>
-                      <span>{exercise.rest}s rest</span>
+                      <span>{exercise.sets || 3} sets</span>
+                      <span>{exercise.reps || 10} reps</span>
+                      <span>{exercise.duration || 60}s duration</span>
+                      <span>{exercise.rest || 30}s rest</span>
                     </div>
                   </div>
                   
@@ -210,16 +194,16 @@ export function WorkoutFlowStep({ data, onUpdate }: WorkoutFlowStepProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleMoveExercise(index, index - 1)}
+                        onClick={() => reorderExercises(index, index - 1)}
                       >
                         ↑
                       </Button>
                     )}
-                    {index < data.exercises.length - 1 && (
+                    {index < (workout.flow.exercises || []).length - 1 && (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleMoveExercise(index, index + 1)}
+                        onClick={() => reorderExercises(index, index + 1)}
                       >
                         ↓
                       </Button>

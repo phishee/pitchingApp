@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { fakeWorkouts } from '@/data/fakeExercises';
-import { fakeExercises } from '@/data/fakeExercises';
+import { workoutApi } from '@/app/services-client/workoutApi';
+import { exerciseApi } from '@/app/services-client/exerciseApi';
+import { Workout } from '@/models/Workout';
+import { Exercise } from '@/models/Exercise';
 
 // Import components
 import { WorkoutDetailHeader } from '@/components/workouts/WorkoutDetailHeader';
@@ -17,27 +19,60 @@ import { WorkoutHistoryTab } from '@/components/workouts/WorkoutHistoryTab';
 export default function WorkoutDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [workout, setWorkout] = useState<any>(null);
+  const [workout, setWorkout] = useState<Workout | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [selectedTab, setSelectedTab] = useState('overview');
+  
+  // TODO: Get organizationId from context or props
+  const organizationId = 'org_001'; // This should come from your auth context
 
   useEffect(() => {
     if (params.id) {
-      const foundWorkout = fakeWorkouts.find(w => w.id === params.id);
-      if (foundWorkout) {
-        setWorkout(foundWorkout);
-      } else {
-        router.push('/app/workout-library');
-      }
+      loadWorkout(params.id as string);
     }
-  }, [params.id, router]);
+  }, [params.id]);
 
-  if (!workout) {
+  const loadWorkout = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const workoutData = await workoutApi.getWorkoutById(id, organizationId);
+      setWorkout(workoutData);
+    } catch (err) {
+      console.error('Failed to load workout:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load workout');
+      // Redirect to workout library if workout not found
+      router.push('/app/workout-library');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading workout...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !workout) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">Error: {error || 'Workout not found'}</div>
+          <button 
+            onClick={() => router.push('/app/workout-library')}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Back to Workouts
+          </button>
         </div>
       </div>
     );
@@ -63,8 +98,14 @@ export default function WorkoutDetailPage() {
     console.log('Share workout:', workout.name);
   };
 
-  const getExerciseDetails = (exerciseId: string) => {
-    return fakeExercises.find(ex => ex.id === exerciseId);
+  const getExerciseDetails = async (exerciseId: string): Promise<Exercise | null> => {
+    try {
+      const exercise = await exerciseApi.getExerciseById(exerciseId);
+      return exercise;
+    } catch (error) {
+      console.error('Failed to load exercise:', error);
+      return null;
+    }
   };
 
   const renderTabContent = () => {

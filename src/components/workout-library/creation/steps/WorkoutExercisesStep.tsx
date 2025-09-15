@@ -18,6 +18,9 @@ export function WorkoutExercisesStep({ data, onUpdate }: WorkoutExercisesStepPro
 
   const categories = ['all', 'strength', 'cardio', 'power', 'mobility', 'baseball'];
 
+  // Ensure exercises array exists with fallback
+  const exercises = data?.flow?.exercises || [];
+
   const filteredExercises = fakeExercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          exercise.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -34,20 +37,31 @@ export function WorkoutExercisesStep({ data, onUpdate }: WorkoutExercisesStepPro
       duration: 60,
       rest: 30
     };
-    onUpdate({ exercises: [...data.exercises, exerciseWithConfig] });
+    onUpdate({ 
+      flow: {
+        ...data.flow,
+        exercises: [...exercises, exerciseWithConfig]
+      }
+    });
   };
 
   const handleRemoveExercise = (exerciseId: string) => {
     onUpdate({ 
-      exercises: data.exercises.filter((ex: any) => ex.id !== exerciseId) 
+      flow: {
+        ...data.flow,
+        exercises: exercises.filter((ex: any) => ex.id !== exerciseId)
+      }
     });
   };
 
   const handleUpdateExerciseConfig = (exerciseId: string, field: string, value: any) => {
     onUpdate({
-      exercises: data.exercises.map((ex: any) =>
-        ex.id === exerciseId ? { ...ex, [field]: value } : ex
-      )
+      flow: {
+        ...data.flow,
+        exercises: exercises.map((ex: any) =>
+          ex.id === exerciseId ? { ...ex, [field]: value } : ex
+        )
+      }
     });
   };
 
@@ -58,11 +72,11 @@ export function WorkoutExercisesStep({ data, onUpdate }: WorkoutExercisesStepPro
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5" />
-            Selected Exercises ({data.exercises.length})
+            Selected Exercises ({exercises.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {data.exercises.length === 0 ? (
+          {exercises.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No exercises selected yet</p>
@@ -70,7 +84,7 @@ export function WorkoutExercisesStep({ data, onUpdate }: WorkoutExercisesStepPro
             </div>
           ) : (
             <div className="space-y-4">
-              {data.exercises.map((exercise: any, index: number) => (
+              {exercises.map((exercise: any, index: number) => (
                 <div key={exercise.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
                     {index + 1}
@@ -184,7 +198,7 @@ export function WorkoutExercisesStep({ data, onUpdate }: WorkoutExercisesStepPro
                   <Button
                     size="sm"
                     onClick={() => handleAddExercise(exercise)}
-                    disabled={data.exercises.some((ex: any) => ex.id === exercise.id)}
+                    disabled={exercises.some((ex: any) => ex.id === exercise.id)}
                     className="flex items-center gap-1"
                   >
                     <Plus className="w-3 h-3" />

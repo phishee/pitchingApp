@@ -46,3 +46,10 @@ export const EXERCISE_TYPES = {
     ExerciseManager: Symbol.for('ExerciseManager'),
     ExerciseController: Symbol.for('ExerciseController'),
   } as const;
+
+// Add workout symbols
+export const WORKOUT_TYPES = {
+  WorkoutService: Symbol.for('WorkoutService'),
+  WorkoutManager: Symbol.for('WorkoutManager'),
+  WorkoutController: Symbol.for('WorkoutController'),
+} as const;

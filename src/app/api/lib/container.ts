@@ -5,6 +5,7 @@ import { TeamModule } from "./modules/team.module";
 import { TeamMemberModule } from "./modules/team-member.module";
 import { OrganizationModule } from "./modules/organization.module";
 import { ExerciseModule } from "./modules/exercise.module";
+import { WorkoutModule } from './modules/workout.module';
 
 const container = new Container();
 container.load(dbModule);
@@ -13,5 +14,6 @@ container.load(TeamModule);
 container.load(TeamMemberModule);
 container.load(OrganizationModule);
 container.load(ExerciseModule);
+container.load(WorkoutModule);
 
 export default container;

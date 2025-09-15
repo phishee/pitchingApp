@@ -31,6 +31,7 @@ import {
     return 'bg-gray-100 text-gray-700';
   };
   
-  export const formatTagName = (tag: string): string => {
+  export const formatTagName = (tag: string | undefined | null): string => {
+    if (!tag) return 'Unknown';
     return tag.replace(/_/g, ' ');
   };

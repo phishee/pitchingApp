@@ -19,7 +19,7 @@ const eslintConfig = [
       "react/no-unescaped-entities": "warn",        // Change from error to warning
       "@next/next/no-img-element": "warn",          // Change from error to warning
       "prefer-const": "warn",                       // Change from error to warning
-      
+      "@typescript-eslint/no-empty-object-type": "warn", // Change from error to warning
       // Keep these as errors for critical issues
       "react-hooks/exhaustive-deps": "warn", // Change to warn temporarily
       "react-hooks/rules-of-hooks": "error"

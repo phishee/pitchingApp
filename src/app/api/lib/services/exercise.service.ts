@@ -2,7 +2,6 @@ import { Exercise } from '@/models/Exercise';
 import { inject, injectable } from 'inversify';
 import { DB_TYPES } from '../symbols/Symbols';
 import { DBProviderFactory } from '../factories/DBFactory';
-// import { fakeExercises } from '@/data/fakeExercises';
 
 // Query parameters interface
 export interface ExerciseQueryParams {

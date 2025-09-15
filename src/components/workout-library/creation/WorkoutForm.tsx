@@ -1,36 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-
-// Import step components
+import { useRouter } from 'next/navigation';
+import { useWorkout } from '@/providers/workout-context';
 import { WorkoutFormStepper } from './WorkoutFormStepper';
 import { WorkoutBasicInfoStep } from './steps/WorkoutBasicInfoStep';
 import { WorkoutExercisesStep } from './steps/WorkoutExercisesStep';
 import { WorkoutFlowStep } from './steps/WorkoutFlowStep';
 import { WorkoutPreviewStep } from './steps/WorkoutPreviewStep';
-
-interface WorkoutFormProps {
-  mode: 'create' | 'edit';
-  initialData: any;
-  onSave: (data: any) => void;
-  onCancel: () => void;
-}
-
-const defaultWorkoutData = {
-  name: '',
-  description: '',
-  tags: [],
-  coverImage: '',
-  exercises: [],
-  flow: {
-    warmup: [],
-    questionnaires: [],
-    exercises: []
-  },
-  teamIds: []
-};
+import { Button } from '@/components/ui/button';
 
 const steps = [
   { id: 1, title: 'Basic Info', description: 'Workout details and settings' },
@@ -39,123 +17,179 @@ const steps = [
   { id: 4, title: 'Preview', description: 'Review and finalize' }
 ];
 
-export function WorkoutForm({ mode, initialData, onSave, onCancel }: WorkoutFormProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [workoutData, setWorkoutData] = useState(defaultWorkoutData);
+export function WorkoutForm() {
+  const router = useRouter();
+  const { 
+    workout, 
+    loading, 
+    error, 
+    isEditing, 
+    isDirty,
+    createWorkout,
+    updateWorkout,
+    setWorkout,
+    clearWorkout
+  } = useWorkout();
 
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize workout data for new workouts
   useEffect(() => {
-    if (initialData) {
-      setWorkoutData(initialData);
+    if (!isEditing && !workout) {
+      setWorkout({
+        name: '',
+        description: '',
+        tags: [],
+        flow: {
+          questionnaires: [],
+          warmup: [],
+          exercises: [],
+          // rest_between_exercises: 30,
+          // rest_between_sets: 60
+        },
+        // difficulty: 'beginner',
+        // estimated_duration: 30,
+        // image: '',
+        // is_template: false
+      });
     }
-  }, [initialData]);
+  }, [isEditing, workout, setWorkout]);
 
   const handleNext = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
+    setCurrentStep(prev => Math.min(prev + 1, 4));
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = async () => {
+    if (!workout) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      // TODO: Get organizationId from context or props
+      const organizationId = 'org_001'; // This should come from your auth context
+      
+      if (isEditing) {
+        await updateWorkout(workout.id!, workout, organizationId);
+      } else {
+        await createWorkout(workout, organizationId);
+      }
+      
+      // Redirect to workout library or detail page
+      if (isEditing) {
+        router.push(`/app/workout-library/${workout.id}`);
+      } else {
+        router.push('/app/workout-library');
+      }
+    } catch (err) {
+      console.error('Failed to save workout:', err);
+      // Error is handled by the context
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleSave = () => {
-    onSave(workoutData);
-  };
-
-  const handlePreview = () => {
-    console.log('Previewing workout:', workoutData);
-    // TODO: Implement preview logic
+  const handleCancel = () => {
+    if (isDirty) {
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to leave?'
+      );
+      if (!confirmed) return;
+    }
+    
+    clearWorkout();
+    router.back();
   };
 
   const renderStepContent = () => {
+    if (!workout) return null;
+    
     switch (currentStep) {
       case 1:
         return (
           <WorkoutBasicInfoStep
-            data={workoutData}
-            onUpdate={(data) => setWorkoutData({ ...workoutData, ...data })}
+            data={workout}
+            onUpdate={(data) => setWorkout({ ...workout, ...data })}
           />
         );
       case 2:
         return (
           <WorkoutExercisesStep
-            data={workoutData}
-            onUpdate={(data) => setWorkoutData({ ...workoutData, ...data })}
+            data={workout}
+            onUpdate={(data) => setWorkout({ ...workout, ...data })}
           />
         );
       case 3:
         return (
-          <WorkoutFlowStep
-            data={workoutData}
-            onUpdate={(data) => setWorkoutData({ ...workoutData, ...data })}
-          />
+          <WorkoutFlowStep />
         );
       case 4:
         return (
-          <WorkoutPreviewStep
-            data={workoutData}
-            onUpdate={(data) => setWorkoutData({ ...workoutData, ...data })}
-          />
+          <WorkoutPreviewStep />
         );
       default:
         return null;
     }
   };
 
+  if (loading && isEditing) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading workout...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">Error: {error}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!workout) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Initializing workout...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={onCancel}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  {mode === 'create' ? 'Create Workout' : 'Edit Workout'}
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Step {currentStep} of {steps.length}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={handlePreview}
-                className="flex items-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                Preview
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {mode === 'create' ? 'Create Workout' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
-        </div>
+        {/* ... existing header code ... */}
       </div>
 
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          <WorkoutFormStepper
-            steps={steps}
-            currentStep={currentStep}
-            onStepClick={setCurrentStep}
-          />
+          {steps && (
+            <WorkoutFormStepper
+              steps={steps}
+              currentStep={currentStep}
+              onStepClick={setCurrentStep}
+            />
+          )}
 
           <div className="mt-8">
             {renderStepContent()}
@@ -170,27 +204,19 @@ export function WorkoutForm({ mode, initialData, onSave, onCancel }: WorkoutForm
               Previous
             </Button>
             
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handlePreview}
+            {currentStep < steps.length ? (
+              <Button onClick={handleNext}>
+                Next
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting}
                 className="flex items-center gap-2"
               >
-                <Eye className="w-4 h-4" />
-                Preview
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Workout')}
               </Button>
-              
-              {currentStep < steps.length ? (
-                <Button onClick={handleNext}>
-                  Next
-                </Button>
-              ) : (
-                <Button onClick={handleSave} className="flex items-center gap-2">
-                  <Save className="w-4 h-4" />
-                  {mode === 'create' ? 'Create Workout' : 'Save Changes'}
-                </Button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
