@@ -15,6 +15,7 @@ import { WorkoutOverviewTab } from '@/components/workouts/WorkoutOverviewTab';
 import { WorkoutFlowTab } from '@/components/workouts/WorkoutFlowTab';
 import { WorkoutExercisesTab } from '@/components/workouts/WorkoutExercisesTab';
 import { WorkoutHistoryTab } from '@/components/workouts/WorkoutHistoryTab';
+import { useOrganization } from '@/providers/organization-context';
 
 export default function WorkoutDetailPage() {
   const params = useParams();
@@ -24,9 +25,10 @@ export default function WorkoutDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [selectedTab, setSelectedTab] = useState('overview');
+  const { currentOrganization } = useOrganization();
   
   // TODO: Get organizationId from context or props
-  const organizationId = 'org_001'; // This should come from your auth context
+  const organizationId = currentOrganization?._id; // This should come from your auth context
 
   useEffect(() => {
     if (params.id) {
@@ -113,9 +115,9 @@ export default function WorkoutDetailPage() {
       case 'overview':
         return <WorkoutOverviewTab workout={workout} />;
       case 'flow':
-        return <WorkoutFlowTab workout={workout} getExerciseDetails={getExerciseDetails} />;
+        return <WorkoutFlowTab workout={workout} />;
       case 'exercises':
-        return <WorkoutExercisesTab workout={workout} getExerciseDetails={getExerciseDetails} />;
+        return <WorkoutExercisesTab workout={workout} />;
       case 'history':
         return <WorkoutHistoryTab />;
       default:

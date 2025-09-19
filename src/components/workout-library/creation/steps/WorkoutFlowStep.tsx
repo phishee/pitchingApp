@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, GripVertical, Clock, Target } from 'lucide-react';
-import { formatTagName } from '@/lib/workoutLibraryUtils';
-import { useWorkout } from '@/providers/workout-context';
+import { formatTagName, getWorkoutColor } from '@/lib/workoutLibraryUtils';
+import { useWorkoutFlow, useWorkoutExercises } from '@/providers/workout-context';
 
 const questionnaireTypes = [
   'readiness_to_train',
@@ -24,47 +23,36 @@ const warmupTypes = [
 ];
 
 export function WorkoutFlowStep() {
-  const { workout, updateWorkoutField, reorderExercises } = useWorkout();
+  const { 
+    workoutFlow, 
+    addQuestionnaire, 
+    removeQuestionnaire, 
+    addWarmup, 
+    removeWarmup, 
+    reorderExercises 
+  } = useWorkoutFlow();
+  const { selectedExercises } = useWorkoutExercises();
   const [newQuestionnaire, setNewQuestionnaire] = useState('');
   const [newWarmup, setNewWarmup] = useState('');
 
-  if (!workout) return null;
-
-  const handleAddQuestionnaire = (type: string) => {
-    if (!workout.flow.questionnaires.includes(type)) {
-      updateWorkoutField('flow', {
-        ...workout.flow,
-        questionnaires: [...workout.flow.questionnaires, type]
-      });
-    }
+  // Helper function to get exercise info by ID
+  const getExerciseById = (exerciseId: string) => {
+    return selectedExercises.find(ex => ex.id === exerciseId);
   };
 
-  const handleRemoveQuestionnaire = (type: string) => {
-    updateWorkoutField('flow', {
-      ...workout.flow,
-      questionnaires: workout.flow.questionnaires.filter((q: string) => q !== type)
-    });
-  };
-
-  const handleAddWarmup = (type: string) => {
-    if (!workout.flow.warmup.includes(type)) {
-      updateWorkoutField('flow', {
-        ...workout.flow,
-        warmup: [...workout.flow.warmup, type]
-      });
-    }
-  };
-
-  const handleRemoveWarmup = (type: string) => {
-    updateWorkoutField('flow', {
-      ...workout.flow,
-      warmup: workout.flow.warmup.filter((w: string) => w !== type)
-    });
+  // Helper function to get default metrics for a specific exercise
+  const getDefaultMetricsForExerciseId = (exerciseId: string) => {
+    const workoutExercise = workoutFlow.exercises?.find(ex => ex.exercise_id === exerciseId);
+    return workoutExercise?.default_Metrics || {};
   };
 
   const calculateTotalTime = () => {
-    return (workout.flow.exercises || []).reduce((total: number, exercise: any) => {
-      return total + (exercise.sets * exercise.duration) + (exercise.sets * exercise.rest);
+    return (workoutFlow.exercises || []).reduce((total: number, exercise: any) => {
+      const defaultMetrics = getDefaultMetricsForExerciseId(exercise.exercise_id);
+      const sets = defaultMetrics.sets || 3;
+      const duration = defaultMetrics.duration || 60;
+      const rest = defaultMetrics.rest || 30;
+      return total + (sets * duration) + (sets * rest);
     }, 0);
   };
 
@@ -77,7 +65,7 @@ export function WorkoutFlowStep() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {workout.flow.questionnaires.map((questionnaire: string) => (
+            {workoutFlow.questionnaires.map((questionnaire: string) => (
               <Badge
                 key={questionnaire}
                 variant="secondary"
@@ -85,7 +73,7 @@ export function WorkoutFlowStep() {
               >
                 {formatTagName(questionnaire)}
                 <button
-                  onClick={() => handleRemoveQuestionnaire(questionnaire)}
+                  onClick={() => removeQuestionnaire(questionnaire)}
                   className="ml-1 hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -96,11 +84,11 @@ export function WorkoutFlowStep() {
           
           <div className="flex flex-wrap gap-2">
             {questionnaireTypes
-              .filter(type => !workout.flow.questionnaires.includes(type))
+              .filter(type => !workoutFlow.questionnaires.includes(type))
               .map(type => (
                 <button
                   key={type}
-                  onClick={() => handleAddQuestionnaire(type)}
+                  onClick={() => addQuestionnaire(type)}
                   className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                 >
                   {formatTagName(type)}
@@ -117,7 +105,7 @@ export function WorkoutFlowStep() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {workout.flow.warmup.map((warmup: string) => (
+            {workoutFlow.warmup.map((warmup: string) => (
               <Badge
                 key={warmup}
                 variant="secondary"
@@ -125,7 +113,7 @@ export function WorkoutFlowStep() {
               >
                 {formatTagName(warmup)}
                 <button
-                  onClick={() => handleRemoveWarmup(warmup)}
+                  onClick={() => removeWarmup(warmup)}
                   className="ml-1 hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -136,11 +124,11 @@ export function WorkoutFlowStep() {
           
           <div className="flex flex-wrap gap-2">
             {warmupTypes
-              .filter(type => !workout.flow.warmup.includes(type))
+              .filter(type => !workoutFlow.warmup.includes(type))
               .map(type => (
                 <button
                   key={type}
-                  onClick={() => handleAddWarmup(type)}
+                  onClick={() => addWarmup(type)}
                   className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                 >
                   {formatTagName(type)}
@@ -162,7 +150,7 @@ export function WorkoutFlowStep() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {(workout.flow.exercises || []).length === 0 ? (
+          {(workoutFlow.exercises || []).length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No exercises in sequence</p>
@@ -170,47 +158,68 @@ export function WorkoutFlowStep() {
             </div>
           ) : (
             <div className="space-y-3">
-              {(workout.flow.exercises || []).map((exercise: any, index: number) => (
-                <div key={exercise.id || exercise.exercise_id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
-                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
-                      {index + 1}
+              {(workoutFlow.exercises || []).map((exercise: any, index: number) => {
+                const exerciseInfo = getExerciseById(exercise.exercise_id);
+                const defaultMetrics = getDefaultMetricsForExerciseId(exercise.exercise_id);
+                
+                if (!exerciseInfo) {
+                  return null; // Skip if exercise info not found
+                }
+
+                return (
+                  <div key={exercise.exercise_id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                      <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+                        {index + 1}
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-medium text-gray-900">{exerciseInfo.name}</h4>
+                        <Badge variant="secondary" className={getWorkoutColor([exerciseInfo.exercise_type])}>
+                          {formatTagName(exerciseInfo.exercise_type)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        {exerciseInfo.settings.sets_counting && (
+                          <span>{defaultMetrics.sets || 3} sets</span>
+                        )}
+                        {exerciseInfo.settings.reps_counting && (
+                          <span>{defaultMetrics.reps || 10} reps</span>
+                        )}
+                        {(exerciseInfo.exercise_type === 'cardio' || exerciseInfo.structure !== 'sets') && (
+                          <span>{defaultMetrics.duration || 60}s duration</span>
+                        )}
+                        <span>{defaultMetrics.rest || 30}s rest</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-1">
+                      {index > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => reorderExercises(index, index - 1)}
+                        >
+                          ↑
+                        </Button>
+                      )}
+                      {index < (workoutFlow.exercises || []).length - 1 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => reorderExercises(index, index + 1)}
+                        >
+                          ↓
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{exercise.name}</h4>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                      <span>{exercise.sets || 3} sets</span>
-                      <span>{exercise.reps || 10} reps</span>
-                      <span>{exercise.duration || 60}s duration</span>
-                      <span>{exercise.rest || 30}s rest</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-1">
-                    {index > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => reorderExercises(index, index - 1)}
-                      >
-                        ↑
-                      </Button>
-                    )}
-                    {index < (workout.flow.exercises || []).length - 1 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => reorderExercises(index, index + 1)}
-                      >
-                        ↓
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

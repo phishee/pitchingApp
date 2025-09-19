@@ -7,28 +7,25 @@ import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
 import { formatTagName } from '@/lib/workoutLibraryUtils';
 import { WorkoutImagePicker } from '../../WorkoutImagePicker';
-
-interface WorkoutBasicInfoStepProps {
-  data: any;
-  onUpdate: (data: any) => void;
-}
+import { useWorkoutMetadata } from '@/providers/workout-context';
 
 const availableTags = [
   'strength', 'cardio', 'power', 'baseball', 'mobility', 'speed', 'recovery', 'endurance'
 ];
 
-export function WorkoutBasicInfoStep({ data, onUpdate }: WorkoutBasicInfoStepProps) {
+export function WorkoutBasicInfoStep() {
+  const { workoutMetadata, updateName, updateDescription, updateTags, updateCoverImage } = useWorkoutMetadata();
   const [newTag, setNewTag] = useState('');
 
   const handleAddTag = () => {
-    if (newTag && !data.tags.includes(newTag)) {
-      onUpdate({ tags: [...data.tags, newTag] });
+    if (newTag && !workoutMetadata.tags.includes(newTag)) {
+      updateTags([...workoutMetadata.tags, newTag]);
       setNewTag('');
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    onUpdate({ tags: data.tags.filter((tag: string) => tag !== tagToRemove) });
+    updateTags(workoutMetadata.tags.filter((tag: string) => tag !== tagToRemove));
   };
 
   return (
@@ -45,8 +42,8 @@ export function WorkoutBasicInfoStep({ data, onUpdate }: WorkoutBasicInfoStepPro
             </label>
             <Input
               placeholder="Enter workout name"
-              value={data.name}
-              onChange={(e) => onUpdate({ name: e.target.value })}
+              value={workoutMetadata.name}
+              onChange={(e) => updateName(e.target.value)}
             />
           </div>
 
@@ -57,8 +54,8 @@ export function WorkoutBasicInfoStep({ data, onUpdate }: WorkoutBasicInfoStepPro
             </label>
             <Textarea
               placeholder="Describe the workout, its goals, and target audience"
-              value={data.description}
-              onChange={(e) => onUpdate({ description: e.target.value })}
+              value={workoutMetadata.description}
+              onChange={(e) => updateDescription(e.target.value)}
               rows={4}
             />
           </div>
@@ -69,8 +66,9 @@ export function WorkoutBasicInfoStep({ data, onUpdate }: WorkoutBasicInfoStepPro
               Cover Image
             </label>
             <WorkoutImagePicker
-              value={data.coverImage}
-              onChange={(imageUrl) => onUpdate({ coverImage: imageUrl })}
+              value={workoutMetadata.coverImage}
+              onChange={(imageUrl) => updateCoverImage(imageUrl)}
+              searchQuery={workoutMetadata.name || "workout"}
             />
           </div>
 
@@ -81,7 +79,7 @@ export function WorkoutBasicInfoStep({ data, onUpdate }: WorkoutBasicInfoStepPro
             </label>
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                {data.tags.map((tag: string) => (
+                {workoutMetadata.tags.map((tag: string) => (
                   <Badge
                     key={tag}
                     variant="secondary"
@@ -117,12 +115,12 @@ export function WorkoutBasicInfoStep({ data, onUpdate }: WorkoutBasicInfoStepPro
               
               <div className="flex flex-wrap gap-2">
                 {availableTags
-                  .filter(tag => !data.tags.includes(tag))
+                  .filter(tag => !workoutMetadata.tags.includes(tag))
                   .map(tag => (
                     <button
                       key={tag}
                       onClick={() => {
-                        onUpdate({ tags: [...data.tags, tag] });
+                        updateTags([...workoutMetadata.tags, tag]);
                       }}
                       className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                     >

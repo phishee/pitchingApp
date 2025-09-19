@@ -10,6 +10,7 @@ import { WorkoutLibraryHeader } from '@/components/workout-library/components/Wo
 import { WorkoutSearchFilters } from '@/components/workout-library/WorkoutSearchFilters';
 import { WorkoutStatsGrid } from '@/components/workout-library/WorkoutStatsGrid';
 import { WorkoutTemplatesSection } from '@/components/workout-library/WorkoutTemplatesSection';
+import { useOrganization } from '@/providers/organization-context';
 
 export default function WorkoutLibraryPage() {
   const router = useRouter();
@@ -19,9 +20,10 @@ export default function WorkoutLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagFilters, setShowTagFilters] = useState(false);
+  const { currentOrganization } = useOrganization();
   
   // TODO: Get organizationId from context or props
-  const organizationId = 'org_001'; // This should come from your auth context
+  const organizationId = currentOrganization?._id; // This should come from your auth context
 
   // Load workouts on component mount
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function WorkoutLibraryPage() {
   };
 
   const handleEditWorkout = (workoutId: string) => {
-    router.push(`/app/workout-library/edit/${workoutId}`);
+    router.push(`/app/workout-library/${workoutId}/edit`);
   };
 
   const handleAssignWorkout = (workoutId: string) => {

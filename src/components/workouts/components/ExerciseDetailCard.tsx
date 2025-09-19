@@ -1,14 +1,15 @@
 import React from 'react';
 import { Target, FileText } from 'lucide-react';
 import { getWorkoutColor, formatTagName } from '@/lib/workoutUtils';
+import { WorkoutExercise, Exercise } from '@/models';
 
 interface ExerciseDetailCardProps {
-  exercise: any;
-  exerciseDetails: any;
+  workoutExercise: WorkoutExercise;
+  exerciseDetails: Exercise;
   index: number;
 }
 
-export function ExerciseDetailCard({ exercise, exerciseDetails, index }: ExerciseDetailCardProps) {
+export function ExerciseDetailCard({ workoutExercise, exerciseDetails, index }: ExerciseDetailCardProps) {
   if (!exerciseDetails) return null;
 
   // Handle case where exercise_type might be undefined

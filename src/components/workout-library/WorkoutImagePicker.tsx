@@ -3,11 +3,12 @@ import { ImagePicker } from '@/components/common/ImagePicker';
 
 interface WorkoutImagePickerProps {
   value?: string;
+  searchQuery?: string;
   onChange: (value: string) => void;
   className?: string;
 }
 
-export function WorkoutImagePicker({ value, onChange, className }: WorkoutImagePickerProps) {
+export function WorkoutImagePicker({ value, onChange, className, searchQuery }: WorkoutImagePickerProps) {
   return (
     <ImagePicker
       value={value}
@@ -15,7 +16,7 @@ export function WorkoutImagePicker({ value, onChange, className }: WorkoutImageP
       multiple={false}
       placeholder="Select a workout cover image"
       className={className}
-      unsplashSearchQuery="MaleChest Workout"
+      unsplashSearchQuery={searchQuery || "workout"}
       unsplashOrientation="landscape"
     //   unsplashColor="blue"
     />

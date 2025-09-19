@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWorkout } from '@/providers/workout-context';
+import { useWorkoutActions, useWorkoutMetadata, useWorkoutUI, useWorkoutFlow, useWorkoutOrganization } from '@/providers/workout-context';
 import { WorkoutFormStepper } from './WorkoutFormStepper';
 import { WorkoutBasicInfoStep } from './steps/WorkoutBasicInfoStep';
 import { WorkoutExercisesStep } from './steps/WorkoutExercisesStep';
 import { WorkoutFlowStep } from './steps/WorkoutFlowStep';
 import { WorkoutPreviewStep } from './steps/WorkoutPreviewStep';
 import { Button } from '@/components/ui/button';
+import { useOrganization } from '@/providers/organization-context';
 
 const steps = [
   { id: 1, title: 'Basic Info', description: 'Workout details and settings' },
@@ -19,24 +20,19 @@ const steps = [
 
 export function WorkoutForm() {
   const router = useRouter();
-  const { 
-    workout, 
-    loading, 
-    error, 
-    isEditing, 
-    isDirty,
-    createWorkout,
-    updateWorkout,
-    setWorkout,
-    clearWorkout
-  } = useWorkout();
-
+  const { workoutMetadata } = useWorkoutMetadata();
+  const { workoutFlow } = useWorkoutFlow();
+  const { loading, error, isEditing, isDirty } = useWorkoutUI();
+  const { createWorkout, updateWorkout, setWorkout, clearWorkout } = useWorkoutActions();
+  const { currentOrganization } = useOrganization();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
-  // Initialize workout data for new workouts
+  // Initialize workout data for new workouts - only run once
   useEffect(() => {
-    if (!isEditing && !workout) {
+    if (!isEditing && !isInitialized) {
       setWorkout({
         name: '',
         description: '',
@@ -45,16 +41,18 @@ export function WorkoutForm() {
           questionnaires: [],
           warmup: [],
           exercises: [],
-          // rest_between_exercises: 30,
-          // rest_between_sets: 60
         },
-        // difficulty: 'beginner',
-        // estimated_duration: 30,
-        // image: '',
-        // is_template: false
       });
+      setIsInitialized(true);
     }
-  }, [isEditing, workout, setWorkout]);
+  }, [isEditing, isInitialized, setWorkout]);
+
+  useEffect(() => {
+    console.log('currentOrganization🤖🤖🤖', currentOrganization);
+    if (currentOrganization) {
+      setOrganizationId(currentOrganization._id);
+    }
+  }, [currentOrganization]);
 
   const handleNext = () => {
     setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -65,23 +63,42 @@ export function WorkoutForm() {
   };
 
   const handleSubmit = async () => {
-    if (!workout) return;
+    if (!workoutMetadata.name) return;
 
     try {
       setIsSubmitting(true);
       
-      // TODO: Get organizationId from context or props
-      const organizationId = 'org_001'; // This should come from your auth context
+      console.log('Submitting workout:', {
+        isEditing,
+        workoutId: workoutMetadata.id,
+        organizationId,
+        workoutData: {
+          ...workoutMetadata,
+          flow: workoutFlow,
+        }
+      });
+      
+      if (!organizationId) {
+        throw new Error('Organization ID is required');
+      }
+      
+      const workoutData = {
+        ...workoutMetadata,
+        flow: workoutFlow,
+      };
       
       if (isEditing) {
-        await updateWorkout(workout.id!, workout, organizationId);
+        if (!workoutMetadata.id) {
+          throw new Error('Workout ID is required for editing');
+        }
+        await updateWorkout(workoutMetadata.id, workoutData, organizationId);
       } else {
-        await createWorkout(workout, organizationId);
+        await createWorkout(workoutData, organizationId);
       }
       
       // Redirect to workout library or detail page
       if (isEditing) {
-        router.push(`/app/workout-library/${workout.id}`);
+        router.push(`/app/workout-library/${workoutMetadata.id}`);
       } else {
         router.push('/app/workout-library');
       }
@@ -106,31 +123,15 @@ export function WorkoutForm() {
   };
 
   const renderStepContent = () => {
-    if (!workout) return null;
-    
     switch (currentStep) {
       case 1:
-        return (
-          <WorkoutBasicInfoStep
-            data={workout}
-            onUpdate={(data) => setWorkout({ ...workout, ...data })}
-          />
-        );
+        return <WorkoutBasicInfoStep />;
       case 2:
-        return (
-          <WorkoutExercisesStep
-            data={workout}
-            onUpdate={(data) => setWorkout({ ...workout, ...data })}
-          />
-        );
+        return <WorkoutExercisesStep />;
       case 3:
-        return (
-          <WorkoutFlowStep />
-        );
+        return <WorkoutFlowStep />;
       case 4:
-        return (
-          <WorkoutPreviewStep />
-        );
+        return <WorkoutPreviewStep />;
       default:
         return null;
     }
@@ -163,7 +164,8 @@ export function WorkoutForm() {
     );
   }
 
-  if (!workout) {
+  // Show loading only while initializing for new workouts
+  if (!isEditing && !isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -178,7 +180,25 @@ export function WorkoutForm() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        {/* ... existing header code ... */}
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {isEditing ? 'Edit Workout' : 'Create New Workout'}
+              </h1>
+              <p className="text-gray-600">
+                {isEditing ? 'Update your workout details' : 'Build a custom workout for your team'}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="text-gray-600"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-6">

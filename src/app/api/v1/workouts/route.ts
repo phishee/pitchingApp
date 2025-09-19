@@ -5,7 +5,7 @@ import { WorkoutController } from "@/app/api/lib/controllers/workout.controller"
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const workoutController = container.get<WorkoutController>(WORKOUT_TYPES.WorkoutController);
-  return workoutController.getWorkouts(req);
+  return workoutController.getWorkoutsWithUsers(req);
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {

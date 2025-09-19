@@ -430,9 +430,30 @@ export const fakeWorkouts: Workout[] = [
       questionnaires: ["fatigue_check", "sleep_quality"],
       warmup: ["dynamic_stretch", "band_pull_aparts", "arm_circles"],
       exercises: [
-        { exercise_id: "ex_001" }, // Bench Press
-        { exercise_id: "ex_005" }, // Medicine Ball Rotational Throw
-        { exercise_id: "ex_006" }  // Single-Arm Dumbbell Row
+        { 
+          exercise_id: "ex_001",
+          default_Metrics: {
+            sets: 3,
+            reps: 10,
+            rest: 60
+          }
+        }, // Bench Press
+        { 
+          exercise_id: "ex_005",
+          default_Metrics: {
+            sets: 3,
+            reps: 8,
+            rest: 90
+          }
+        }, // Medicine Ball Rotational Throw
+        { 
+          exercise_id: "ex_006",
+          default_Metrics: {
+            sets: 3,
+            reps: 12,
+            rest: 60
+          }
+        }  // Single-Arm Dumbbell Row
       ]
     },
     tags: ["strength", "baseball", "upper_body"]
@@ -456,9 +477,29 @@ export const fakeWorkouts: Workout[] = [
       questionnaires: ["energy_level", "hydration_status"],
       warmup: ["light_jogging", "dynamic_stretching", "jump_rope_basics"],
       exercises: [
-        { exercise_id: "ex_003" }, // Jump Rope
-        { exercise_id: "ex_004" }, // Burpees
-        { exercise_id: "ex_005" }  // Medicine Ball Rotational Throw
+        { 
+          exercise_id: "ex_003",
+          default_Metrics: {
+            duration: 300,
+            rest: 60
+          }
+        }, // Jump Rope
+        { 
+          exercise_id: "ex_004",
+          default_Metrics: {
+            sets: 3,
+            reps: 15,
+            rest: 60
+          }
+        }, // Burpees
+        { 
+          exercise_id: "ex_005",
+          default_Metrics: {
+            sets: 3,
+            reps: 8,
+            rest: 90
+          }
+        }  // Medicine Ball Rotational Throw
       ]
     },
     tags: ["cardio", "conditioning", "baseball", "endurance"]
@@ -482,10 +523,38 @@ export const fakeWorkouts: Workout[] = [
       questionnaires: ["muscle_soreness", "recovery_status"],
       warmup: ["mobility_drills", "light_cardio", "dynamic_movements"],
       exercises: [
-        { exercise_id: "ex_002" }, // Deadlift
-        { exercise_id: "ex_001" }, // Bench Press
-        { exercise_id: "ex_006" }, // Single-Arm Dumbbell Row
-        { exercise_id: "ex_004" }  // Burpees
+        { 
+          exercise_id: "ex_002",
+          default_Metrics: {
+            sets: 4,
+            reps: 8,
+            rest: 120
+          }
+        }, // Deadlift
+        { 
+          exercise_id: "ex_001",
+          default_Metrics: {
+            sets: 3,
+            reps: 10,
+            rest: 60
+          }
+        }, // Bench Press
+        { 
+          exercise_id: "ex_006",
+          default_Metrics: {
+            sets: 3,
+            reps: 12,
+            rest: 60
+          }
+        }, // Single-Arm Dumbbell Row
+        { 
+          exercise_id: "ex_004",
+          default_Metrics: {
+            sets: 3,
+            reps: 15,
+            rest: 60
+          }
+        }  // Burpees
       ]
     },
     tags: ["strength", "power", "compound", "full_body"]
@@ -509,9 +578,29 @@ export const fakeWorkouts: Workout[] = [
       questionnaires: ["mobility_assessment", "pain_level"],
       warmup: ["light_walking", "gentle_arm_swings"],
       exercises: [
-        { exercise_id: "ex_003" }, // Jump Rope (modified for mobility)
-        { exercise_id: "ex_004" }, // Burpees (modified for flexibility)
-        { exercise_id: "ex_005" }  // Medicine Ball Rotational Throw
+        { 
+          exercise_id: "ex_003",
+          default_Metrics: {
+            duration: 180,
+            rest: 60
+          }
+        }, // Jump Rope (modified for mobility)
+        { 
+          exercise_id: "ex_004",
+          default_Metrics: {
+            sets: 2,
+            reps: 8,
+            rest: 90
+          }
+        }, // Burpees (modified for flexibility)
+        { 
+          exercise_id: "ex_005",
+          default_Metrics: {
+            sets: 2,
+            reps: 6,
+            rest: 120
+          }
+        }  // Medicine Ball Rotational Throw
       ]
     },
     tags: ["mobility", "flexibility", "recovery", "injury_prevention"]
@@ -535,9 +624,29 @@ export const fakeWorkouts: Workout[] = [
       questionnaires: ["energy_level", "coordination_check"],
       warmup: ["dynamic_stretching", "light_jogging", "ladder_drills"],
       exercises: [
-        { exercise_id: "ex_003" }, // Jump Rope
-        { exercise_id: "ex_005" }, // Medicine Ball Rotational Throw
-        { exercise_id: "ex_006" }  // Single-Arm Dumbbell Row
+        { 
+          exercise_id: "ex_003",
+          default_Metrics: {
+            duration: 240,
+            rest: 60
+          }
+        }, // Jump Rope
+        { 
+          exercise_id: "ex_005",
+          default_Metrics: {
+            sets: 3,
+            reps: 8,
+            rest: 90
+          }
+        }, // Medicine Ball Rotational Throw
+        { 
+          exercise_id: "ex_006",
+          default_Metrics: {
+            sets: 3,
+            reps: 12,
+            rest: 60
+          }
+        }  // Single-Arm Dumbbell Row
       ]
     },
     tags: ["speed", "agility", "baseball", "coordination", "reaction_time"]
@@ -561,9 +670,29 @@ export const fakeWorkouts: Workout[] = [
       questionnaires: ["soreness_level", "sleep_quality", "stress_level"],
       warmup: ["gentle_mobility", "breathing_exercises"],
       exercises: [
-        { exercise_id: "ex_003" }, // Jump Rope (low intensity)
-        { exercise_id: "ex_004" }, // Burpees (modified for recovery)
-        { exercise_id: "ex_005" }  // Medicine Ball Rotational Throw
+        { 
+          exercise_id: "ex_003",
+          default_Metrics: {
+            duration: 120,
+            rest: 90
+          }
+        }, // Jump Rope (low intensity)
+        { 
+          exercise_id: "ex_004",
+          default_Metrics: {
+            sets: 2,
+            reps: 5,
+            rest: 120
+          }
+        }, // Burpees (modified for recovery)
+        { 
+          exercise_id: "ex_005",
+          default_Metrics: {
+            sets: 2,
+            reps: 4,
+            rest: 150
+          }
+        }  // Medicine Ball Rotational Throw
       ]
     },
     tags: ["recovery", "regeneration", "wellness", "stress_relief", "active_recovery"]
