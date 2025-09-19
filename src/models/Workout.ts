@@ -1,12 +1,25 @@
 export interface WorkoutFlow {
   questionnaires: string[];
   warmup: string[];
-  exercises: Array<{ exercise_id: string }>;
+  exercises: Array<WorkoutExercise>;
+}
+
+export interface WorkoutExercise {
+  exercise_id: string;
+  default_Metrics: { [key: string]: any };
 }
 
 export interface WorkoutUser {
   userId: string;
   memberId: string;
+}
+
+// Extended user profile for workout context
+export interface WorkoutUserProfile {
+  userId: string;
+  name: string;
+  email: string;
+  profileImageUrl?: string;
 }
 
 export interface Workout {
@@ -20,6 +33,12 @@ export interface Workout {
   description: string;
   flow: WorkoutFlow;
   tags: string[];
+}
+
+// Extended workout with user information
+export interface WorkoutWithUser extends Workout {
+  createdByUser?: WorkoutUserProfile;
+  updatedByUser?: WorkoutUserProfile;
 }
 
 // Query parameters interface
@@ -39,6 +58,24 @@ export interface WorkoutQueryParams {
 // Response interface
 export interface WorkoutResponse {
   data: Workout[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  filters: {
+    availableTags: string[];
+    totalWorkouts: number;
+  };
+  query: WorkoutQueryParams;
+}
+
+// Extended response interface with user information
+export interface WorkoutResponseWithUser {
+  data: WorkoutWithUser[];
   pagination: {
     page: number;
     limit: number;

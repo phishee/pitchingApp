@@ -1,4 +1,4 @@
-import { Workout, WorkoutResponse, WorkoutQueryParams } from '@/models/Workout';
+import { Workout, WorkoutResponse, WorkoutQueryParams, WorkoutWithUser, WorkoutResponseWithUser } from '@/models/Workout';
 import { inject, injectable } from 'inversify';
 import { DB_TYPES } from '../symbols/Symbols';
 import { DBProviderFactory } from '../factories/DBFactory';
@@ -12,7 +12,7 @@ export class WorkoutService {
         this.workoutRepo = this.dbFactory.createDBProvider();
     }
 
-    // Get all workouts with complex querying
+    // Get all workouts with complex querying (original method)
     async getWorkouts(params: WorkoutQueryParams): Promise<WorkoutResponse> {
         try {
             // Build MongoDB query
@@ -45,6 +45,63 @@ export class WorkoutService {
         } catch (error) {
             console.error('Error fetching workouts from database:', error);
             throw new Error('Failed to fetch workouts');
+        }
+    }
+
+    // Get all workouts with user information using populate
+    async getWorkoutsWithUsers(params: WorkoutQueryParams): Promise<WorkoutResponseWithUser> {
+        try {
+            // Build MongoDB query
+            const mongoQuery = this.buildMongoFilter(params);
+
+            // Use findWithPopulate to get workouts with user information
+            const allWorkouts = await this.workoutRepo.findWithPopulate(
+                this.workoutCollection,
+                mongoQuery,
+                [
+                    {
+                        path: 'createdByUser',
+                        from: 'users',
+                        localField: 'createdBy.userId',
+                        foreignField: 'userId',
+                        select: ['userId', 'name', 'email', 'profileImageUrl'],
+                        as: 'createdByUser'
+                    },
+                    {
+                        path: 'updatedByUser',
+                        from: 'users',
+                        localField: 'updatedBy.userId',
+                        foreignField: 'userId',
+                        select: ['userId', 'name', 'email', 'profileImageUrl'],
+                        as: 'updatedByUser'
+                    }
+                ]
+            );
+
+            // Apply client-side filters for complex logic
+            const filteredWorkouts = this.applyFilters(allWorkouts, params);
+
+            // Sort workouts
+            const sortedWorkouts = this.sortWorkouts(filteredWorkouts, params.sort || 'name', params.order || 'asc');
+
+            // Calculate pagination
+            const pagination = this.calculatePagination(sortedWorkouts, params);
+
+            // Get paginated data
+            const paginatedWorkouts = this.paginateResults(sortedWorkouts, pagination);
+
+            // Get available filters
+            const filters = this.getAvailableFilters(allWorkouts);
+
+            return {
+                data: paginatedWorkouts as WorkoutWithUser[],
+                pagination,
+                filters,
+                query: params
+            };
+        } catch (error) {
+            console.error('Error fetching workouts with users from database:', error);
+            throw new Error('Failed to fetch workouts with user information');
         }
     }
 
@@ -203,7 +260,7 @@ export class WorkoutService {
             const workout = await this.workoutRepo.findQuery(
                 this.workoutCollection,
                 {
-                    _id: id,
+                    id: id,
                     organizationId: organizationId
                 }
             ) as Workout[];
@@ -267,7 +324,7 @@ export class WorkoutService {
             const existingWorkout = await this.workoutRepo.findQuery(
                 this.workoutCollection,
                 {
-                    _id: id,
+                    id: id,
                     organizationId: organizationId
                 }
             );
@@ -303,7 +360,7 @@ export class WorkoutService {
             const existingWorkout = await this.workoutRepo.findQuery(
                 this.workoutCollection,
                 {
-                    _id: id,
+                    id: id,
                     organizationId: organizationId
                 }
             );
@@ -312,13 +369,16 @@ export class WorkoutService {
                 throw new Error('Workout not found or does not belong to organization');
             }
 
+            // Get the MongoDB _id from the existing workout
+            const mongoId = existingWorkout[0]._id;
+
             // Check if another workout with same name exists (excluding current one)
             const duplicateWorkout = await this.workoutRepo.findQuery(
                 this.workoutCollection,
                 {
                     name: workoutData.name,
                     organizationId: organizationId,
-                    _id: { $ne: id } // Exclude current workout
+                    id: { $ne: id } // Exclude current workout
                 }
             );
 
@@ -326,8 +386,8 @@ export class WorkoutService {
                 throw new Error('A workout with this name already exists in your organization');
             }
 
-            // Update the workout
-            const updatedWorkout = await this.workoutRepo.update(this.workoutCollection, id, workoutData);
+            // Update the workout using the MongoDB _id
+            const updatedWorkout = await this.workoutRepo.update(this.workoutCollection, mongoId, workoutData);
             return updatedWorkout;
         } catch (error) {
             console.error('Error updating workout:', error);

@@ -74,7 +74,6 @@ export function UnsplashImagePicker({
   const searchImages = useCallback(async (query: string, pageNum: number = 1, reset = false) => {
     setLoading(true);
     try {
-        query = "Chest Workout"
       const params = new URLSearchParams({
         query,
         page: pageNum.toString(),
@@ -96,7 +95,12 @@ export function UnsplashImagePicker({
         setImages(data.results);
         setPage(1);
       } else {
-        setImages(prev => [...prev, ...data.results]);
+        // Ensure unique images by filtering out duplicates based on ID
+        setImages(prev => {
+          const existingIds = new Set(prev.map(img => img.id));
+          const newImages = data.results.filter((img: UnsplashImage) => !existingIds.has(img.id));
+          return [...prev, ...newImages];
+        });
       }
       
       setHasMore(data.results.length === perPage);
@@ -199,9 +203,9 @@ export function UnsplashImagePicker({
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {images.map((image) => (
+              {images.map((image, index) => (
                 <div
-                  key={image.id}
+                  key={`${image.id}-${index}`} // Use both ID and index for uniqueness
                   className={`relative group cursor-pointer rounded-lg overflow-hidden ${
                     isImageSelected(image.id) ? 'ring-2 ring-blue-500' : ''
                   }`}

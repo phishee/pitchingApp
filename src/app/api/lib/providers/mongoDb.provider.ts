@@ -347,7 +347,7 @@ async findWithPopulate(
 
             // Extract foreign key values for this populate
             const foreignKeyValues = result
-                .map(doc => doc[localField])
+                .map(doc => this.getNestedValue(doc, localField))
                 .filter(val => val != null);
 
             if (foreignKeyValues.length === 0) {
@@ -390,7 +390,7 @@ async findWithPopulate(
 
             // Apply this population to all documents
             result = result.map(doc => {
-                const foreignKeyValue = doc[localField];
+                const foreignKeyValue = this.getNestedValue(doc, localField);
                 const relatedDoc = lookupMap.get(foreignKeyValue?.toString());
                 
                 return {
@@ -516,6 +516,13 @@ private determineAlias(path: string): string {
     }
     return path.toLowerCase();
 }
+
+    // Helper method to get nested values from objects
+    private getNestedValue(obj: any, path: string): any {
+        return path.split('.').reduce((current, key) => {
+            return current && current[key] !== undefined ? current[key] : undefined;
+        }, obj);
+    }
     //
 }
 
