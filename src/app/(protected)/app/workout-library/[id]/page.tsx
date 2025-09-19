@@ -115,9 +115,9 @@ export default function WorkoutDetailPage() {
       case 'overview':
         return <WorkoutOverviewTab workout={workout} />;
       case 'flow':
-        return <WorkoutFlowTab workout={workout} getExerciseDetails={getExerciseDetails} />;
+        return <WorkoutFlowTab workout={workout} />;
       case 'exercises':
-        return <WorkoutExercisesTab workout={workout} getExerciseDetails={getExerciseDetails} />;
+        return <WorkoutExercisesTab workout={workout} />;
       case 'history':
         return <WorkoutHistoryTab />;
       default:
