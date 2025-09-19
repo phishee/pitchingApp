@@ -9,7 +9,7 @@ import { Search, Plus, Target, Clock, X, Check } from 'lucide-react';
 import { getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
 import { WorkoutExercise, Exercise } from '@/models';
 import { useWorkoutFlow, useWorkoutExercises } from '@/providers/workout-context';
-import { ExerciseLibrarySelection } from '../ExerciseLibraryPopup';
+import { ExerciseLibrarySelection } from '../ExerciseLibrarySelection';
 
 export function WorkoutExercisesStep() {
   const { workoutFlow, addExercise, removeExercise, updateExercise } = useWorkoutFlow();

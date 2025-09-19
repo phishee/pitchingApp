@@ -10,9 +10,7 @@ import { getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
 import { Exercise, WorkoutExercise } from '@/models';
 import { exerciseApi } from '@/app/services-client/exerciseApi';
 
-interface ExerciseLibraryPopupProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface ExerciseLibrarySelectionProps {
   selectedExercises: Exercise[];
   onExerciseSelect: (exercise: Exercise) => void;
   tags?: string[];
@@ -22,7 +20,7 @@ export function ExerciseLibrarySelection({
   selectedExercises, 
   onExerciseSelect,
   tags = []
-}: ExerciseLibraryPopupProps) {
+}: ExerciseLibrarySelectionProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
