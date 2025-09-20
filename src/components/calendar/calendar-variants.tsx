@@ -1,32 +1,36 @@
 import React from 'react';
 import { Calendar } from './calendar';
-import { CalendarView } from '@/models';
+import { CalendarProvider } from '@/providers/calendar-context';
 
 // Full-screen calendar
 export function FullScreenCalendar() {
   return (
-    <Calendar 
-      className="h-screen w-full"
-    />
+    <CalendarProvider>
+      <Calendar 
+        className="h-screen w-full"
+      />
+    </CalendarProvider>
   );
 }
 
 // Compact calendar
 export function CompactCalendar() {
   return (
-    <Calendar 
-      className="max-w-4xl mx-auto"
-      initialView="week"
-    />
+    <CalendarProvider initialView="week">
+      <Calendar 
+        className="max-w-4xl mx-auto"
+      />
+    </CalendarProvider>
   );
 }
 
 // Mobile-optimized calendar
 export function MobileCalendar() {
   return (
-    <Calendar 
-      className="p-4"
-      initialView="day"
-    />
+    <CalendarProvider initialView="day">
+      <Calendar 
+        className="p-4"
+      />
+    </CalendarProvider>
   );
 }
