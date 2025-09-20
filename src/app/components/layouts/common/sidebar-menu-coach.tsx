@@ -51,7 +51,7 @@ const COACH_MENU = [
   },
   {
     title: 'Schedule',
-    path: '/app/schedule',
+    path: '/app/calendar/1',
     icon: Calendar,
   },
   {
