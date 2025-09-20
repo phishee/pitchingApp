@@ -10,6 +10,7 @@ import { MonthView } from './views/month-view';
 import { WeekView } from './views/week-view';
 import { DayView } from './views/day-view';
 import { useCalendar } from '@/providers/calendar-context';
+import { CalendarEvent } from '@/models';
 
 interface CalendarProps {
   className?: string;
@@ -28,10 +29,12 @@ export function Calendar({ className }: CalendarProps) {
     hideEventPopup,
   } = useCalendar();
 
-  const handleEventClick = (event: any, clickEvent: React.MouseEvent) => {
+  const handleEventClick = (event: CalendarEvent) => {
+    // For now, we'll position the popup in the center of the screen
+    // In a real app, you might want to get the actual click position
     showEventPopup(event, {
-      x: clickEvent.clientX,
-      y: clickEvent.clientY
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2
     });
   };
 
