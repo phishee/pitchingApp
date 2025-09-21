@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { CalendarView, CalendarEvent } from '@/models';
-import { mockEvents } from '@/data/mock-event';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { CalendarView, CalendarEvent, TeamMemberWithUser } from '@/models';
+import { calendarApi } from '@/app/services-client/calendarApi';
 
 interface CalendarContextType {
   // Core state
@@ -11,6 +11,10 @@ interface CalendarContextType {
   events: CalendarEvent[];
   selectedEvent: CalendarEvent | null;
   popupPosition: { x: number; y: number };
+  
+  // Member selection state
+  selectedMember: Partial<TeamMemberWithUser> | null;
+  isLoadingEvents: boolean;
   
   // Actions
   setCurrentDate: (date: Date) => void;
@@ -23,6 +27,10 @@ interface CalendarContextType {
   addEvent: (event: Omit<CalendarEvent, 'id'>) => void;
   updateEvent: (eventId: string, updates: Partial<CalendarEvent>) => void;
   deleteEvent: (eventId: string) => void;
+  
+  // Member actions
+  setSelectedMember: (member: Partial<TeamMemberWithUser> | null) => void;
+  loadMemberEvents: (member: Partial<TeamMemberWithUser> | null) => Promise<void>;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
@@ -32,19 +40,59 @@ interface CalendarProviderProps {
   initialDate?: Date;
   initialView?: CalendarView;
   initialEvents?: CalendarEvent[];
+  initialSelectedMember?: Partial<TeamMemberWithUser> | null;
 }
 
 export function CalendarProvider({ 
   children, 
   initialDate = new Date(), 
   initialView = 'month',
-  initialEvents = mockEvents
+  initialEvents = [],
+  initialSelectedMember = null
 }: CalendarProviderProps) {
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [currentView, setCurrentView] = useState<CalendarView>(initialView);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [selectedMember, setSelectedMember] = useState<Partial<TeamMemberWithUser> | null>(initialSelectedMember);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+
+  // Load events when selected member changes
+  const loadMemberEvents = async (member: Partial<TeamMemberWithUser> | null) => {
+    if (!member) {
+      setEvents([]);
+      return;
+    }
+
+    setIsLoadingEvents(true);
+    try {
+      // Get userId from member - handle both populated and non-populated members
+      let userId: string;
+      if ('user' in member && member.user?.userId) {
+        userId = member.user.userId;
+      } else if (member.userId) {
+        userId = member.userId;
+      } else {
+        console.error('No userId found in member');
+        setEvents([]);
+        return;
+      }
+
+      const memberEvents = await calendarApi.getEventsByUserId(userId);
+      setEvents(memberEvents);
+    } catch (error) {
+      console.error('Error loading member events:', error);
+      setEvents([]);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
+
+  // Load events when selected member changes
+  useEffect(() => {
+    loadMemberEvents(selectedMember);
+  }, [selectedMember]);
 
   // Navigation actions
   const navigateToPrevious = () => {
@@ -89,24 +137,83 @@ export function CalendarProvider({
     setSelectedEvent(null);
   };
 
-  const addEvent = (eventData: Omit<CalendarEvent, 'id'>) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: Date.now().toString(),
-    };
-    setEvents(prev => [...prev, newEvent]);
+  const addEvent = async (eventData: Omit<CalendarEvent, 'id'>) => {
+    if (!selectedMember) {
+      console.error('No member selected');
+      return;
+    }
+
+    try {
+      // Get userId from selected member
+      let userId: string;
+      if ('user' in selectedMember && selectedMember.user?.userId) {
+        userId = selectedMember.user.userId;
+      } else if (selectedMember.userId) {
+        userId = selectedMember.userId;
+      } else {
+        console.error('No userId found in selected member');
+        return;
+      }
+
+      const newEvent = await calendarApi.createEvent(userId, eventData);
+      setEvents(prev => [...prev, newEvent]);
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
   };
 
-  const updateEvent = (eventId: string, updates: Partial<CalendarEvent>) => {
-    setEvents(prev => 
-      prev.map(event => 
-        event.id === eventId ? { ...event, ...updates } : event
-      )
-    );
+  const updateEvent = async (eventId: string, updates: Partial<CalendarEvent>) => {
+    if (!selectedMember) {
+      console.error('No member selected');
+      return;
+    }
+
+    try {
+      // Get userId from selected member
+      let userId: string;
+      if ('user' in selectedMember && selectedMember.user?.userId) {
+        userId = selectedMember.user.userId;
+      } else if (selectedMember.userId) {
+        userId = selectedMember.userId;
+      } else {
+        console.error('No userId found in selected member');
+        return;
+      }
+
+      const updatedEvent = await calendarApi.updateEvent(userId, eventId, updates);
+      setEvents(prev => 
+        prev.map(event => 
+          event.id === eventId ? updatedEvent : event
+        )
+      );
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
   };
 
-  const deleteEvent = (eventId: string) => {
-    setEvents(prev => prev.filter(event => event.id !== eventId));
+  const deleteEvent = async (eventId: string) => {
+    if (!selectedMember) {
+      console.error('No member selected');
+      return;
+    }
+
+    try {
+      // Get userId from selected member
+      let userId: string;
+      if ('user' in selectedMember && selectedMember.user?.userId) {
+        userId = selectedMember.user.userId;
+      } else if (selectedMember.userId) {
+        userId = selectedMember.userId;
+      } else {
+        console.error('No userId found in selected member');
+        return;
+      }
+
+      await calendarApi.deleteEvent(userId, eventId);
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
   };
 
   const contextValue: CalendarContextType = {
@@ -116,6 +223,8 @@ export function CalendarProvider({
     events,
     selectedEvent,
     popupPosition,
+    selectedMember,
+    isLoadingEvents,
     
     // Actions
     setCurrentDate,
@@ -128,6 +237,8 @@ export function CalendarProvider({
     addEvent,
     updateEvent,
     deleteEvent,
+    setSelectedMember,
+    loadMemberEvents,
   };
 
   return (
