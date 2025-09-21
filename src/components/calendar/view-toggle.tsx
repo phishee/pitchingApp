@@ -16,7 +16,7 @@ export function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
   ] as const;
 
   return (
-    <div className="flex bg-gray-100 rounded-lg p-1">
+    <div className="flex bg-gray-100 p-1 rounded-full">
       {views.map((view) => (
         <Button
           key={view.key}
@@ -24,7 +24,7 @@ export function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
           variant={currentView === view.key ? 'primary' : 'ghost'}
           size="sm"
           className={cn(
-            'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+            'px-4 py-2 text-sm font-medium transition-colors rounded-full',
             currentView === view.key
               ? 'bg-purple-600 text-white shadow-sm'
               : 'text-gray-600 hover:text-gray-900 hover:bg-white'
