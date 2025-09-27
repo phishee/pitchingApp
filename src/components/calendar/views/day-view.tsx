@@ -22,7 +22,7 @@ export function DayView({ currentDate, onEventClick }: DayViewProps) {
 
   // Get events for the current day
   const dayEvents = events.filter(event => {
-    const eventDate = new Date(event.date);
+    const eventDate = new Date(event.startTime);
     return eventDate.getDate() === currentDate.getDate() &&
            eventDate.getMonth() === currentDate.getMonth() &&
            eventDate.getFullYear() === currentDate.getFullYear();
@@ -32,8 +32,8 @@ export function DayView({ currentDate, onEventClick }: DayViewProps) {
   const eventsByTimeSlot = timeSlots.reduce((acc, time) => {
     const [hour] = time.split(':');
     const eventsInSlot = dayEvents.filter(event => {
-      const [eventHour] = event.startTime.split(':');
-      return parseInt(eventHour) === parseInt(hour);
+      const eventHour = new Date(event.startTime).getHours();
+      return eventHour === parseInt(hour);
     });
     acc[time] = eventsInSlot;
     return acc;
@@ -79,4 +79,3 @@ export function DayView({ currentDate, onEventClick }: DayViewProps) {
     </Card>
   );
 }
-

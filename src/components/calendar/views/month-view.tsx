@@ -10,10 +10,11 @@ interface MonthViewProps {
 }
 
 export function MonthView({ currentDate, onEventClick }: MonthViewProps) {
-  const { events } = useCalendar();
+  const { calendarDays, events } = useCalendar();
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  const generateCalendarDays = (): CalendarDay[] => {
+  // Generate calendar days from events if calendarDays is not available
+  const generateCalendarDaysFromEvents = (): CalendarDay[] => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
@@ -34,7 +35,7 @@ export function MonthView({ currentDate, onEventClick }: MonthViewProps) {
       date.setDate(startDate.getDate() + i);
       
       const dayEvents = events.filter(event => {
-        const eventDate = new Date(event.date);
+        const eventDate = new Date(event.startTime);
         return eventDate.getDate() === date.getDate() &&
                eventDate.getMonth() === date.getMonth() &&
                eventDate.getFullYear() === date.getFullYear();
@@ -45,14 +46,18 @@ export function MonthView({ currentDate, onEventClick }: MonthViewProps) {
         isCurrentMonth: date.getMonth() === month,
         isToday: date.toDateString() === new Date().toDateString(),
         events: dayEvents,
-        fullDate: date
+        fullDate: date,
+        dayOfWeek: date.toLocaleDateString('en', { weekday: 'long' }),
+        isAvailable: true // Default to available
       });
     }
     
     return days;
   };
 
-  const calendarDays = generateCalendarDays();
+  // If calendarDays is available from context (month view), use it
+  // Otherwise generate calendar days from events
+  const displayCalendarDays = calendarDays.length > 0 ? calendarDays : generateCalendarDaysFromEvents();
 
   return (
     <Card className="overflow-hidden">
@@ -68,7 +73,7 @@ export function MonthView({ currentDate, onEventClick }: MonthViewProps) {
 
         {/* Calendar Days */}
         <div className="grid grid-cols-7">
-          {calendarDays.map((day, index) => (
+          {displayCalendarDays.map((day, index) => (
             <CalendarDayComponent
               key={index}
               day={day}

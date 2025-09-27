@@ -12,7 +12,7 @@ import { DayView } from './views/day-view';
 import { useCalendar } from '@/providers/calendar-context';
 import { useTeam } from '@/providers/team-context';
 import { MemberSwitcher } from '@/app/components/layouts/common/member-switcher';
-import { CalendarEvent, TeamMemberWithUser } from '@/models';
+import { CalendarEvent, Event, TeamMemberWithUser } from '@/models';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 
 interface CoachCalendarProps {
@@ -33,6 +33,7 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
     showEventPopup,
     hideEventPopup,
     setSelectedMember,
+    addEvent,
   } = useCalendar();
 
   const { teamMembers } = useTeam();
@@ -46,9 +47,65 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
     });
   };
 
-  const handleMemberSelect = (member: Partial<TeamMemberWithUser>) => {
+  const handleMemberSelect = (member: Partial<TeamMemberWithUser> | null) => {
     setSelectedMember(member);
     // Events will be automatically loaded via useEffect in the context
+  };
+
+  const handleEventTypeSelect = async (eventType: string) => {
+    if (!selectedMember) {
+      console.warn('Please select a team member first');
+      return;
+    }
+
+    try {
+      // Get current user ID from selected member
+      const userId = ('user' in selectedMember && selectedMember.user?.userId) || selectedMember.userId;
+      if (!userId) {
+        console.error('No userId found in selected member');
+        return;
+      }
+
+      // Create a proper Event object
+      const newEvent: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
+        groupId: `manual-${Date.now()}`,
+        type: getEventTypeFromString(eventType),
+        organizationId: 'org-123', // You'll need to get this from context
+        teamId: 'team-456', // You'll need to get this from context
+        title: `${eventType} - ${getMemberDisplayName(selectedMember)}`,
+        description: eventType,
+        startTime: new Date(`${currentDate.toISOString().split('T')[0]}T14:00:00`),
+        endTime: new Date(`${currentDate.toISOString().split('T')[0]}T16:00:00`),
+        participants: {
+          athletes: [{ userId, memberId: 'member-id' }],
+          coaches: [],
+          required: [userId],
+          optional: []
+        },
+        sourceAssignmentId: 'manual-creation',
+        sequenceNumber: 1,
+        totalInSequence: 1,
+        status: 'scheduled' as const,
+        visibility: 'team_only' as const,
+        createdBy: { userId, memberId: 'creator-member-id' },
+        details: {
+          type: 'workout' as const,
+          workoutAssignmentId: 'manual',
+          sessionType: 'individual',
+          bookingInfo: {
+            isBookingRequested: false,
+            requestStatus: 'none'
+          },
+          estimatedDuration: 120,
+          equipment: [],
+          notes: ''
+        }
+      };
+
+      await addEvent(newEvent as Event);
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
   };
 
   return (
@@ -75,7 +132,7 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
           onNextMonth={navigateToNext}
           view={currentView}
         />
-        <ActionButtons />
+        <ActionButtons onEventTypeSelect={handleEventTypeSelect} />
       </div>
 
       {/* Loading State */}
@@ -83,13 +140,24 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
         <div className="flex items-center justify-center py-8">
           <LoadingSpinner />
           <span className="ml-2 text-sm text-muted-foreground">
-            Loading {selectedMember ? getMemberDisplayName(selectedMember) : 'member'}'s calendar...
+            Loading {selectedMember ? getMemberDisplayName(selectedMember) as string : 'member'}'s calendar...
           </span>
         </div>
       )}
 
+      {/* No Member Selected State */}
+      {!selectedMember && !isLoadingEvents && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-gray-400 text-lg mb-2">📅</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">Select a Team Member</h3>
+            <p className="text-gray-500">Choose a team member above to view their calendar and assign events.</p>
+          </div>
+        </div>
+      )}
+
       {/* Calendar Content */}
-      {!isLoadingEvents && (
+      {!isLoadingEvents && selectedMember && (
         <>
           {currentView === 'day' ? (
             <DayView
@@ -126,6 +194,36 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
 function getMemberDisplayName(member: Partial<TeamMemberWithUser>) {
   if ('user' in member && member.user) {
     return member.user.name || 'Unknown User';
+  } else if ('name' in member) {
+    return member.name || 'Unknown User';
   }
   return 'Team Member';
+}
+
+// Helper function to get event type from string
+function getEventTypeFromString(eventType: string): 'workout' | 'gameday' | 'assessment' | 'coaching_session' {
+  switch (eventType) {
+    case 'Assign Workout':
+      return 'workout';
+    case 'Assign Assessment':
+      return 'assessment';
+    case 'Book Session':
+      return 'coaching_session';
+    default:
+      return 'workout';
+  }
+}
+
+// Helper function to get color based on event type
+function getEventTypeColor(eventType: string): string {
+  switch (eventType) {
+    case 'Assign Workout':
+      return '#2196F3'; // blue
+    case 'Assign Assessment':
+      return '#4CAF50'; // green
+    case 'Book Session':
+      return '#FF9800'; // orange
+    default:
+      return '#9C27B0'; // purple
+  }
 }
