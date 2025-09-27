@@ -25,24 +25,30 @@ export function TimeSlot({ time, events, onEventClick }: TimeSlotProps) {
             {events.map((event) => (
               <Card
                 key={event.id}
-                className={cn(
-                  'cursor-pointer hover:shadow-sm transition-shadow p-2',
-                  {
-                    'bg-purple-100 border-purple-200 text-purple-800': event.color === 'purple',
-                    'bg-green-100 border-green-200 text-green-800': event.color === 'green',
-                    'bg-blue-100 border-blue-200 text-blue-800': event.color === 'blue',
-                    'bg-orange-100 border-orange-200 text-orange-800': event.color === 'orange',
-                  }
-                )}
+                className="cursor-pointer hover:shadow-sm transition-shadow p-2"
+                style={{ 
+                  backgroundColor: event.color || '#9C27B0',
+                  borderColor: event.color || '#9C27B0',
+                  color: 'white'
+                }}
                 onClick={() => onEventClick(event)}
               >
                 <CardContent className="p-0">
-                  <div className="font-semibold text-sm">{event.clientName}</div>
-                  <div className="text-xs opacity-80">{event.service}</div>
+                  <div className="font-semibold text-sm">
+                    {event.title || 'Untitled Event'}
+                  </div>
+                  <div className="text-xs opacity-80">
+                    {event.description || 'No description'}
+                  </div>
                   <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
                     <Clock className="h-3 w-3" />
-                    {event.time}
+                    {`${event.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${event.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
                   </div>
+                  {event.status && (
+                    <div className="text-xs opacity-60 mt-1 capitalize">
+                      Status: {event.status}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

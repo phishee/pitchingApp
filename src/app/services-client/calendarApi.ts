@@ -1,122 +1,9 @@
-import { CalendarEvent } from '@/models';
-
-// Mock data for different team members
-const mockMemberEvents: Record<string, CalendarEvent[]> = {
-  'user1': [
-    {
-      id: '1',
-      clientName: 'Jenny Wilson',
-      service: 'Pitching Practice',
-      time: '14:00 - 16:00',
-      color: 'purple',
-      date: '2025-01-15',
-      startTime: '14:00',
-      endTime: '16:00'
-    },
-    {
-      id: '2',
-      clientName: 'Arlene McCoy',
-      service: 'Strength Training',
-      time: '10:00 - 11:30',
-      color: 'green',
-      date: '2025-01-16',
-      startTime: '10:00',
-      endTime: '11:30'
-    },
-    {
-      id: '3',
-      clientName: 'Jane Cooper',
-      service: 'Bullpen Session',
-      time: '16:00 - 17:30',
-      color: 'blue',
-      date: '2025-01-17',
-      startTime: '16:00',
-      endTime: '17:30'
-    }
-  ],
-  'user2': [
-    {
-      id: '4',
-      clientName: 'Wade Warren',
-      service: 'Batting Practice',
-      time: '09:00 - 10:30',
-      color: 'orange',
-      date: '2025-01-15',
-      startTime: '09:00',
-      endTime: '10:30'
-    },
-    {
-      id: '5',
-      clientName: 'Cody Fisher',
-      service: 'Fielding Drills',
-      time: '11:00 - 12:00',
-      color: 'green',
-      date: '2025-01-16',
-      startTime: '11:00',
-      endTime: '12:00'
-    },
-    {
-      id: '6',
-      clientName: 'Cayla Brister',
-      service: 'Conditioning',
-      time: '15:00 - 16:00',
-      color: 'purple',
-      date: '2025-01-18',
-      startTime: '15:00',
-      endTime: '16:00'
-    }
-  ],
-  'user3': [
-    {
-      id: '7',
-      clientName: 'Devon Lane',
-      service: 'Catching Practice',
-      time: '13:00 - 14:30',
-      color: 'blue',
-      date: '2025-01-15',
-      startTime: '13:00',
-      endTime: '14:30'
-    },
-    {
-      id: '8',
-      clientName: 'Dianne Russell',
-      service: 'Pitching Mechanics',
-      time: '10:30 - 12:00',
-      color: 'purple',
-      date: '2025-01-17',
-      startTime: '10:30',
-      endTime: '12:00'
-    }
-  ]
-};
-
-// Default events for when no specific member is selected
-const defaultEvents: CalendarEvent[] = [
-  {
-    id: 'default1',
-    clientName: 'Team Meeting',
-    service: 'Strategy Session',
-    time: '09:00 - 10:00',
-    color: 'blue',
-    date: new Date().toISOString().split('T')[0],
-    startTime: '09:00',
-    endTime: '10:00'
-  },
-  {
-    id: 'default2',
-    clientName: 'General Practice',
-    service: 'Team Practice',
-    time: '14:00 - 16:00',
-    color: 'green',
-    date: new Date().toISOString().split('T')[0],
-    startTime: '14:00',
-    endTime: '16:00'
-  }
-];
+import { Event } from '@/models';
+import { mockMemberEvents, defaultEvents } from '@/data/mock-calendar-events';
 
 export const calendarApi = {
   // Get events for a specific user
-  async getEventsByUserId(userId: string): Promise<CalendarEvent[]> {
+  async getEventsByUserId(userId: string): Promise<Event[]> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
     
@@ -125,22 +12,29 @@ export const calendarApi = {
   },
 
   // Get events for a specific date range
-  async getEventsByDateRange(userId: string, startDate: string, endDate: string): Promise<CalendarEvent[]> {
+  async getEventsByDateRange(userId: string, startDate: string, endDate: string): Promise<Event[]> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const allEvents = mockMemberEvents[userId] || defaultEvents;
-    return allEvents.filter(event => 
-      event.date >= startDate && event.date <= endDate
-    );
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    return allEvents.filter(event => {
+      const eventDate = event.startTime;
+      return eventDate >= start && eventDate <= end;
+    });
   },
 
   // Create a new event
-  async createEvent(userId: string, event: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent> {
+  async createEvent(userId: string, eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Promise<Event> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    const newEvent: CalendarEvent = {
-      ...event,
+    const now = new Date();
+    const newEvent: Event = {
+      ...eventData,
       id: Date.now().toString(),
+      createdAt: now,
+      updatedAt: now
     };
     
     // In a real app, this would be saved to the backend
@@ -154,7 +48,7 @@ export const calendarApi = {
   },
 
   // Update an existing event
-  async updateEvent(userId: string, eventId: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent> {
+  async updateEvent(userId: string, eventId: string, updates: Partial<Event>): Promise<Event> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const userEvents = mockMemberEvents[userId] || defaultEvents;
@@ -164,7 +58,11 @@ export const calendarApi = {
       throw new Error('Event not found');
     }
     
-    const updatedEvent = { ...userEvents[eventIndex], ...updates };
+    const updatedEvent: Event = { 
+      ...userEvents[eventIndex], 
+      ...updates,
+      updatedAt: new Date()
+    };
     userEvents[eventIndex] = updatedEvent;
     
     return updatedEvent;
@@ -182,5 +80,42 @@ export const calendarApi = {
     }
     
     userEvents.splice(eventIndex, 1);
+  },
+
+  // Get a single event by ID
+  async getEventById(userId: string, eventId: string): Promise<Event | null> {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const userEvents = mockMemberEvents[userId] || defaultEvents;
+    return userEvents.find(event => event.id === eventId) || null;
+  },
+
+  // Get events by type
+  async getEventsByType(userId: string, eventType: string): Promise<Event[]> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const allEvents = mockMemberEvents[userId] || defaultEvents;
+    return allEvents.filter(event => event.type === eventType);
+  },
+
+  // Get events by status
+  async getEventsByStatus(userId: string, status: string): Promise<Event[]> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const allEvents = mockMemberEvents[userId] || defaultEvents;
+    return allEvents.filter(event => event.status === status);
+  },
+
+  // Search events by title or description
+  async searchEvents(userId: string, query: string): Promise<Event[]> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const allEvents = mockMemberEvents[userId] || defaultEvents;
+    const lowercaseQuery = query.toLowerCase();
+    
+    return allEvents.filter(event => 
+      event.title.toLowerCase().includes(lowercaseQuery) ||
+      event.description.toLowerCase().includes(lowercaseQuery)
+    );
   }
 };

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CalendarDay } from '@/models';
+import { CalendarDay, CalendarEvent } from '@/models';
 import { cn } from '@/lib/utils';
 import { useCalendar } from '@/providers/calendar-context';
+import { EventCard } from '@/components/calendar/event/cards/event-card';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -32,8 +33,8 @@ function WeekTimeSlot({ time, weekDays, onEventClick }: WeekTimeSlotProps) {
         {weekDays.map((day, dayIndex) => {
           // Find events for this day and time slot
           const eventsInSlot = day.events.filter(event => {
-            const [eventHour] = event.startTime.split(':');
-            return parseInt(eventHour) === parseInt(hour);
+            const eventHour = new Date(event.startTime).getHours();
+            return eventHour === parseInt(hour);
           });
 
           return (
@@ -47,22 +48,12 @@ function WeekTimeSlot({ time, weekDays, onEventClick }: WeekTimeSlotProps) {
               {eventsInSlot.length > 0 ? (
                 <div className="space-y-1">
                   {eventsInSlot.map((event) => (
-                    <div
+                    <EventCard
                       key={event.id}
-                      className={cn(
-                        'cursor-pointer hover:shadow-sm transition-shadow p-2 rounded text-xs',
-                        {
-                          'bg-purple-100 border border-purple-200 text-purple-800': event.color === 'purple',
-                          'bg-green-100 border border-green-200 text-green-800': event.color === 'green',
-                          'bg-blue-100 border border-blue-200 text-blue-800': event.color === 'blue',
-                          'bg-orange-100 border border-orange-200 text-orange-800': event.color === 'orange',
-                        }
-                      )}
-                      onClick={() => onEventClick(event)}
-                    >
-                      <div className="font-semibold truncate">{event.clientName}</div>
-                      <div className="opacity-80 truncate">{event.service}</div>
-                    </div>
+                      event={event}
+                      onClick={onEventClick}
+                      compact={true}
+                    />
                   ))}
                 </div>
               ) : (
@@ -93,7 +84,7 @@ export function WeekView({ currentDate, onEventClick }: WeekViewProps) {
       date.setDate(startOfWeek.getDate() + i);
       
       const dayEvents = events.filter(event => {
-        const eventDate = new Date(event.date);
+        const eventDate = new Date(event.startTime);
         return eventDate.getDate() === date.getDate() &&
                eventDate.getMonth() === date.getMonth() &&
                eventDate.getFullYear() === date.getFullYear();
@@ -104,7 +95,9 @@ export function WeekView({ currentDate, onEventClick }: WeekViewProps) {
         isCurrentMonth: date.getMonth() === currentDate.getMonth(),
         isToday: date.toDateString() === new Date().toDateString(),
         events: dayEvents,
-        fullDate: date
+        fullDate: date,
+        dayOfWeek: date.toLocaleDateString('en', { weekday: 'long' }),
+        isAvailable: true
       });
     }
     

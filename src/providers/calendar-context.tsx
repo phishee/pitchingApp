@@ -1,14 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { CalendarView, CalendarEvent, TeamMemberWithUser } from '@/models';
-import { calendarApi } from '@/app/services-client/calendarApi';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { CalendarView, CalendarEvent, TeamMemberWithUser, CalendarDay, Event } from '@/models';
+import { calendarService } from '@/app/services-client/calendar-service';
 
 interface CalendarContextType {
   // Core state
   currentDate: Date;
   currentView: CalendarView;
   events: CalendarEvent[];
+  calendarDays: CalendarDay[];
   selectedEvent: CalendarEvent | null;
   popupPosition: { x: number; y: number };
   
@@ -24,8 +25,8 @@ interface CalendarContextType {
   selectEvent: (event: CalendarEvent | null) => void;
   showEventPopup: (event: CalendarEvent, position: { x: number; y: number }) => void;
   hideEventPopup: () => void;
-  addEvent: (event: Omit<CalendarEvent, 'id'>) => void;
-  updateEvent: (eventId: string, updates: Partial<CalendarEvent>) => void;
+  addEvent: (event: Event) => void;
+  updateEvent: (eventId: string, updates: Partial<Event>) => void;
   deleteEvent: (eventId: string) => void;
   
   // Member actions
@@ -53,46 +54,77 @@ export function CalendarProvider({
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [currentView, setCurrentView] = useState<CalendarView>(initialView);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
+  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [selectedMember, setSelectedMember] = useState<Partial<TeamMemberWithUser> | null>(initialSelectedMember);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
-  // Load events when selected member changes
-  const loadMemberEvents = async (member: Partial<TeamMemberWithUser> | null) => {
+  // Get current user ID from selected member
+  const getCurrentUserId = useCallback((): string | null => {
+    if (!selectedMember) return null;
+    
+    if ('user' in selectedMember && selectedMember.user?.userId) {
+      return selectedMember.user.userId;
+    } else if ('userId' in selectedMember && selectedMember.userId) {
+      return selectedMember.userId;
+    }
+    return null;
+  }, [selectedMember]);
+
+  // Load events when selected member or date/view changes
+  const loadMemberEvents = useCallback(async (member: Partial<TeamMemberWithUser> | null) => {
     if (!member) {
       setEvents([]);
+      setCalendarDays([]);
       return;
     }
 
     setIsLoadingEvents(true);
     try {
-      // Get userId from member - handle both populated and non-populated members
       let userId: string;
       if ('user' in member && member.user?.userId) {
         userId = member.user.userId;
-      } else if (member.userId) {
+      } else if ('userId' in member && member.userId) {
         userId = member.userId;
       } else {
         console.error('No userId found in member');
         setEvents([]);
+        setCalendarDays([]);
         return;
       }
 
-      const memberEvents = await calendarApi.getEventsByUserId(userId);
-      setEvents(memberEvents);
+      if (currentView === 'month') {
+        const monthData = await calendarService.getCalendarMonth(
+          userId, 
+          currentDate.getFullYear(), 
+          currentDate.getMonth() + 1
+        );
+        setCalendarDays(monthData);
+        
+        // Extract events from calendar days
+        const allEvents = monthData.flatMap(day => day.events);
+        setEvents(allEvents);
+      } else {
+        // For week/day views, get events in date range
+        const range = currentView === 'week' ? getWeekRange(currentDate) : getDayRange(currentDate);
+        const memberEvents = await calendarService.getEventsForDateRange(userId, range);
+        setEvents(memberEvents);
+        setCalendarDays([]);
+      }
     } catch (error) {
       console.error('Error loading member events:', error);
       setEvents([]);
+      setCalendarDays([]);
     } finally {
       setIsLoadingEvents(false);
     }
-  };
+  }, [currentDate, currentView]);
 
-  // Load events when selected member changes
+  // Auto-reload events when member, date, or view changes
   useEffect(() => {
     loadMemberEvents(selectedMember);
-  }, [selectedMember]);
+  }, [selectedMember, currentDate, currentView, loadMemberEvents]);
 
   // Navigation actions
   const navigateToPrevious = () => {
@@ -137,53 +169,46 @@ export function CalendarProvider({
     setSelectedEvent(null);
   };
 
-  const addEvent = async (eventData: Omit<CalendarEvent, 'id'>) => {
+  const addEvent = async (eventData: Event) => {
     if (!selectedMember) {
       console.error('No member selected');
       return;
     }
 
     try {
-      // Get userId from selected member
-      let userId: string;
-      if ('user' in selectedMember && selectedMember.user?.userId) {
-        userId = selectedMember.user.userId;
-      } else if (selectedMember.userId) {
-        userId = selectedMember.userId;
-      } else {
+      const userId = getCurrentUserId();
+      if (!userId) {
         console.error('No userId found in selected member');
         return;
       }
 
-      const newEvent = await calendarApi.createEvent(userId, eventData);
-      setEvents(prev => [...prev, newEvent]);
+      const newEvent = await calendarService.createEvent(eventData);
+      const calendarEvent = calendarService.transformToCalendarEvent(newEvent, userId);
+      setEvents(prev => [...prev, calendarEvent]);
     } catch (error) {
       console.error('Error creating event:', error);
     }
   };
 
-  const updateEvent = async (eventId: string, updates: Partial<CalendarEvent>) => {
+  const updateEvent = async (eventId: string, updates: Partial<Event>) => {
     if (!selectedMember) {
       console.error('No member selected');
       return;
     }
 
     try {
-      // Get userId from selected member
-      let userId: string;
-      if ('user' in selectedMember && selectedMember.user?.userId) {
-        userId = selectedMember.user.userId;
-      } else if (selectedMember.userId) {
-        userId = selectedMember.userId;
-      } else {
+      const userId = getCurrentUserId();
+      if (!userId) {
         console.error('No userId found in selected member');
         return;
       }
 
-      const updatedEvent = await calendarApi.updateEvent(userId, eventId, updates);
+      const updatedEvent = await calendarService.updateEvent(eventId, updates, userId);
+      const calendarEvent = calendarService.transformToCalendarEvent(updatedEvent, userId);
+      
       setEvents(prev => 
         prev.map(event => 
-          event.id === eventId ? updatedEvent : event
+          event.id === eventId ? calendarEvent : event
         )
       );
     } catch (error) {
@@ -198,18 +223,8 @@ export function CalendarProvider({
     }
 
     try {
-      // Get userId from selected member
-      let userId: string;
-      if ('user' in selectedMember && selectedMember.user?.userId) {
-        userId = selectedMember.user.userId;
-      } else if (selectedMember.userId) {
-        userId = selectedMember.userId;
-      } else {
-        console.error('No userId found in selected member');
-        return;
-      }
-
-      await calendarApi.deleteEvent(userId, eventId);
+      const userId = getCurrentUserId();
+      await calendarService.deleteEvent(eventId, userId);
       setEvents(prev => prev.filter(event => event.id !== eventId));
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -221,6 +236,7 @@ export function CalendarProvider({
     currentDate,
     currentView,
     events,
+    calendarDays,
     selectedEvent,
     popupPosition,
     selectedMember,
@@ -254,4 +270,29 @@ export function useCalendar() {
     throw new Error('useCalendar must be used within a CalendarProvider');
   }
   return context;
+}
+
+// Utility functions
+function getWeekRange(date: Date): { start: Date; end: Date } {
+  const start = new Date(date);
+  const day = start.getDay();
+  const diff = start.getDate() - day;
+  start.setDate(diff);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  
+  return { start, end };
+}
+
+function getDayRange(date: Date): { start: Date; end: Date } {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  
+  return { start, end };
 }
