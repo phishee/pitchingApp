@@ -14,6 +14,7 @@ import { useTeam } from '@/providers/team-context';
 import { MemberSwitcher } from '@/app/components/layouts/common/member-switcher';
 import { CalendarEvent, Event, TeamMemberWithUser } from '@/models';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
+import { useOrganization } from '@/providers/organization-context';
 
 interface CoachCalendarProps {
   className?: string;
@@ -37,7 +38,8 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
   } = useCalendar();
 
   const { teamMembers } = useTeam();
-
+  const { currentOrganization } = useOrganization();
+  const { currentTeam } = useTeam();
   const handleEventClick = (event: CalendarEvent) => {
     // For now, we'll position the popup in the center of the screen
     // In a real app, you might want to get the actual click position
@@ -70,8 +72,8 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
       const newEvent: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
         groupId: `manual-${Date.now()}`,
         type: getEventTypeFromString(eventType),
-        organizationId: 'org-123', // You'll need to get this from context
-        teamId: 'team-456', // You'll need to get this from context
+        organizationId: currentOrganization?._id || '', // You'll need to get this from context
+        teamId: currentTeam?._id || '', // You'll need to get this from context
         title: `${eventType} - ${getMemberDisplayName(selectedMember)}`,
         description: eventType,
         startTime: new Date(`${currentDate.toISOString().split('T')[0]}T14:00:00`),
@@ -132,7 +134,17 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
           onNextMonth={navigateToNext}
           view={currentView}
         />
-        <ActionButtons onEventTypeSelect={handleEventTypeSelect} />
+        <ActionButtons 
+          onEventTypeSelect={handleEventTypeSelect}
+          selectedMembers={selectedMember && selectedMember._id && selectedMember.teamId && selectedMember.userId ? [selectedMember as TeamMemberWithUser] : []}
+          availableMembers={teamMembers?.filter((member): member is TeamMemberWithUser => 
+            member._id !== undefined && member.teamId !== undefined && member.userId !== undefined
+          ) || []}
+          // onAddEvent={addEvent}
+          organizationId={currentOrganization?._id || ''} // Replace with actual organization ID
+          teamId={currentTeam?._id || ''} // Replace with actual team ID
+          currentUserId="current-user" // Replace with actual current user ID
+        />
       </div>
 
       {/* Loading State */}
