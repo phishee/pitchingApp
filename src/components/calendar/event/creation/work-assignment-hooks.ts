@@ -5,7 +5,7 @@ import { exerciseApi } from '@/app/services-client/exerciseApi';
 import { WorkoutAssignmentData, ExerciseMetricPrescription } from './work-assignment-types';
 
 export const useWorkoutAssignment = (
-  initialSelectedMembers: TeamMemberWithUser[],
+  initialSelectedMembers: Partial<TeamMemberWithUser>[],
   organizationId: string
 ) => {
   const [assignmentData, setAssignmentData] = useState<WorkoutAssignmentData>({
@@ -112,7 +112,7 @@ export const useExercisePrescriptions = (selectedWorkout: Workout | null) => {
   };
 };
 
-export const useMemberSearch = (availableMembers: TeamMemberWithUser[], searchQuery: string) => {
+export const useMemberSearch = (availableMembers: Partial<TeamMemberWithUser>[], searchQuery: string) => {
   const filteredMembers = useMemo(() => {
     return availableMembers.filter(member => {
       const matchesSearch = searchQuery === '' || 

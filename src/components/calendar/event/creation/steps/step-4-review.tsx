@@ -133,10 +133,10 @@ export function Step4ReviewCustomize({
       </Card>
 
       {/* Calendar Preview */}
-      <CalendarPreview
+      {/* <CalendarPreview
         scheduleConfig={assignmentData.scheduleConfig}
         totalEvents={totalEvents}
-      />
+      /> */}
 
       {/* Session Configuration */}
       <Card>

@@ -1,7 +1,7 @@
 import { TeamMemberWithUser, Workout, Exercise, Event } from '@/models';
 
 export interface WorkoutAssignmentData {
-  selectedMembers: TeamMemberWithUser[];
+  selectedMembers: Partial<TeamMemberWithUser>[];
   selectedWorkout: Workout | null;
   scheduleConfig: {
     daysOfWeek: number[];
@@ -24,8 +24,8 @@ export interface WorkoutAssignmentData {
 export interface WorkoutAssignmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedMembers: TeamMemberWithUser[];
-  availableMembers?: TeamMemberWithUser[];
+  selectedMembers: Partial<TeamMemberWithUser>[];
+  availableMembers?: Partial<TeamMemberWithUser>[];
   onAddEvent: (event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   organizationId?: string;
   teamId?: string;
@@ -56,7 +56,7 @@ export interface StepProps {
 }
 
 export interface AthletesStepProps extends StepProps {
-  availableMembers: TeamMemberWithUser[];
+  availableMembers: Partial<TeamMemberWithUser>[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }

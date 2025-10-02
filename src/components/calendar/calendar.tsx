@@ -10,6 +10,7 @@ import { MonthView } from './views/month-view';
 import { WeekView } from './views/week-view';
 import { DayView } from './views/day-view';
 import { useCalendar } from '@/providers/calendar-context';
+import { useTeam } from '@/providers/team-context';
 import { CalendarEvent } from '@/models';
 
 interface CalendarProps {
@@ -28,6 +29,8 @@ export function Calendar({ className }: CalendarProps) {
     showEventPopup,
     hideEventPopup,
   } = useCalendar();
+
+  const { currentTeamMember, teamMembers, currentTeam } = useTeam();
 
   const handleEventClick = (event: CalendarEvent) => {
     // For now, we'll position the popup in the center of the screen
@@ -53,7 +56,12 @@ export function Calendar({ className }: CalendarProps) {
           onNextMonth={navigateToNext}
           view={currentView}
         />
-        <ActionButtons />
+        <ActionButtons 
+          selectedMembers={currentTeamMember ? [currentTeamMember] : []}
+          availableMembers={teamMembers}
+          organizationId={currentTeam?.organizationId}
+          teamId={currentTeam?._id}
+        />
       </div>
 
       {/* Calendar Content */}

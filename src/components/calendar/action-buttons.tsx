@@ -12,8 +12,8 @@ import { TeamMemberWithUser } from '@/models';
 
 interface ActionButtonsProps {
   onEventTypeSelect?: (eventType: string) => void;
-  selectedMembers?: TeamMemberWithUser[];
-  availableMembers?: TeamMemberWithUser[];
+  selectedMembers?: Partial<TeamMemberWithUser>[];
+  availableMembers?: Partial<TeamMemberWithUser>[];
   onAddEvent?: (event: any) => Promise<void>;
   organizationId?: string;
   teamId?: string;
@@ -22,7 +22,7 @@ interface ActionButtonsProps {
 
 export function ActionButtons({
   onEventTypeSelect,
-  selectedMembers,
+  selectedMembers = [], // Add default empty array
   availableMembers = [], // Add default empty array
   onAddEvent = async () => {},
   organizationId,
