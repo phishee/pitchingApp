@@ -1,3 +1,4 @@
+// In action-buttons.tsx
 import React, { useState } from 'react';
 import { Filter, Plus, ChevronDown, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { WorkoutAssignmentDialog } from './event/creation/work-assignment-event';
+import { EventCreationProvider, useEventCreation} from '@/providers/event-creation-context';
 import { TeamMemberWithUser } from '@/models';
 
 interface ActionButtonsProps {
@@ -22,22 +24,18 @@ interface ActionButtonsProps {
 
 export function ActionButtons({
   onEventTypeSelect,
-  selectedMembers = [], // Add default empty array
-  availableMembers = [], // Add default empty array
+  selectedMembers = [],
+  availableMembers = [],
   onAddEvent = async () => {},
   organizationId,
   teamId,
   currentUserId,
 }: ActionButtonsProps) {
-  const handleEventTypeClick = (eventType: string) => {
-    if (onEventTypeSelect) {
-      onEventTypeSelect(eventType);
-    }
-    // You can add specific logic for each event type here
-    console.log('Selected event type:', eventType);
-  };
-
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+
+  const handleEventTypeClick = (eventType: string) => {
+    onEventTypeSelect?.(eventType);
+  };
 
   const handleOpenAssignmentDialog = () => {
     setIsAssignmentDialogOpen(true);
@@ -47,12 +45,12 @@ export function ActionButtons({
     setIsAssignmentDialogOpen(false);
   };
 
+  // Get the current user from selectedMembers (the user whose calendar we're viewing)
+  const currentUser = selectedMembers.length > 0 ? selectedMembers[0] : null;
+
   return (
-    <div className="flex items-center gap-3">
-      {/* <Button variant="ghost" size="icon" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-        <Filter className="h-5 w-5 text-gray-600" />
-      </Button> */}
-      
+    <div className="flex items-center gap-2">
+      {/* Your existing buttons */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
@@ -78,33 +76,28 @@ export function ActionButtons({
               Assign Workout
             </Button>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleEventTypeClick('Assign Assessment')}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            Assign Assessment
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleEventTypeClick('Book Session')}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <div className="w-2 h-2 bg-orange-500 rounded-full" />
-            Book Session
-          </DropdownMenuItem>
+          {/* Other menu items */}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <WorkoutAssignmentDialog
-        isOpen={isAssignmentDialogOpen}
-        onClose={handleCloseAssignmentDialog}
-        selectedMembers={selectedMembers}
-        availableMembers={availableMembers} // Pass the available members
-        onAddEvent={onAddEvent as (event: any) => Promise<void>}
-        organizationId={organizationId}
-        teamId={teamId}
-        currentUserId={currentUserId}
-      />
+      {/* Wrap the dialog with EventCreationProvider */}
+      <EventCreationProvider
+        organizationId={organizationId || ''}
+        teamId={teamId || ''}
+        currentUserId={currentUser?.userId || currentUserId || ''} // Use current user from selectedMembers
+        initialEventType="workout"
+      >
+        <WorkoutAssignmentDialog
+          isOpen={isAssignmentDialogOpen}
+          onClose={handleCloseAssignmentDialog}
+          selectedMembers={selectedMembers}
+          availableMembers={availableMembers}
+          onAddEvent={onAddEvent as (event: any) => Promise<void>}
+          organizationId={organizationId}
+          teamId={teamId}
+          currentUserId={currentUser?.userId || currentUserId || ''} // Pass the same current user
+        />
+      </EventCreationProvider>
     </div>
   );
 }

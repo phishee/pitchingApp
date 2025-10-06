@@ -10,11 +10,11 @@ export interface UserInfo {
   memberId: string;
 }
 
-export interface RecurrenceConfig {
-  type: 'none' | 'daily' | 'weekly' | 'monthly';
-  interval: number;
-  endDate?: Date;
-}
+// export interface RecurrenceConfig {
+//   type: 'none' | 'daily' | 'weekly' | 'monthly';
+//   interval: number;
+//   endDate?: Date;
+// }
 
 export interface WorkingHours {
   start: string; // "09:00"
@@ -30,23 +30,30 @@ export interface DayAvailability {
 
 export interface WorkoutEventDetails {
   type: 'workout';
-  workoutAssignmentId: string;
-  workoutSessionId?: string; // Set when workout starts
-  sessionType: 'individual' | 'coached';
-  bookingInfo: {
-    isBookingRequested: boolean;
-    requestedCoach?: UserInfo;
-    requestStatus: 'none' | 'pending' | 'approved' | 'rejected' | 'cancelled';
-    requestedAt?: Date;
-    approvedAt?: Date;
-    rejectedAt?: Date;
-    rejectedReason?: string;
-    cancelledAt?: Date;
-    cancelledReason?: string;
+  
+  // Workout selection
+  workoutId: string; // Reference to the selected workout from library
+  
+  // Exercise prescriptions (modified from workout defaults)
+  exercisePrescriptions?: {
+    [exerciseId: string]: {
+      prescribedMetrics: { [key: string]: any }; // Modified metrics (starts with workout defaults)
+      notes?: string; // Additional notes for this exercise
+      isModified: boolean; // Track if metrics were changed from defaults
+    };
   };
-  estimatedDuration: number; // minutes
-  equipment: string[];
-  notes: string;
+  
+  // Session details
+  sessionType: 'individual' | 'group' | 'team';
+  estimatedDuration?: number; // in minutes
+  equipment?: string[];
+  notes?: string;
+  
+  // Booking info
+  bookingInfo?: {
+    isBookingRequested: boolean;
+    requestStatus: 'none' | 'pending' | 'approved' | 'rejected';
+  };
 }
 
 export interface GamedayEventDetails {
@@ -119,6 +126,9 @@ export interface Event {
     required: string[]; // userIds who must attend
     optional: string[]; // userIds who can attend
   };
+
+  // Recurrence
+  recurrence: RecurrenceConfig;
   
   // Bulk operation tracking
   sourceAssignmentId: string; // Links to WorkoutAssignment, GameSchedule, etc.
@@ -134,6 +144,27 @@ export interface Event {
   
   // Type-specific data
   details: EventDetails;
+}
+
+export interface RecurrenceConfig {
+  pattern: 'daily' | 'weekly' | 'monthly' | 'none';
+  interval: number;
+  
+  // Start date for the recurrence
+  startDate?: Date;
+  
+  // For weekly recurrence
+  daysOfWeek?: number[];
+  
+  // For monthly recurrence - choose ONE:
+  weekOfMonth?: number[];  // Week-based: "1st Monday"
+  dayOfMonth?: number;     // Date-based: "15th of month"
+  
+  // Termination
+  endDate?: Date;
+  occurrences?: number;
+  
+  exceptions?: Date[];
 }
 
 // ===== CALENDAR MODELS =====
@@ -200,6 +231,51 @@ export interface CalendarDay {
 }
 
 // ===== REQUEST/RESPONSE TYPES =====
+
+export type DayOfWeek = 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+
+export interface RepetitionConfig {
+  pattern: 'none' | 'daily' | 'weekly' | 'custom';
+  startDate: Date;
+  endDate?: Date;
+  occurrences?: number;
+  interval?: number; // Every N days/weeks
+  numberOfWeeks?: number;
+  daysOfWeek?: DayOfWeek[];
+  timeOverrides?: {
+    dayOfWeek: DayOfWeek;
+    startTime?: string;
+    endTime?: string;
+  }[];
+}
+
+export type EventTemplate = Omit<Event, 'id' | 'groupId' | 'startTime' | 'endTime' | 'sequenceNumber' | 'totalInSequence' | 'createdAt' | 'updatedAt' | 'participants'> & {
+  participants?: Partial<Event['participants']>;
+};
+
+export type CreateEventRequest = 
+  | {
+      creationType: 'simple';
+      event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>;
+    }
+  | {
+      creationType: 'repeated-single-user';
+      eventTemplate: EventTemplate;
+      repetitionConfig: RepetitionConfig;
+      participant: UserInfo;
+    }
+  | {
+      creationType: 'repeated-multiple-users';
+      eventTemplate: EventTemplate;
+      repetitionConfig: RepetitionConfig;
+      participants: UserInfo[];
+    };
+
+export interface CreateEventResponse {
+  success: boolean;
+  events: Event[];
+  message: string;
+}
 
 export interface CreateWorkoutEventRequest {
   workoutAssignmentId: string;

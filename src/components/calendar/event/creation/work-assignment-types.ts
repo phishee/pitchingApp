@@ -41,7 +41,7 @@ export interface ExerciseMetricPrescription {
   exercise: Exercise;
 }
 
-export type WizardStep = 'athletes' | 'workout' | 'schedule' | 'review';
+export type WizardStep = 'athletes' | 'workout' | 'prescriptions' | 'schedule' | 'review';
 
 export interface CalendarDay {
   date: Date;
@@ -68,6 +68,10 @@ export interface WorkoutStepProps extends StepProps {
 
 export interface ScheduleStepProps extends StepProps {
   // Additional schedule-specific props can be added here
+}
+
+export interface ExercisePrescriptionStepProps extends StepProps {
+  selectedWorkout: Workout | null;
 }
 
 export interface ReviewStepProps extends StepProps {
