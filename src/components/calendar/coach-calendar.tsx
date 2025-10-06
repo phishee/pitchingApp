@@ -84,6 +84,10 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
           required: [userId],
           optional: []
         },
+        recurrence: {
+          pattern: 'none',
+          interval: 1
+        },
         sourceAssignmentId: 'manual-creation',
         sequenceNumber: 1,
         totalInSequence: 1,
@@ -92,7 +96,7 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
         createdBy: { userId, memberId: 'creator-member-id' },
         details: {
           type: 'workout' as const,
-          workoutAssignmentId: 'manual',
+          workoutId: 'manual',
           sessionType: 'individual',
           bookingInfo: {
             isBookingRequested: false,
