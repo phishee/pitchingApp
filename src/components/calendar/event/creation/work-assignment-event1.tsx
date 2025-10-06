@@ -48,7 +48,7 @@ export interface WorkoutAssignmentData {
       prescribedMetrics: { [metricId: string]: any };
     };
   };
-  sessionType: 'individual' | 'coached';
+  sessionType: 'individual' | 'group' | 'team';
   notes: string;
 }
 
@@ -339,6 +339,10 @@ export function WorkoutAssignmentDialog({
             ),
             optional: []
           },
+          recurrence: {
+            pattern: 'none',
+            interval: 1
+          },
           sourceAssignmentId: `workout-${assignmentData.selectedWorkout!.id}`,
           sequenceNumber: week * daysOfWeek.length + sequenceIndex + 1,
           totalInSequence: numberOfWeeks * daysOfWeek.length,
@@ -347,7 +351,7 @@ export function WorkoutAssignmentDialog({
           createdBy: { userId: currentUserId, memberId: 'creator-member-id' },
           details: {
             type: 'workout',
-            workoutAssignmentId: `assignment-${assignmentData.selectedWorkout!.id}`,
+            workoutId: assignmentData.selectedWorkout!.id,
             sessionType: assignmentData.sessionType,
             bookingInfo: {
               isBookingRequested: false,
@@ -356,9 +360,17 @@ export function WorkoutAssignmentDialog({
             estimatedDuration: 120,
             equipment: [],
             notes: assignmentData.notes,
-            // Add exercise prescriptions if any
-            ...(Object.keys(assignmentData.exercisePrescriptions).length > 0 && {
-              exercisePrescriptions: assignmentData.exercisePrescriptions
+            // Add exercise prescriptions if any are prescribed
+            ...(Object.entries(assignmentData.exercisePrescriptions).some(([_, p]) => p.isPrescribed) && {
+              exercisePrescriptions: Object.entries(assignmentData.exercisePrescriptions)
+                .filter(([_, p]) => p.isPrescribed)
+                .reduce((acc, [exerciseId, p]) => ({
+                  ...acc,
+                  [exerciseId]: {
+                    prescribedMetrics: p.prescribedMetrics,
+                    isModified: true
+                  }
+                }), {})
             })
           }
         };
@@ -944,9 +956,9 @@ function SessionConfigurationSection({
   onSessionTypeChange,
   onNotesChange
 }: {
-  sessionType: 'individual' | 'coached';
+  sessionType: 'individual' | 'group' | 'team';
   notes: string;
-  onSessionTypeChange: (sessionType: 'individual' | 'coached') => void;
+  onSessionTypeChange: (sessionType: 'individual' | 'group' | 'team') => void;
   onNotesChange: (notes: string) => void;
 }) {
   return (
@@ -967,7 +979,8 @@ function SessionConfigurationSection({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="individual">Individual</SelectItem>
-              <SelectItem value="coached">Coached</SelectItem>
+              <SelectItem value="group">Group</SelectItem>
+              <SelectItem value="team">Team</SelectItem>
             </SelectContent>
           </Select>
         </div>

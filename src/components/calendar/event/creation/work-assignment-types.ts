@@ -1,7 +1,7 @@
 import { TeamMemberWithUser, Workout, Exercise, Event } from '@/models';
 
 export interface WorkoutAssignmentData {
-  selectedMembers: TeamMemberWithUser[];
+  selectedMembers: Partial<TeamMemberWithUser>[];
   selectedWorkout: Workout | null;
   scheduleConfig: {
     daysOfWeek: number[];
@@ -24,8 +24,8 @@ export interface WorkoutAssignmentData {
 export interface WorkoutAssignmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedMembers: TeamMemberWithUser[];
-  availableMembers?: TeamMemberWithUser[];
+  selectedMembers: Partial<TeamMemberWithUser>[];
+  availableMembers?: Partial<TeamMemberWithUser>[];
   onAddEvent: (event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   organizationId?: string;
   teamId?: string;
@@ -41,7 +41,7 @@ export interface ExerciseMetricPrescription {
   exercise: Exercise;
 }
 
-export type WizardStep = 'athletes' | 'workout' | 'schedule' | 'review';
+export type WizardStep = 'athletes' | 'workout' | 'prescriptions' | 'schedule' | 'review';
 
 export interface CalendarDay {
   date: Date;
@@ -56,7 +56,7 @@ export interface StepProps {
 }
 
 export interface AthletesStepProps extends StepProps {
-  availableMembers: TeamMemberWithUser[];
+  availableMembers: Partial<TeamMemberWithUser>[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
@@ -68,6 +68,10 @@ export interface WorkoutStepProps extends StepProps {
 
 export interface ScheduleStepProps extends StepProps {
   // Additional schedule-specific props can be added here
+}
+
+export interface ExercisePrescriptionStepProps extends StepProps {
+  selectedWorkout: Workout | null;
 }
 
 export interface ReviewStepProps extends StepProps {

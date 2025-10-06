@@ -51,6 +51,10 @@ export const generateEvents = (
           ),
           optional: []
         },
+        recurrence: {
+          pattern: 'none',
+          interval: 1
+        },
         sourceAssignmentId: `workout-${assignmentData.selectedWorkout!.id}`,
         sequenceNumber: week * daysOfWeek.length + sequenceIndex + 1,
         totalInSequence: numberOfWeeks * daysOfWeek.length,
@@ -59,8 +63,8 @@ export const generateEvents = (
         createdBy: { userId: currentUserId, memberId: 'creator-member-id' },
         details: {
           type: 'workout',
-          workoutAssignmentId: `assignment-${assignmentData.selectedWorkout!.id}`,
-          sessionType: assignmentData.sessionType,
+          workoutId: assignmentData.selectedWorkout!.id,
+          sessionType: assignmentData.sessionType === 'coached' ? 'individual' : assignmentData.sessionType,
           bookingInfo: {
             isBookingRequested: false,
             requestStatus: 'none'
@@ -69,7 +73,16 @@ export const generateEvents = (
           equipment: [],
           notes: assignmentData.notes,
           ...(Object.keys(assignmentData.exercisePrescriptions).length > 0 && {
-            exercisePrescriptions: assignmentData.exercisePrescriptions
+            exercisePrescriptions: Object.fromEntries(
+              Object.entries(assignmentData.exercisePrescriptions).map(([exerciseId, prescription]) => [
+                exerciseId,
+                {
+                  prescribedMetrics: prescription.prescribedMetrics,
+                  notes: '',
+                  isModified: prescription.isPrescribed
+                }
+              ])
+            )
           })
         }
       };
@@ -91,6 +104,8 @@ export const validateStep = (step: string, assignmentData: WorkoutAssignmentData
       return assignmentData.selectedMembers.length > 0;
     case 'workout':
       return assignmentData.selectedWorkout !== null;
+    case 'prescriptions':
+      return assignmentData.selectedWorkout !== null; // Can proceed if workout is selected
     case 'schedule':
       return assignmentData.scheduleConfig.daysOfWeek.length > 0;
     case 'review':

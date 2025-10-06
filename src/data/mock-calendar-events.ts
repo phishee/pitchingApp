@@ -20,6 +20,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user1', 'coach1'],
         optional: []
       },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
+      },
       sourceAssignmentId: 'assignment-1',
       sequenceNumber: 1,
       totalInSequence: 1,
@@ -30,8 +34,8 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00'),
       details: {
         type: 'workout',
-        workoutAssignmentId: 'workout-assign-1',
-        sessionType: 'coached',
+        workoutId: 'workout-assign-1',
+        sessionType: 'group',
         bookingInfo: {
           isBookingRequested: false,
           requestStatus: 'none'
@@ -58,6 +62,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user1'],
         optional: []
       },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
+      },
       sourceAssignmentId: 'assignment-2',
       sequenceNumber: 1,
       totalInSequence: 1,
@@ -68,7 +76,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00'),
       details: {
         type: 'workout',
-        workoutAssignmentId: 'workout-assign-2',
+        workoutId: 'workout-assign-2',
         sessionType: 'individual',
         bookingInfo: {
           isBookingRequested: false,
@@ -95,6 +103,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         coaches: [{ userId: 'coach1', memberId: 'coach-member1' }],
         required: ['user1', 'coach1'],
         optional: []
+      },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
       },
       sourceAssignmentId: 'assignment-3',
       sequenceNumber: 1,
@@ -134,6 +146,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user2', 'coach2'],
         optional: []
       },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
+      },
       sourceAssignmentId: 'assignment-4',
       sequenceNumber: 1,
       totalInSequence: 1,
@@ -144,8 +160,8 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00'),
       details: {
         type: 'workout',
-        workoutAssignmentId: 'workout-assign-4',
-        sessionType: 'coached',
+        workoutId: 'workout-assign-4',
+        sessionType: 'group',
         bookingInfo: {
           isBookingRequested: false,
           requestStatus: 'none'
@@ -172,6 +188,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user2'],
         optional: []
       },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
+      },
       sourceAssignmentId: 'assignment-5',
       sequenceNumber: 1,
       totalInSequence: 1,
@@ -182,7 +202,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00'),
       details: {
         type: 'workout',
-        workoutAssignmentId: 'workout-assign-5',
+        workoutId: 'workout-assign-5',
         sessionType: 'individual',
         bookingInfo: {
           isBookingRequested: false,
@@ -210,6 +230,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user2'],
         optional: []
       },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
+      },
       sourceAssignmentId: 'assignment-6',
       sequenceNumber: 1,
       totalInSequence: 1,
@@ -220,7 +244,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00'),
       details: {
         type: 'workout',
-        workoutAssignmentId: 'workout-assign-6',
+        workoutId: 'workout-assign-6',
         sessionType: 'individual',
         bookingInfo: {
           isBookingRequested: false,
@@ -250,6 +274,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user3', 'coach3'],
         optional: []
       },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
+      },
       sourceAssignmentId: 'assignment-7',
       sequenceNumber: 1,
       totalInSequence: 1,
@@ -260,8 +288,8 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00'),
       details: {
         type: 'workout',
-        workoutAssignmentId: 'workout-assign-7',
-        sessionType: 'coached',
+        workoutId: 'workout-assign-7',
+        sessionType: 'group',
         bookingInfo: {
           isBookingRequested: false,
           requestStatus: 'none'
@@ -287,6 +315,10 @@ export const mockMemberEvents: Record<string, Event[]> = {
         coaches: [{ userId: 'coach3', memberId: 'coach-member3' }],
         required: ['user3', 'coach3'],
         optional: []
+      },
+      recurrence: {
+        pattern: 'none',
+        interval: 1
       },
       sourceAssignmentId: 'assignment-8',
       sequenceNumber: 1,
@@ -330,6 +362,10 @@ export const defaultEvents: Event[] = [
       required: ['coach1'],
       optional: []
     },
+    recurrence: {
+      pattern: 'none',
+      interval: 1
+    },
     sourceAssignmentId: 'assignment-default1',
     sequenceNumber: 1,
     totalInSequence: 1,
@@ -366,6 +402,10 @@ export const defaultEvents: Event[] = [
       required: [],
       optional: []
     },
+    recurrence: {
+      pattern: 'none',
+      interval: 1
+    },
     sourceAssignmentId: 'assignment-default2',
     sequenceNumber: 1,
     totalInSequence: 1,
@@ -376,8 +416,8 @@ export const defaultEvents: Event[] = [
     updatedAt: new Date(),
     details: {
       type: 'workout',
-      workoutAssignmentId: 'workout-assign-default2',
-      sessionType: 'coached',
+      workoutId: 'workout-assign-default2',
+      sessionType: 'team',
       bookingInfo: {
         isBookingRequested: false,
         requestStatus: 'none'

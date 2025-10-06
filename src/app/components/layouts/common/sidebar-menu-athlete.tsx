@@ -1,7 +1,7 @@
 // src/app/components/layouts/common/sidebar-menu-athlete.tsx
 'use client';
 
-import { Home, Dumbbell, Users, BarChart, Settings } from 'lucide-react';
+import { Home, Dumbbell, Users, BarChart, Settings, Calendar } from 'lucide-react';
 import { SidebarMenu } from './sidebar-menu';
 
 const ATHLETE_MENU = [
@@ -9,6 +9,11 @@ const ATHLETE_MENU = [
     title: 'Dashboard',
     path: '/app/dashboard',
     icon: Home,
+  },
+  {
+    title: 'Schedule',
+    path: '/app/calendar/athlete',
+    icon: Calendar,
   },
   {
     title: "My Workouts",
