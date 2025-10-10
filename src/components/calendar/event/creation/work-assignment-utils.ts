@@ -65,10 +65,10 @@ export const generateEvents = (
           type: 'workout',
           workoutId: assignmentData.selectedWorkout!.id,
           sessionType: assignmentData.sessionType === 'coached' ? 'individual' : assignmentData.sessionType,
-          bookingInfo: {
-            isBookingRequested: false,
-            requestStatus: 'none'
-          },
+          // bookingInfo: {
+          //   isBookingRequested: false,
+          //   requestStatus: 'none'
+          // },
           estimatedDuration: 120,
           equipment: [],
           notes: assignmentData.notes,

@@ -21,7 +21,7 @@ export const calendarService = {
   // Create event
   async createEvent(eventData: Event): Promise<Event> {
     const userId = eventData.participants?.athletes?.[0]?.userId || 'default-user';
-    
+
     const createdEvent = await calendarApi.createEvent(userId, eventData);
     return createdEvent;
   },
@@ -60,8 +60,8 @@ export const calendarService = {
       workoutType: this.getWorkoutType(event),
       opponent: this.getOpponent(event),
       assessmentType: this.getAssessmentType(event),
-      isBookable: this.isEventBookable(event),
-      bookingStatus: this.getBookingStatus(event)
+      // isBookable: this.isEventBookable(event),
+      // bookingStatus: this.getBookingStatus(event)
     };
   },
 
@@ -104,14 +104,10 @@ export const calendarService = {
   },
 
   isEventBookable(event: Event): boolean {
-    return event.type === 'workout' && event.details.type === 'workout' && 
-           event.details.bookingInfo.isBookingRequested;
+    return false;
   },
 
   getBookingStatus(event: Event): 'none' | 'pending' | 'approved' | 'rejected' | 'cancelled' | undefined {
-    if (event.type === 'workout' && event.details.type === 'workout') {
-      return event.details.bookingInfo.requestStatus;
-    }
     return undefined;
   }
 };
@@ -120,25 +116,25 @@ export const calendarService = {
 function generateCalendarDaysFromEvents(events: CalendarEvent[], year: number, month: number): CalendarDay[] {
   const firstDay = new Date(year, month - 1, 1);
   const startDate = new Date(firstDay);
-  
+
   // Adjust to start from Monday
   const dayOfWeek = firstDay.getDay();
   const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   startDate.setDate(startDate.getDate() - daysToSubtract);
-  
+
   const days: CalendarDay[] = [];
   const totalDays = 42; // 6 weeks * 7 days
-  
+
   for (let i = 0; i < totalDays; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
-    
+
     const dayEvents = events.filter(event => {
       const eventDate = event.startTime.toISOString().split('T')[0];
       const currentDate = date.toISOString().split('T')[0];
       return eventDate === currentDate;
     });
-    
+
     days.push({
       date: date.getDate(),
       isCurrentMonth: date.getMonth() === month - 1,
@@ -149,7 +145,7 @@ function generateCalendarDaysFromEvents(events: CalendarEvent[], year: number, m
       isAvailable: true
     });
   }
-  
+
   return days;
 }
 

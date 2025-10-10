@@ -250,10 +250,6 @@ export function EventCreationProvider({
           workoutId: '',
           exercisePrescriptions: {},
           sessionType: 'individual',
-          bookingInfo: {
-            isBookingRequested: false,
-            requestStatus: 'none'
-          },
           estimatedDuration: 60,
           equipment: [],
           notes: '',

@@ -79,10 +79,10 @@ export function WorkoutAssignmentDialog({
         estimatedDuration: 120, // Default 2 hours
         equipment: [],
         notes: assignmentData.notes,
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        }
+        // bookingInfo: {
+        //   isBookingRequested: false,
+        //   requestStatus: 'none'
+        // }
       });
 
       // Update recurrence if schedule is configured

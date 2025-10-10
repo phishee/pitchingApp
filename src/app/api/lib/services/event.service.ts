@@ -1,426 +1,580 @@
-import { Event, CreateEventRequest, CreateEventResponse, RepetitionConfig, DayOfWeek, UserInfo, EventTemplate } from '@/models/Calendar';
-import { inject, injectable } from 'inversify';
-import { DB_TYPES } from '../symbols/Symbols';
+// src/app/api/lib/services/event.service.ts
+
+import { injectable, inject } from 'inversify';
 import { DBProviderFactory } from '../factories/DBFactory';
+import { DB_TYPES } from '../symbols/Symbols';
+import { Event, RecurrenceConfig } from '@/models/Calendar';
+import { ClientSession } from 'mongodb';
+
+interface CreateEventRequest {
+  events: Partial<Event>[];
+}
+
+interface CreateEventResponse {
+  success: boolean;
+  summary: {
+    totalCreated: number;
+    athleteGroups: {
+      athleteId: string;
+      groupId: string;
+      eventCount: number;
+    }[];
+    dateRange: {
+      start: Date;
+      end: Date;
+    };
+  };
+  message: string;
+}
+
+interface EventFilter {
+  organizationId: string; // Required
+  types?: string[];
+  statuses?: string[];
+  startDate?: Date;
+  endDate?: Date;
+  athleteIds?: string[];
+  athleteMemberIds?: string[];
+  coachIds?: string[];
+  coachMemberIds?: string[];
+  bookingStatus?: string;
+  teamId?: string;
+  limit?: number;
+  offset?: number;
+  sort?: { [key: string]: 1 | -1 };
+  includeDetails?: boolean;
+}
 
 @injectable()
 export class EventService {
-    private eventRepo;
-    private eventCollection = 'events';
+  private dbProvider;
+  private eventCollection = 'events';
 
-    constructor(@inject(DB_TYPES.DBProviderFactory) private dbFactory: DBProviderFactory) {
-        this.eventRepo = this.dbFactory.createDBProvider();
+  constructor(@inject(DB_TYPES.DBProviderFactory) private dbFactory: DBProviderFactory) {
+    this.dbProvider = this.dbFactory.createDBProvider();
+  }
+
+  /**
+   * Normalize dates - convert date strings to Date objects
+   */
+  private normalizeDates(event: Partial<Event>): Partial<Event> {
+    const normalized = { ...event };
+
+    // Convert main event dates
+    if (normalized.startTime && !(normalized.startTime instanceof Date)) {
+      normalized.startTime = new Date(normalized.startTime);
+    }
+    
+    if (normalized.endTime && !(normalized.endTime instanceof Date)) {
+      normalized.endTime = new Date(normalized.endTime);
     }
 
-    /**
-     * Factory method to create events based on request type
-     */
-    async createEvent(request: CreateEventRequest): Promise<CreateEventResponse> {
-        try {
-            switch (request.creationType) {
-                case 'simple':
-                    return await this.createSimpleEvent(request);
-                
-                case 'repeated-single-user':
-                    return await this.createRepeatedEventSingleUser(request);
-                
-                case 'repeated-multiple-users':
-                    return await this.createRepeatedEventMultipleUsers(request);
-                
-                default:
-                    throw new Error('Invalid creation type');
-            }
-        } catch (error) {
-            console.error('Error creating event:', error);
-            throw error;
-        }
+    if (normalized.createdAt && !(normalized.createdAt instanceof Date)) {
+      normalized.createdAt = new Date(normalized.createdAt);
     }
 
-    /**
-     * Type 1: Create a simple single event
-     * Frontend sends complete event object, backend just adds id (MongoDB) and timestamps
-     */
-    private async createSimpleEvent(request: CreateEventRequest): Promise<CreateEventResponse> {
-        if (request.creationType !== 'simple') {
-            throw new Error('Invalid request type');
-        }
-
-        const eventToCreate: Omit<Event, 'id'> = {
-            ...request.event,
-            groupId: '', // No groupId for simple events
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-
-        const createdEvent = await this.eventRepo.insert(this.eventCollection, eventToCreate);
-        
-        return {
-            success: true,
-            events: [createdEvent],
-            message: 'Event created successfully'
-        };
+    if (normalized.updatedAt && !(normalized.updatedAt instanceof Date)) {
+      normalized.updatedAt = new Date(normalized.updatedAt);
     }
 
-    /**
-     * Type 2: Create repeated events for a single user
-     * Frontend sends event template, backend generates multiple events with same groupId
-     */
-    private async createRepeatedEventSingleUser(request: CreateEventRequest): Promise<CreateEventResponse> {
-        if (request.creationType !== 'repeated-single-user') {
-            throw new Error('Invalid request type');
-        }
+    // Convert recurrence dates
+    if (normalized.recurrence) {
+      if (normalized.recurrence.startDate && !(normalized.recurrence.startDate instanceof Date)) {
+        normalized.recurrence.startDate = new Date(normalized.recurrence.startDate);
+      }
+      
+      if (normalized.recurrence.endDate && !(normalized.recurrence.endDate instanceof Date)) {
+        normalized.recurrence.endDate = new Date(normalized.recurrence.endDate);
+      }
 
-        const { repetitionConfig, participant, eventTemplate } = request;
-        
-        // Generate unique groupId using timestamp
-        const groupId = `group-${Date.now()}`;
-        
-        // Check if groupId already exists (unlikely but safety check)
-        const existingGroup = await this.eventRepo.findQuery(
-            this.eventCollection,
-            { groupId }
+      // Convert exception dates
+      if (normalized.recurrence.exceptions && Array.isArray(normalized.recurrence.exceptions)) {
+        normalized.recurrence.exceptions = normalized.recurrence.exceptions.map(exception => 
+          exception instanceof Date ? exception : new Date(exception)
         );
+      }
+    }
+
+    // Convert gameday-specific dates (if present)
+    if (normalized.details) {
+      const details = normalized.details as any;
+      
+      if (details.type === 'gameday') {
+        if (details.arrivalTime && !(details.arrivalTime instanceof Date)) {
+          details.arrivalTime = new Date(details.arrivalTime);
+        }
         
-        if (existingGroup.length > 0) {
-            throw new Error('GroupId collision detected. Please retry.');
+        if (details.warmupStart && !(details.warmupStart instanceof Date)) {
+          details.warmupStart = new Date(details.warmupStart);
+        }
+      }
+    }
+
+    // Convert booking summary dates (if present)
+    if (normalized.bookingSummary && normalized.bookingSummary.lastUpdated) {
+      if (!(normalized.bookingSummary.lastUpdated instanceof Date)) {
+        normalized.bookingSummary.lastUpdated = new Date(normalized.bookingSummary.lastUpdated);
+      }
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Main event creation method - handles both simple and recurring events
+   */
+  async createEvents(request: CreateEventRequest): Promise<CreateEventResponse> {
+    const { events } = request;
+
+    if (!events || events.length === 0) {
+      throw new Error('No events provided');
+    }
+
+    // Validate all events have required organizationId
+    events.forEach((event, index) => {
+      if (!event.organizationId) {
+        throw new Error(`Event at index ${index} missing required organizationId`);
+      }
+    });
+
+    // Use transaction for atomicity
+    return await this.dbProvider.withTransaction(async (session: ClientSession) => {
+      const allEventsToCreate: Event[] = [];
+      const athleteGroups: { athleteId: string; groupId: string; eventCount: number }[] = [];
+      let minDate: Date | null = null;
+      let maxDate: Date | null = null;
+
+      // Process each event template
+      for (const eventTemplate of events) {
+        const athleteId = eventTemplate.participants?.athletes?.[0]?.userId;
+        
+        if (!athleteId) {
+          throw new Error('Each event must have at least one athlete in participants');
         }
 
-        // Generate event dates based on repetition config
-        const eventDates = this.generateEventDates(repetitionConfig);
-        
-        // Cast eventTemplate to access optional participants (it's omitted in the type but may exist at runtime)
-        const templateWithParticipants = eventTemplate as EventTemplate;
-        
-        // Create events by applying dates to the template
-        const events: Omit<Event, 'id'>[] = eventDates.map((dateInfo, index) => ({
-            ...eventTemplate,
+        // Convert date strings to Date objects
+        const normalizedTemplate = this.normalizeDates(eventTemplate);
+
+        // Check if recurrence is needed
+        if (normalizedTemplate.recurrence && normalizedTemplate.recurrence.pattern !== 'none') {
+          // Generate groupId for this athlete's recurring series
+          const groupId = await this.generateUniqueGroupId(athleteId, session);
+
+          // Generate all recurring instances
+          const recurringEvents = this.generateRecurringEvents(
+            normalizedTemplate as Event,
+            groupId
+          );
+
+          allEventsToCreate.push(...recurringEvents);
+
+          athleteGroups.push({
+            athleteId,
             groupId,
-            startTime: dateInfo.startTime,
-            endTime: dateInfo.endTime,
-            participants: {
-                athletes: [participant],
-                coaches: templateWithParticipants.participants?.coaches || [],
-                required: [participant.userId],
-                optional: templateWithParticipants.participants?.optional || []
-            },
-            sequenceNumber: index + 1,
-            totalInSequence: eventDates.length,
+            eventCount: recurringEvents.length
+          });
+
+          // Track date range
+          recurringEvents.forEach(event => {
+            if (!minDate || event.startTime < minDate) minDate = event.startTime;
+            if (!maxDate || event.endTime > maxDate) maxDate = event.endTime;
+          });
+
+        } else {
+          // Simple single event
+          const groupId = await this.generateUniqueGroupId(athleteId, session);
+          
+          const singleEvent: Event = {
+            ...normalizedTemplate,
+            id: this.generateEventId(),
+            groupId,
+            sequenceNumber: 1,
+            totalInSequence: 1,
             createdAt: new Date(),
-            updatedAt: new Date(),
-        }));
+            updatedAt: new Date()
+          } as Event;
 
-        // Bulk insert events
-        const createdEvents = await this.eventRepo.insertMany(this.eventCollection, events);
-        
-        return {
-            success: true,
-            events: createdEvents,
-            message: `${createdEvents.length} events created successfully for user`
-        };
-    }
+          allEventsToCreate.push(singleEvent);
 
-    /**
-     * Type 3: Create repeated events for multiple users
-     * Each user gets their own event series with unique groupId
-     */
-    private async createRepeatedEventMultipleUsers(request: CreateEventRequest): Promise<CreateEventResponse> {
-        if (request.creationType !== 'repeated-multiple-users') {
-            throw new Error('Invalid request type');
+          athleteGroups.push({
+            athleteId,
+            groupId,
+            eventCount: 1
+          });
+
+          if (!minDate || singleEvent.startTime < minDate) minDate = singleEvent.startTime;
+          if (!maxDate || singleEvent.endTime > maxDate) maxDate = singleEvent.endTime;
         }
+      }
 
-        const { repetitionConfig, participants, eventTemplate } = request;
-        
-        // Generate event dates based on repetition config
-        const eventDates = this.generateEventDates(repetitionConfig);
-        
-        // Cast eventTemplate to access optional participants
-        const templateWithParticipants = eventTemplate as EventTemplate;
-        
-        const allEvents: Omit<Event, 'id'>[] = [];
-        
-        // For each participant, create their own set of events with unique groupId
-        for (const participant of participants) {
-            const groupId = `group-${Date.now()}-${participant.userId}`;
-            
-            // Create events for this participant
-            const participantEvents: Omit<Event, 'id'>[] = eventDates.map((dateInfo, index) => ({
-                ...eventTemplate,
-                groupId,
-                startTime: dateInfo.startTime,
-                endTime: dateInfo.endTime,
-                participants: {
-                    athletes: [participant],
-                    coaches: templateWithParticipants.participants?.coaches || [],
-                    required: [participant.userId],
-                    optional: templateWithParticipants.participants?.optional || []
-                },
-                sequenceNumber: index + 1,
-                totalInSequence: eventDates.length,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            }));
-            
-            allEvents.push(...participantEvents);
-            
-            // Small delay to ensure unique timestamp for groupId
-            await new Promise(resolve => setTimeout(resolve, 10));
+      // Bulk insert all events
+      const result = await this.dbProvider.bulkInsert(
+        this.eventCollection,
+        allEventsToCreate,
+        session
+      );
+
+      return {
+        success: true,
+        summary: {
+          totalCreated: result.insertedCount,
+          athleteGroups,
+          dateRange: {
+            start: minDate || new Date(),
+            end: maxDate || new Date()
+          }
+        },
+        message: `Successfully created ${result.insertedCount} events for ${athleteGroups.length} athlete(s)`
+      };
+    });
+  }
+
+  /**
+   * Generate recurring event instances from template
+   */
+  private generateRecurringEvents(template: Event, groupId: string): Event[] {
+    const events: Event[] = [];
+    const recurrence = template.recurrence;
+
+    if (!recurrence || recurrence.pattern === 'none') {
+      return [];
+    }
+
+    const startDate = recurrence.startDate || template.startTime;
+    const endDate = recurrence.endDate;
+    const occurrences = recurrence.occurrences;
+
+    let currentDate = new Date(startDate);
+    let sequenceNumber = 1;
+    const eventDuration = template.endTime.getTime() - template.startTime.getTime();
+
+    // Generate events based on pattern
+    while (true) {
+      // Check termination conditions
+      if (endDate && currentDate > new Date(endDate)) break;
+      if (occurrences && sequenceNumber > occurrences) break;
+
+      // Check if this date should generate an event
+      if (this.shouldGenerateEvent(currentDate, recurrence)) {
+        // Calculate event times for this occurrence
+        const eventStartTime = new Date(currentDate);
+        eventStartTime.setHours(template.startTime.getHours());
+        eventStartTime.setMinutes(template.startTime.getMinutes());
+        eventStartTime.setSeconds(template.startTime.getSeconds());
+
+        const eventEndTime = new Date(eventStartTime.getTime() + eventDuration);
+
+        // Check if in exceptions
+        if (!this.isException(eventStartTime, recurrence.exceptions)) {
+          events.push({
+            ...template,
+            id: this.generateEventId(),
+            groupId,
+            startTime: eventStartTime,
+            endTime: eventEndTime,
+            sequenceNumber,
+            totalInSequence: 0, // Will update after we know total
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+
+          sequenceNumber++;
         }
+      }
 
-        // Bulk insert all events
-        const createdEvents = await this.eventRepo.insertMany(this.eventCollection, allEvents);
-        
-        return {
-            success: true,
-            events: createdEvents,
-            message: `${createdEvents.length} events created successfully for ${participants.length} users`
-        };
+      // Move to next date based on pattern
+      currentDate = this.getNextDate(currentDate, recurrence);
+
+      // Safety check - prevent infinite loops
+      if (sequenceNumber > 1000) {
+        throw new Error('Recurrence pattern would generate more than 1000 events');
+      }
     }
 
-    /**
-     * Helper: Generate event dates and times based on repetition configuration
-     */
-    private generateEventDates(config: RepetitionConfig): { startTime: Date; endTime: Date }[] {
-        const dates: { startTime: Date; endTime: Date }[] = [];
-        const startDate = new Date(config.startDate);
-        
-        if (config.pattern === 'none') {
-            // Just return the start date (time should already be in the template)
-            dates.push({
-                startTime: startDate,
-                endTime: startDate
-            });
-            return dates;
-        }
+    // Update totalInSequence for all events
+    const totalInSequence = events.length;
+    events.forEach(event => {
+      event.totalInSequence = totalInSequence;
+    });
 
-        if (config.pattern === 'daily') {
-            const occurrences = config.occurrences || 1;
-            const interval = config.interval || 1;
-            
-            for (let i = 0; i < occurrences; i++) {
-                const date = new Date(startDate);
-                date.setDate(date.getDate() + (i * interval));
-                dates.push({
-                    startTime: new Date(date),
-                    endTime: new Date(date)
-                });
-            }
-        } else if (config.pattern === 'weekly' || config.pattern === 'custom') {
-            if (!config.daysOfWeek || config.daysOfWeek.length === 0) {
-                throw new Error('daysOfWeek is required for weekly/custom patterns');
-            }
+    return events;
+  }
 
-            const numberOfWeeks = config.numberOfWeeks || 1;
-            const interval = config.interval || 1;
-            const dayMap: { [key in DayOfWeek]: number } = {
-                sunday: 0,
-                monday: 1,
-                tuesday: 2,
-                wednesday: 3,
-                thursday: 4,
-                friday: 5,
-                saturday: 6
-            };
-
-            const generatedDates: Date[] = [];
-
-            for (let week = 0; week < numberOfWeeks; week += interval) {
-                for (const dayOfWeek of config.daysOfWeek) {
-                    const targetDay = dayMap[dayOfWeek];
-                    const date = new Date(startDate);
-                    
-                    // Calculate which week we're in
-                    date.setDate(date.getDate() + (week * 7));
-                    
-                    // Find the next occurrence of the target day
-                    const currentDay = date.getDay();
-                    const daysUntilTarget = (targetDay - currentDay + 7) % 7;
-                    date.setDate(date.getDate() + daysUntilTarget);
-                    
-                    // Only add if the date is not before start date
-                    if (date >= startDate) {
-                        generatedDates.push(new Date(date));
-                    }
-                }
-            }
-            
-            // Sort dates chronologically
-            generatedDates.sort((a, b) => a.getTime() - b.getTime());
-            
-            // Apply time overrides if provided
-            for (const date of generatedDates) {
-                let startTime = new Date(date);
-                let endTime = new Date(date);
-                
-                // Check if there's a time override for this day of week
-                if (config.timeOverrides) {
-                    const dayName = this.getDayName(date.getDay());
-                    const override = config.timeOverrides.find(o => o.dayOfWeek === dayName);
-                    
-                    if (override) {
-                        if (override.startTime) {
-                            startTime = this.combineDateTime(date, override.startTime);
-                        }
-                        if (override.endTime) {
-                            endTime = this.combineDateTime(date, override.endTime);
-                        }
-                    }
-                }
-                
-                dates.push({ startTime, endTime });
-            }
-            
-            // If endDate is specified, filter out dates after it
-            if (config.endDate) {
-                const endDate = new Date(config.endDate);
-                const filtered = dates.filter(d => d.startTime <= endDate);
-                return filtered;
-            }
-            
-            // If occurrences is specified, limit to that number
-            if (config.occurrences) {
-                return dates.slice(0, config.occurrences);
-            }
-        }
-
-        return dates;
+  /**
+   * Check if event should be generated on this date
+   */
+  private shouldGenerateEvent(date: Date, recurrence: RecurrenceConfig): boolean {
+    if (recurrence.pattern === 'daily') {
+      return true;
     }
 
-    /**
-     * Helper: Get day name from day number
-     */
-    private getDayName(dayNumber: number): DayOfWeek {
-        const days: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        return days[dayNumber];
+    if (recurrence.pattern === 'weekly' && recurrence.daysOfWeek) {
+      const dayOfWeek = date.getDay();
+      return recurrence.daysOfWeek.includes(dayOfWeek);
     }
 
-    /**
-     * Helper: Combine date and time string
-     */
-    private combineDateTime(date: Date, timeString: string): Date {
-        const [hours, minutes] = timeString.split(':').map(Number);
-        const combined = new Date(date);
-        combined.setHours(hours, minutes, 0, 0);
-        return combined;
+    if (recurrence.pattern === 'monthly') {
+      if (recurrence.dayOfMonth) {
+        return date.getDate() === recurrence.dayOfMonth;
+      }
+      
+      if (recurrence.weekOfMonth) {
+        const weekOfMonth = Math.ceil(date.getDate() / 7);
+        return recurrence.weekOfMonth.includes(weekOfMonth);
+      }
     }
 
-    /**
-     * Get events by various filters
-     */
-    async getEvents(filter: {
-        organizationId?: string;
-        teamId?: string;
-        userId?: string;
-        startDate?: Date;
-        endDate?: Date;
-        type?: string;
-        status?: string;
-    }): Promise<Event[]> {
-        try {
-            const query: any = {};
-            
-            if (filter.organizationId) {
-                query.organizationId = filter.organizationId;
-            }
-            
-            if (filter.teamId) {
-                query.teamId = filter.teamId;
-            }
-            
-            if (filter.userId) {
-                query['participants.athletes.userId'] = filter.userId;
-            }
-            
-            if (filter.type) {
-                query.type = filter.type;
-            }
-            
-            if (filter.status) {
-                query.status = filter.status;
-            }
-            
-            if (filter.startDate || filter.endDate) {
-                query.startTime = {};
-                if (filter.startDate) {
-                    query.startTime.$gte = filter.startDate;
-                }
-                if (filter.endDate) {
-                    query.startTime.$lte = filter.endDate;
-                }
-            }
-            
-            const events = await this.eventRepo.findQuery(this.eventCollection, query);
-            return events;
-        } catch (error) {
-            console.error('Error fetching events:', error);
-            throw new Error('Failed to fetch events');
-        }
+    return false;
+  }
+
+  /**
+   * Get next date based on recurrence pattern
+   */
+  private getNextDate(currentDate: Date, recurrence: RecurrenceConfig): Date {
+    const next = new Date(currentDate);
+
+    if (recurrence.pattern === 'daily') {
+      next.setDate(next.getDate() + (recurrence.interval || 1));
+    } else if (recurrence.pattern === 'weekly') {
+      next.setDate(next.getDate() + 1); // Move day by day to check daysOfWeek
+    } else if (recurrence.pattern === 'monthly') {
+      next.setMonth(next.getMonth() + (recurrence.interval || 1));
     }
 
-    /**
-     * Get event by ID
-     */
-    async getEventById(id: string): Promise<Event | null> {
-        try {
-            return await this.eventRepo.findById(this.eventCollection, id);
-        } catch (error) {
-            console.error('Error fetching event:', error);
-            throw new Error('Failed to fetch event');
-        }
+    return next;
+  }
+
+  /**
+   * Check if date is in exceptions list
+   */
+  private isException(date: Date, exceptions?: Date[]): boolean {
+    if (!exceptions || exceptions.length === 0) return false;
+
+    const dateStr = date.toISOString().split('T')[0];
+    return exceptions.some(exception => {
+      const exceptionStr = new Date(exception).toISOString().split('T')[0];
+      return dateStr === exceptionStr;
+    });
+  }
+
+  /**
+   * Generate unique groupId for athlete
+   */
+  private async generateUniqueGroupId(athleteId: string, session?: ClientSession): Promise<string> {
+    let groupId: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      groupId = `group_${athleteId}_${timestamp}_${random}`;
+
+      const exists = await this.dbProvider.exists(this.eventCollection, { groupId });
+      
+      if (!exists) {
+        return groupId;
+      }
+
+      attempts++;
+      if (attempts >= maxAttempts) {
+        throw new Error('Failed to generate unique groupId after multiple attempts');
+      }
+    } while (true);
+  }
+
+  /**
+   * Generate unique event ID
+   */
+  private generateEventId(): string {
+    return `event_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  /**
+   * List events with advanced filtering
+   */
+  async listEventsWithFilters(filter: EventFilter): Promise<any[]> {
+    const filters: any[] = [];
+
+    // Required organizationId
+    filters.push({
+      field: 'organizationId',
+      operator: '$eq' as const,
+      value: filter.organizationId
+    });
+
+    // Optional filters
+    if (filter.teamId) {
+      filters.push({
+        field: 'teamId',
+        operator: '$eq' as const,
+        value: filter.teamId
+      });
     }
 
-    /**
-     * Get events by groupId
-     */
-    async getEventsByGroupId(groupId: string): Promise<Event[]> {
-        try {
-            return await this.eventRepo.findQuery(this.eventCollection, { groupId });
-        } catch (error) {
-            console.error('Error fetching events by groupId:', error);
-            throw new Error('Failed to fetch events by groupId');
-        }
+    if (filter.types && filter.types.length > 0) {
+      filters.push({
+        field: 'type',
+        operator: '$in' as const,
+        value: filter.types
+      });
     }
 
-    /**
-     * Update event
-     */
-    async updateEvent(id: string, updates: Partial<Event>): Promise<Event> {
-        try {
-            return await this.eventRepo.update(this.eventCollection, id, {
-                ...updates,
-                updatedAt: new Date()
-            });
-        } catch (error) {
-            console.error('Error updating event:', error);
-            throw new Error('Failed to update event');
-        }
+    if (filter.statuses && filter.statuses.length > 0) {
+      filters.push({
+        field: 'status',
+        operator: '$in' as const,
+        value: filter.statuses
+      });
     }
 
-    /**
-     * Delete event
-     */
-    async deleteEvent(id: string): Promise<boolean> {
-        try {
-            await this.eventRepo.deleteById(this.eventCollection, id);
-            return true;
-        } catch (error) {
-            console.error('Error deleting event:', error);
-            throw new Error('Failed to delete event');
-        }
+    // ✅ Date range query - dates are already Date objects from controller
+    if (filter.startDate && filter.endDate) {
+      console.log('[Service] Date filters received:', {
+        startDate: filter.startDate,
+        endDate: filter.endDate,
+        startDateIsDate: filter.startDate instanceof Date,
+        endDateIsDate: filter.endDate instanceof Date
+      });
+
+      // Find overlapping events
+      filters.push({
+        field: 'startTime',
+        operator: '$lte' as const,
+        value: filter.endDate
+      });
+      filters.push({
+        field: 'endTime',
+        operator: '$gte' as const,
+        value: filter.startDate
+      });
+    } else if (filter.startDate) {
+      filters.push({
+        field: 'endTime',
+        operator: '$gte' as const,
+        value: filter.startDate
+      });
+    } else if (filter.endDate) {
+      filters.push({
+        field: 'startTime',
+        operator: '$lte' as const,
+        value: filter.endDate
+      });
     }
 
-    /**
-     * Delete events by groupId
-     */
-    async deleteEventsByGroupId(groupId: string): Promise<number> {
-        try {
-            const events = await this.getEventsByGroupId(groupId);
-            for (const event of events) {
-                await this.deleteEvent(event.id);
-            }
-            return events.length;
-        } catch (error) {
-            console.error('Error deleting events by groupId:', error);
-            throw new Error('Failed to delete events by groupId');
-        }
+    // Filter by athlete userId
+    if (filter.athleteIds && filter.athleteIds.length > 0) {
+      filters.push({
+        field: 'participants.athletes.userId',
+        operator: '$in' as const,
+        value: filter.athleteIds
+      });
     }
+
+    // Filter by athlete memberId
+    if (filter.athleteMemberIds && filter.athleteMemberIds.length > 0) {
+      filters.push({
+        field: 'participants.athletes.memberId',
+        operator: '$in' as const,
+        value: filter.athleteMemberIds
+      });
+    }
+
+    // Filter by coach userId
+    if (filter.coachIds && filter.coachIds.length > 0) {
+      filters.push({
+        field: 'participants.coaches.userId',
+        operator: '$in' as const,
+        value: filter.coachIds
+      });
+    }
+
+    // Filter by coach memberId
+    if (filter.coachMemberIds && filter.coachMemberIds.length > 0) {
+      filters.push({
+        field: 'participants.coaches.memberId',
+        operator: '$in' as const,
+        value: filter.coachMemberIds
+      });
+    }
+
+    if (filter.bookingStatus) {
+      filters.push({
+        field: 'bookingSummary.status',
+        operator: '$eq' as const,
+        value: filter.bookingStatus
+      });
+    }
+
+    // Build options
+    const options: any = {};
+
+    if (filter.sort) {
+      options.sort = filter.sort;
+    } else {
+      options.sort = { startTime: 1 };
+    }
+
+    if (filter.limit) {
+      options.limit = filter.limit;
+    }
+
+    if (filter.offset) {
+      options.skip = filter.offset;
+    }
+
+    if (filter.includeDetails === false) {
+      options.projection = { details: 0 };
+    }
+
+    console.log('[Service] Calling findWithFilters with filters:', JSON.stringify(filters, null, 2));
+
+    return await this.dbProvider.findWithFilters(this.eventCollection, filters, options);
+  }
+
+  /**
+   * Get single event by ID
+   */
+  async getEventById(id: string): Promise<Event | null> {
+    return await this.dbProvider.findById(this.eventCollection, id);
+  }
+
+  /**
+   * Update single event
+   */
+  async updateEvent(id: string, data: Partial<Event>): Promise<Event | null> {
+    // Normalize dates in update data
+    const normalizedData = this.normalizeDates(data);
+    return await this.dbProvider.update(this.eventCollection, id, normalizedData);
+  }
+
+  /**
+   * Delete single event
+   */
+  async deleteEvent(id: string): Promise<boolean> {
+    return await this.dbProvider.delete(this.eventCollection, id);
+  }
+
+  /**
+   * Bulk update all events in a group
+   */
+  async bulkUpdateEventGroup(groupId: string, data: Partial<Event>): Promise<number> {
+    // Normalize dates in update data
+    const normalizedData = this.normalizeDates(data);
+    return await this.dbProvider.updateMany(
+      this.eventCollection,
+      { groupId },
+      normalizedData
+    );
+  }
+
+  /**
+   * Bulk delete all events in a group
+   */
+  async bulkDeleteEventGroup(groupId: string): Promise<number> {
+    return await this.dbProvider.deleteMany(
+      this.eventCollection,
+      { groupId }
+    );
+  }
 }

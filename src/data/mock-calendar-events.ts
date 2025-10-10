@@ -36,10 +36,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         type: 'workout',
         workoutId: 'workout-assign-1',
         sessionType: 'group',
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        },
         estimatedDuration: 120,
         equipment: ['baseball', 'catcher gear'],
         notes: 'Focus on fastball command and changeup development'
@@ -78,10 +74,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         type: 'workout',
         workoutId: 'workout-assign-2',
         sessionType: 'individual',
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        },
         estimatedDuration: 90,
         equipment: ['dumbbells', 'barbell', 'bench'],
         notes: 'Focus on shoulder stability and core strength'
@@ -162,10 +154,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         type: 'workout',
         workoutId: 'workout-assign-4',
         sessionType: 'group',
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        },
         estimatedDuration: 90,
         equipment: ['bat', 'balls', 'tee'],
         notes: 'Focus on swing path and contact point'
@@ -204,10 +192,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         type: 'workout',
         workoutId: 'workout-assign-5',
         sessionType: 'individual',
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        },
         estimatedDuration: 60,
         equipment: ['glove', 'balls'],
         notes: 'Ground ball and fly ball practice'
@@ -246,10 +230,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         type: 'workout',
         workoutId: 'workout-assign-6',
         sessionType: 'individual',
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        },
         estimatedDuration: 60,
         equipment: [],
         notes: 'Sprint intervals and endurance work'
@@ -290,10 +270,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         type: 'workout',
         workoutId: 'workout-assign-7',
         sessionType: 'group',
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        },
         estimatedDuration: 90,
         equipment: ['catcher gear', 'balls'],
         notes: 'Blocking, framing, and throwing to bases'
@@ -418,10 +394,6 @@ export const defaultEvents: Event[] = [
       type: 'workout',
       workoutId: 'workout-assign-default2',
       sessionType: 'team',
-      bookingInfo: {
-        isBookingRequested: false,
-        requestStatus: 'none'
-      },
       estimatedDuration: 120,
       equipment: ['baseballs', 'bats', 'gloves'],
       notes: 'Full team workout with scrimmage'

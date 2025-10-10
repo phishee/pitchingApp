@@ -98,10 +98,6 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
           type: 'workout' as const,
           workoutId: 'manual',
           sessionType: 'individual',
-          bookingInfo: {
-            isBookingRequested: false,
-            requestStatus: 'none'
-          },
           estimatedDuration: 120,
           equipment: [],
           notes: ''
