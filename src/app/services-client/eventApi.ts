@@ -301,14 +301,15 @@ export const eventApi = {
 
   /**
    * Create recurring events for a single athlete
+   * Note: With the new foreign key architecture, recurrence is handled by the source objects (WorkoutAssignment, etc.)
+   * This method now creates events from a template without recurrence validation
    */
   async createRecurringEventForAthlete(
     event: Partial<Event>,
   ): Promise<CreateEventsResponse> {
-    if (!event.recurrence || event.recurrence.pattern === 'none') {
-      throw new Error('Recurrence configuration required for recurring events');
-    }
-
+    // Note: Recurrence validation is now handled by the source objects (WorkoutAssignment, etc.)
+    // The Event model no longer contains recurrence information directly
+    
     return this.createEvents({
       events: [event]
     });
@@ -316,14 +317,16 @@ export const eventApi = {
 
   /**
    * Create recurring events for multiple athletes
+   * Note: With the new foreign key architecture, recurrence is handled by the source objects (WorkoutAssignment, etc.)
+   * This method now validates events without recurrence validation
    */
   async createRecurringEventsForAthletes(
     events: Partial<Event>[]
   ): Promise<CreateEventsResponse> {
     events.forEach((event, index) => {
-      if (!event.recurrence || event.recurrence.pattern === 'none') {
-        throw new Error(`Event at index ${index} missing recurrence configuration`);
-      }
+      // Note: Recurrence validation is now handled by the source objects (WorkoutAssignment, etc.)
+      // The Event model no longer contains recurrence information directly
+      
       if (!event.participants?.athletes?.length) {
         throw new Error(`Event at index ${index} missing athlete participant`);
       }

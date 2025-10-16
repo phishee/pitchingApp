@@ -14,19 +14,18 @@ export const mockMemberEvents: Record<string, Event[]> = {
       startTime: new Date('2025-01-15T14:00:00'),
       endTime: new Date('2025-01-15T16:00:00'),
       location: 'Bullpen A',
+      coverPhotoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop',
       participants: {
         athletes: [{ userId: 'user1', memberId: 'member1' }],
         coaches: [{ userId: 'coach1', memberId: 'coach-member1' }],
         required: ['user1', 'coach1'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
-      detailsId: 'workout-assignment-1',
+      sourceId: 'workout-assignment-1',
+      sourceType: 'workout_assignment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach1', memberId: 'coach-member1' },
@@ -50,18 +49,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user1'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'workout-assignment-2',
+      sourceType: 'workout_assignment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'trainer1', memberId: 'trainer-member1' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'workout-assignment-2'
+      updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
       id: '3',
@@ -80,18 +77,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user1', 'coach1'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'assessment-1',
+      sourceType: 'assessment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach1', memberId: 'coach-member1' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'assessment-plan-1'
+      updatedAt: new Date('2025-01-01T10:00:00')
     }
   ],
   'user2': [
@@ -112,18 +107,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user2', 'coach2'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'workout-assignment-3',
+      sourceType: 'workout_assignment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach2', memberId: 'coach-member2' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'workout-assignment-4'
+      updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
       id: '5',
@@ -142,18 +135,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user2'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'workout-assignment-4',
+      sourceType: 'workout_assignment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach2', memberId: 'coach-member2' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'workout-assignment-5'
+      updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
       id: '6',
@@ -172,18 +163,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user2'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'workout-assignment-5',
+      sourceType: 'workout_assignment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'trainer2', memberId: 'trainer-member2' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'workout-assignment-6'
+      updatedAt: new Date('2025-01-01T10:00:00')
     }
   ],
   'user3': [
@@ -204,18 +193,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user3', 'coach3'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'workout-assignment-6',
+      sourceType: 'workout_assignment',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach3', memberId: 'coach-member3' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'workout-assignment-7'
+      updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
       id: '8',
@@ -234,18 +221,16 @@ export const mockMemberEvents: Record<string, Event[]> = {
         required: ['user3', 'coach3'],
         optional: []
       },
-      recurrence: {
-        pattern: 'none',
-        interval: 1
-      },
+      sourceId: 'coaching-booking-3',
+      sourceType: 'coaching_session',
       sequenceNumber: 1,
       totalInSequence: 1,
+      isModified: false,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach3', memberId: 'coach-member3' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      detailsId: 'coaching-booking-3'
+      updatedAt: new Date('2025-01-01T10:00:00')
     }
   ]
 };
@@ -269,47 +254,16 @@ export const defaultEvents: Event[] = [
       required: ['coach1'],
       optional: []
     },
-    recurrence: {
-      pattern: 'none',
-      interval: 1
-    },
+    sourceId: 'coaching-booking-4',
+    sourceType: 'coaching_session',
     sequenceNumber: 1,
     totalInSequence: 1,
+    isModified: false,
     status: 'scheduled',
     visibility: 'team_only',
     createdBy: { userId: 'coach1', memberId: 'coach-member1' },
     createdAt: new Date(),
-    updatedAt: new Date(),
-    detailsId: 'coaching-booking-4'
+    updatedAt: new Date()
   },
-  {
-    id: 'default2',
-    groupId: 'group_default2',
-    type: 'workout',
-    organizationId: 'org-123',
-    teamId: 'team-456',
-    title: 'Team Practice',
-    description: 'Full team practice session',
-    startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-    endTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
-    location: 'Main Field',
-    participants: {
-      athletes: [],
-      coaches: [],
-      required: [],
-      optional: []
-    },
-    recurrence: {
-      pattern: 'none',
-      interval: 1
-    },
-    sequenceNumber: 1,
-    totalInSequence: 1,
-    status: 'scheduled',
-    visibility: 'team_only',
-    createdBy: { userId: 'coach1', memberId: 'coach-member1' },
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    detailsId: 'workout-assignment-default2'
-  }
+  
 ];

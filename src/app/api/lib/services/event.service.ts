@@ -6,8 +6,15 @@ import { DB_TYPES } from '../symbols/Symbols';
 import { Event, RecurrenceConfig } from '@/models/Calendar';
 import { ClientSession } from 'mongodb';
 
+// Template interface for backward compatibility with existing event creation
+interface EventTemplate extends Omit<Event, 'id' | 'groupId' | 'sourceId' | 'sourceType' | 'sequenceNumber' | 'totalInSequence' | 'isModified' | 'createdAt' | 'updatedAt'> {
+  recurrence?: RecurrenceConfig; // Optional for backward compatibility
+  createdAt?: Date; // Optional for templates
+  updatedAt?: Date; // Optional for templates
+}
+
 interface CreateEventRequest {
-  events: Partial<Event>[];
+  events: Partial<EventTemplate>[];
 }
 
 interface CreateEventResponse {
@@ -57,7 +64,7 @@ export class EventService {
   /**
    * Normalize dates - convert date strings to Date objects
    */
-  private normalizeDates(event: Partial<Event>): Partial<Event> {
+  private normalizeDates(event: Partial<EventTemplate>): Partial<EventTemplate> {
     const normalized = { ...event };
 
     // Convert main event dates
@@ -77,7 +84,7 @@ export class EventService {
       normalized.updatedAt = new Date(normalized.updatedAt);
     }
 
-    // Convert recurrence dates
+    // Convert recurrence dates (for backward compatibility with EventTemplate)
     if (normalized.recurrence) {
       if (normalized.recurrence.startDate && !(normalized.recurrence.startDate instanceof Date)) {
         normalized.recurrence.startDate = new Date(normalized.recurrence.startDate);
@@ -94,9 +101,6 @@ export class EventService {
         );
       }
     }
-
-    // Note: Details are now stored separately and referenced by detailsId
-    // Date conversion for details would need to be handled in the respective detail services
 
     // Note: Booking summary is now handled separately
     // Date conversion for booking data would need to be handled in the booking service
@@ -146,7 +150,7 @@ export class EventService {
 
           // Generate all recurring instances
           const recurringEvents = this.generateRecurringEvents(
-            normalizedTemplate as Event,
+            normalizedTemplate as EventTemplate,
             groupId
           );
 
@@ -218,7 +222,7 @@ export class EventService {
 /**
  * Generate recurring event instances from template
  */
-private generateRecurringEvents(template: Event, groupId: string): Event[] {
+  private generateRecurringEvents(template: EventTemplate, groupId: string): Event[] {
   const events: Event[] = [];
   const recurrence = template.recurrence;
 
@@ -283,6 +287,9 @@ private generateRecurringEvents(template: Event, groupId: string): Event[] {
           endTime: eventEndTime,
           sequenceNumber,
           totalInSequence: 0,
+          sourceId: '', // Will be set by the calling service
+          sourceType: 'workout_assignment', // Default for backward compatibility
+          isModified: false,
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -320,6 +327,9 @@ private generateRecurringEvents(template: Event, groupId: string): Event[] {
           endTime: eventEndTime,
           sequenceNumber,
           totalInSequence: 0,
+          sourceId: '', // Will be set by the calling service
+          sourceType: 'workout_assignment', // Default for backward compatibility
+          isModified: false,
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -360,6 +370,9 @@ private generateRecurringEvents(template: Event, groupId: string): Event[] {
           endTime: eventEndTime,
           sequenceNumber,
           totalInSequence: 0,
+          sourceId: '', // Will be set by the calling service
+          sourceType: 'workout_assignment', // Default for backward compatibility
+          isModified: false,
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -510,12 +523,6 @@ private generateRecurringEvents(template: Event, groupId: string): Event[] {
 
     // ✅ Date range query - dates are already Date objects from controller
     if (filter.startDate && filter.endDate) {
-      console.log('[Service] Date filters received:', {
-        startDate: filter.startDate,
-        endDate: filter.endDate,
-        startDateIsDate: filter.startDate instanceof Date,
-        endDateIsDate: filter.endDate instanceof Date
-      });
 
       // Find overlapping events
       filters.push({
@@ -602,7 +609,6 @@ private generateRecurringEvents(template: Event, groupId: string): Event[] {
       options.projection = { details: 0 };
     }
 
-    console.log('[Service] Calling findWithFilters with filters:', JSON.stringify(filters, null, 2));
 
     return await this.dbProvider.findWithFilters(this.eventCollection, filters, options);
   }

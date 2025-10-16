@@ -58,12 +58,10 @@ export class EventController {
 
       if (searchParams.get('startDate')) {
         startDate = new Date(searchParams.get('startDate')!);
-        console.log('[Controller] startDate:', startDate, 'isDate:', startDate instanceof Date);
       }
       
       if (searchParams.get('endDate')) {
         endDate = new Date(searchParams.get('endDate')!);
-        console.log('[Controller] endDate:', endDate, 'isDate:', endDate instanceof Date);
       }
 
       const filter: any = {
@@ -90,14 +88,6 @@ export class EventController {
       if (sortField) {
         filter.sort = { [sortField]: sortOrder };
       }
-
-      console.log('[Controller] Calling service with filter:', {
-        organizationId: filter.organizationId,
-        startDate: filter.startDate,
-        endDate: filter.endDate,
-        startDateType: typeof filter.startDate,
-        endDateType: typeof filter.endDate
-      });
 
       const events = await this.eventService.listEventsWithFilters(filter);
       

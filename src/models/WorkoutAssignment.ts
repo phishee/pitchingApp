@@ -47,6 +47,13 @@ export interface CreateWorkoutAssignmentPayload {
   sessionType: 'individual' | 'coached';
   scheduledCoach?: UserInfo;
   notes: string;
+  
+  // Add workout data for event generation
+  workoutData?: {
+    name: string;
+    description: string;
+    coverImage: string;
+  };
 }
 
 export interface UpdateWorkoutAssignmentPayload {

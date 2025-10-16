@@ -50,15 +50,14 @@ export interface Event {
     optional: string[]; // userIds who can attend
   };
 
-  // Recurrence
-  recurrence: RecurrenceConfig;
+  // Reference to source (foreign key approach)
+  sourceId: string; // FK to WorkoutAssignment | GameSchedule | AssessmentPlan | CoachingBooking
+  sourceType: 'workout_assignment' | 'game_schedule' | 'assessment' | 'coaching_session';
   
-  // Reference to source details (replaces discriminated union)
-  detailsId: string; // FK to WorkoutAssignment | GameSchedule | AssessmentPlan | CoachingBooking
-  
-  // Bulk operation tracking
+  // Event instance tracking
   sequenceNumber: number; // 1st occurrence, 2nd occurrence, etc.
   totalInSequence: number; // Total events in this group
+  isModified: boolean; // Track if individually changed
   
   // Status & Metadata
   status: EventStatus;

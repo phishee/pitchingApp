@@ -51,16 +51,14 @@ export const generateEvents = (
           ),
           optional: []
         },
-        recurrence: {
-          pattern: 'none',
-          interval: 1
-        },
+        sourceId: `workout-assignment-${assignmentData.selectedWorkout!.id}-${Date.now()}`,
+        sourceType: 'workout_assignment',
         sequenceNumber: week * daysOfWeek.length + sequenceIndex + 1,
         totalInSequence: numberOfWeeks * daysOfWeek.length,
+        isModified: false,
         status: 'scheduled',
         visibility: 'team_only',
-        createdBy: { userId: currentUserId, memberId: 'creator-member-id' },
-        detailsId: `workout-assignment-${assignmentData.selectedWorkout!.id}-${Date.now()}`
+        createdBy: { userId: currentUserId, memberId: 'creator-member-id' }
       };
 
       events.push(event);

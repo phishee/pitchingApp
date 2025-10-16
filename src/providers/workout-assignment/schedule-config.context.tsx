@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { RecurrenceConfig } from '@/models/Calendar';
 
 interface ScheduleConfigState {
@@ -37,7 +37,10 @@ export function ScheduleConfigProvider({ children }: { children: ReactNode }) {
   const [sessionType, setSessionType] = useState<'individual' | 'coached'>('individual');
   const [notes, setNotes] = useState('');
 
-  const updateRecurrence = (config: RecurrenceConfig) => setRecurrenceConfig(config);
+
+  const updateRecurrence = useCallback((config: RecurrenceConfig) => {
+    setRecurrenceConfig(config);
+  }, []);
   const updateTimeSlot = (start: string, end: string) => {
     setDefaultStartTime(start);
     setDefaultEndTime(end);
