@@ -15,6 +15,32 @@ class WorkoutAssignmentService {
   }
 
   /**
+   * Creates workout assignments for multiple athletes
+   * Each athlete gets their own assignment and events
+   */
+  async createAssignmentsForMultipleAthletes(
+    basePayload: Omit<CreateWorkoutAssignmentPayload, 'athleteInfo'>,
+    athletes: Array<{ userId: string; memberId: string; name?: string; email?: string }>
+  ): Promise<{ assignments: WorkoutAssignment[]; events: Event[]; totalCreated: number }> {
+    // Single API call - backend creates assignments and events for all athletes
+    const payload = { ...basePayload, athletes } as any;
+    const response = await workoutAssignmentApi.create(payload);
+    
+    // The API returns different formats for single vs multiple athletes
+    // For multiple athletes, it returns { assignments, events, totalCreated }
+    if ('assignments' in response) {
+      return response as unknown as { assignments: WorkoutAssignment[]; events: Event[]; totalCreated: number };
+    } else {
+      // Fallback: if somehow single athlete format is returned, convert it
+      return {
+        assignments: [response.assignment],
+        events: response.events,
+        totalCreated: response.events.length
+      };
+    }
+  }
+
+  /**
    * Updates an assignment and optionally updates future events
    */
   async updateAssignment(

@@ -84,16 +84,14 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
           required: [userId],
           optional: []
         },
-        recurrence: {
-          pattern: 'none',
-          interval: 1
-        },
+        sourceId: 'manual-workout-event',
+        sourceType: 'workout_assignment' as const,
         sequenceNumber: 1,
         totalInSequence: 1,
+        isModified: false,
         status: 'scheduled' as const,
         visibility: 'team_only' as const,
-        createdBy: { userId, memberId: 'creator-member-id' },
-        detailsId: 'manual-workout-event'
+        createdBy: { userId, memberId: 'creator-member-id' }
       };
 
       await addEvent(newEvent as Event);

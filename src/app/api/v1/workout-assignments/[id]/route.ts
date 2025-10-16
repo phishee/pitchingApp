@@ -65,6 +65,40 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const controller = container.get<WorkoutAssignmentController>(WORKOUT_ASSIGNMENT_TYPES.WorkoutAssignmentController);
+    
+    // Validate required fields
+    if (!body.updateStrategy) {
+      return NextResponse.json(
+        { error: 'updateStrategy is required' },
+        { status: 400 }
+      );
+    }
+    
+    const result = await controller.updateAssignmentAndEvents(id, body);
+    
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Failed to update assignment and events:', error);
+    
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;

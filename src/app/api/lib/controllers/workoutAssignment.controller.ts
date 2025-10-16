@@ -1,8 +1,9 @@
 import { CreateWorkoutAssignmentPayload, UpdateWorkoutAssignmentPayload, WorkoutAssignment } from '@/models/WorkoutAssignment';
 import { Event } from '@/models';
 import { WorkoutAssignmentService } from '../services/workoutAssignment.service';
+import { EventManagementService } from '../services/eventManagement.service';
 import { inject, injectable } from 'inversify';
-import { WORKOUT_ASSIGNMENT_TYPES } from '@/app/api/lib/symbols/Symbols';
+import { WORKOUT_ASSIGNMENT_TYPES, EVENT_MANAGEMENT_TYPES } from '@/app/api/lib/symbols/Symbols';
 
 export interface GetAssignmentsFilters {
   organizationId: string;
@@ -20,7 +21,9 @@ export interface CreateAssignmentResult {
 export class WorkoutAssignmentController {
   constructor(
     @inject(WORKOUT_ASSIGNMENT_TYPES.WorkoutAssignmentService)
-    private readonly workoutAssignmentService: WorkoutAssignmentService
+    private readonly workoutAssignmentService: WorkoutAssignmentService,
+    @inject(EVENT_MANAGEMENT_TYPES.EventManagementService)
+    private readonly eventManagement: EventManagementService
   ) {}
 
   async createAssignment(payload: CreateWorkoutAssignmentPayload): Promise<CreateAssignmentResult> {
@@ -119,6 +122,116 @@ export class WorkoutAssignmentController {
       await this.workoutAssignmentService.deleteAssignment(id);
     } catch (error) {
       console.error('Controller: Failed to delete workout assignment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update assignment and its associated events
+   */
+  async updateAssignmentAndEvents(
+    assignmentId: string,
+    payload: {
+      assignmentUpdates?: UpdateWorkoutAssignmentPayload;
+      eventUpdates?: Partial<Event>;
+      updateStrategy: 'all' | 'future_only' | 'unmodified_only';
+      fromDate?: Date;
+    }
+  ): Promise<{ assignment: WorkoutAssignment; events: Event[] }> {
+    try {
+      if (!assignmentId) {
+        throw new Error('Assignment ID is required');
+      }
+
+      if (!payload.assignmentUpdates && !payload.eventUpdates) {
+        throw new Error('Either assignment updates or event updates must be provided');
+      }
+
+      const result = await this.workoutAssignmentService.updateAssignmentAndEvents(assignmentId, payload);
+      return result;
+    } catch (error) {
+      console.error('Controller: Failed to update assignment and events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a single event
+   */
+  async updateSingleEvent(
+    eventId: string,
+    updates: Partial<Event>
+  ): Promise<Event | null> {
+    try {
+      if (!eventId) {
+        throw new Error('Event ID is required');
+      }
+
+      const updatedEvent = await this.eventManagement.updateSingleEvent(eventId, updates);
+      return updatedEvent;
+    } catch (error) {
+      console.error('Controller: Failed to update single event:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get events for an assignment
+   */
+  async getAssignmentEvents(assignmentId: string): Promise<Event[]> {
+    try {
+      if (!assignmentId) {
+        throw new Error('Assignment ID is required');
+      }
+
+      const events = await this.eventManagement.getEventsBySource(assignmentId, 'workout_assignment');
+      return events;
+    } catch (error) {
+      console.error('Controller: Failed to get assignment events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get event group information
+   */
+  async getEventGroupInfo(groupId: string): Promise<{
+    groupId: string;
+    totalEvents: number;
+    modifiedEvents: number;
+    unmodifiedEvents: number;
+    futureEvents: number;
+    pastEvents: number;
+  } | null> {
+    try {
+      if (!groupId) {
+        throw new Error('Group ID is required');
+      }
+
+      const groupInfo = await this.eventManagement.getEventGroupInfo(groupId);
+      return groupInfo;
+    } catch (error) {
+      console.error('Controller: Failed to get event group info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete future events from a group
+   */
+  async deleteFutureEvents(
+    groupId: string,
+    fromDate?: Date
+  ): Promise<{ deletedCount: number }> {
+    try {
+      if (!groupId) {
+        throw new Error('Group ID is required');
+      }
+
+      const result = await this.eventManagement.deleteFutureEvents(groupId, fromDate);
+      return result;
+    } catch (error) {
+      console.error('Controller: Failed to delete future events:', error);
       throw error;
     }
   }

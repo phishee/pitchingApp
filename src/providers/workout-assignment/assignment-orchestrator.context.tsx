@@ -117,19 +117,19 @@ function OrchestratorLogic({
 
   // ==================== BUILD PAYLOAD ====================
 
-  const buildPayload = useCallback((): CreateWorkoutAssignmentPayload => {
+  const buildPayload = useCallback((): CreateWorkoutAssignmentPayload | { athletes: any[]; [key: string]: any } => {
     if (!isValid()) {
       throw new Error('Cannot build payload: validation failed');
     }
 
-    // For now, handle single athlete (can extend to multiple later)
-    const athlete = athleteState.selectedAthletes[0];
+    const selectedWorkout = workoutState.selectedWorkout!;
+    const isMultipleAthletes = athleteState.selectedAthletes.length > 1;
 
-    return {
+    // Base payload (common to both single and multiple athlete scenarios)
+    const basePayload = {
       organizationId,
       teamId,
-      workoutId: workoutState.selectedWorkout!.id,
-      athleteInfo: athlete,
+      workoutId: selectedWorkout.id,
       coachInfo: { userId: currentUserId, memberId: 'TODO' }, // TODO: Get actual memberId
       recurrence: scheduleState.recurrenceConfig,
       startDate: scheduleState.recurrenceConfig.startDate!,
@@ -143,8 +143,29 @@ function OrchestratorLogic({
       scheduledCoach: scheduleState.sessionType === 'coached'
         ? { userId: currentUserId, memberId: 'TODO' }
         : undefined,
-      notes: scheduleState.notes
+      notes: scheduleState.notes,
+      
+      // Add workout data for event generation
+      workoutData: {
+        name: selectedWorkout.name,
+        description: selectedWorkout.description,
+        coverImage: selectedWorkout.coverImage
+      }
     };
+
+    if (isMultipleAthletes) {
+      // Multiple athletes: return format expected by createAssignmentsForMultipleAthletes
+      return {
+        ...basePayload,
+        athletes: athleteState.selectedAthletes
+      };
+    } else {
+      // Single athlete: return format expected by createAssignment
+      return {
+        ...basePayload,
+        athleteInfo: athleteState.selectedAthletes[0]
+      };
+    }
   }, [
     organizationId,
     teamId,
@@ -168,9 +189,21 @@ function OrchestratorLogic({
 
     try {
       const payload = buildPayload();
+      const isMultipleAthletes = athleteState.selectedAthletes.length > 1;
 
-      // Create assignment (service handles event creation)
-      const result = await workoutAssignmentService.createAssignment(payload);
+      let result;
+
+      if (isMultipleAthletes) {
+        // Multiple athletes: use the multiple athlete endpoint
+        const { athletes, ...basePayload } = payload as { athletes: any[]; [key: string]: any };
+        result = await workoutAssignmentService.createAssignmentsForMultipleAthletes(
+          basePayload as Omit<CreateWorkoutAssignmentPayload, 'athleteInfo'>, 
+          athletes
+        );
+      } else {
+        // Single athlete: use the single athlete endpoint
+        result = await workoutAssignmentService.createAssignment(payload as CreateWorkoutAssignmentPayload);
+      }
 
       setState(prev => ({
         ...prev,
@@ -179,9 +212,9 @@ function OrchestratorLogic({
 
       return {
         success: true,
-        assignment: result.assignment,
+        assignment: isMultipleAthletes ? result.assignments[0] : result.assignment, // For compatibility, return first assignment
         events: result.events,
-        totalCreated: result.events.length
+        totalCreated: result.totalCreated || result.events.length
       };
 
     } catch (error) {
@@ -195,7 +228,7 @@ function OrchestratorLogic({
 
       throw error;
     }
-  }, [isValid, getValidationErrors, buildPayload]);
+  }, [isValid, getValidationErrors, buildPayload, athleteState.selectedAthletes.length]);
 
   // ==================== TOTAL EVENTS CALCULATION ====================
 
@@ -212,7 +245,7 @@ function OrchestratorLogic({
       return athleteCount;
     }
 
-    // For weekly pattern, calculate based on days selected and occurrences
+    // For weekly pattern, calculate based on occurrences (not days * occurrences)
     if (recurrenceConfig.pattern === 'weekly') {
       const daysCount = recurrenceConfig.daysOfWeek?.length || 0;
       if (daysCount === 0) return 0; // No days selected yet

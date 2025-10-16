@@ -142,7 +142,7 @@ export function Step3ExercisePrescriptions() {
             const prescription = prescriptionState.prescriptions[exercise.exercise_id];
             const isExpanded = expandedExercise === exercise.exercise_id;
             const isModified = prescription?.isModified || false;
-            const defaultMetrics = exercise.default_Metrics;
+            const defaultMetrics = exercise.default_Metrics || {};
             const prescribedMetrics = prescription?.prescribedMetrics || defaultMetrics;
 
             return (
@@ -215,7 +215,7 @@ export function Step3ExercisePrescriptions() {
                       <div>
                         <h5 className="font-medium mb-3">Metrics</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {Object.entries(defaultMetrics).map(([key, defaultValue]) => (
+                          {defaultMetrics && Object.entries(defaultMetrics).map(([key, defaultValue]) => (
                             <div key={key} className="space-y-1">
                               <label className="text-sm font-medium capitalize">
                                 {key.replace(/_/g, ' ')}
@@ -240,7 +240,11 @@ export function Step3ExercisePrescriptions() {
                                 </p>
                               )}
                             </div>
-                          ))}
+                          )) || (
+                            <div className="col-span-full text-center py-4 text-muted-foreground">
+                              <p className="text-sm">No metrics available for this exercise</p>
+                            </div>
+                          )}
                         </div>
                       </div>
 

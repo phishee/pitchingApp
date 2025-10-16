@@ -2,8 +2,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import container from '@/app/api/lib/container';
-import { EVENT_TYPES } from '@/app/api/lib/symbols/Symbols';
+import { EVENT_TYPES, WORKOUT_ASSIGNMENT_TYPES } from '@/app/api/lib/symbols/Symbols';
 import { EventController } from '@/app/api/lib/controllers/event.controller';
+import { WorkoutAssignmentController } from '@/app/api/lib/controllers/workoutAssignment.controller';
 
 export async function GET(
   req: NextRequest,
@@ -17,8 +18,37 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const eventController = container.get<EventController>(EVENT_TYPES.EventController);
-  return eventController.updateEvent(req, { params });
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    
+    // Use the new EventManagementService through WorkoutAssignmentController
+    const workoutController = container.get<WorkoutAssignmentController>(WORKOUT_ASSIGNMENT_TYPES.WorkoutAssignmentController);
+    const updatedEvent = await workoutController.updateSingleEvent(id, body);
+    
+    if (!updatedEvent) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(updatedEvent);
+  } catch (error) {
+    console.error('Failed to update event:', error);
+    
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(

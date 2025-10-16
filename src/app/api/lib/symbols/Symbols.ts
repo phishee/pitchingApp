@@ -66,3 +66,10 @@ export const WORKOUT_ASSIGNMENT_TYPES = {
   WorkoutAssignmentService: Symbol.for('WorkoutAssignmentService'),
   WorkoutAssignmentController: Symbol.for('WorkoutAssignmentController'),
 } as const;
+
+// Add event management symbols
+export const EVENT_MANAGEMENT_TYPES = {
+  EventManagementService: Symbol.for('EventManagementService'),
+  EventGeneratorService: Symbol.for('EventGeneratorService'),
+  RecurrenceCalculatorService: Symbol.for('RecurrenceCalculatorService'),
+} as const;
