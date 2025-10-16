@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { WorkoutAssignmentDialog } from './event/creation/work-assignment-event';
-import { EventCreationProvider, useEventCreation} from '@/providers/event-creation-context';
 import { TeamMemberWithUser } from '@/models';
+import { useCalendar } from '@/providers/calendar-context';
 
 interface ActionButtonsProps {
   onEventTypeSelect?: (eventType: string) => void;
@@ -26,12 +26,15 @@ export function ActionButtons({
   onEventTypeSelect,
   selectedMembers = [],
   availableMembers = [],
-  onAddEvent = async () => {},
+  onAddEvent = async () => { },
   organizationId,
   teamId,
   currentUserId,
 }: ActionButtonsProps) {
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  
+  // Get calendar refresh function
+  const { refreshEvents } = useCalendar();
 
   const handleEventTypeClick = (eventType: string) => {
     onEventTypeSelect?.(eventType);
@@ -53,8 +56,8 @@ export function ActionButtons({
       {/* Your existing buttons */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             size="md"
             className="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition-colors flex items-center gap-2"
           >
@@ -65,39 +68,26 @@ export function ActionButtons({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48" side="bottom" align="end">
           <DropdownMenuItem
-            onClick={() => handleEventTypeClick('Assign Workout')}
+            onClick={handleOpenAssignmentDialog}  // ✅ Remove the nested button, just use the dropdown item
             className="flex items-center gap-2 cursor-pointer"
           >
-            <Button 
-              onClick={handleOpenAssignmentDialog}
-              className="flex items-center gap-2"
-            >
-              <Target className="h-4 w-4" />
-              Assign Workout
-            </Button>
+            <Target className="h-4 w-4" />
+            Assign Workout
           </DropdownMenuItem>
           {/* Other menu items */}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Wrap the dialog with EventCreationProvider */}
-      <EventCreationProvider
+      {/* Workout Assignment Dialog - uses new orchestrator architecture */}
+      <WorkoutAssignmentDialog
+        isOpen={isAssignmentDialogOpen}
+        onClose={handleCloseAssignmentDialog}
+        availableMembers={availableMembers}
         organizationId={organizationId || ''}
         teamId={teamId || ''}
-        currentUserId={currentUser?.userId || currentUserId || ''} // Use current user from selectedMembers
-        initialEventType="workout"
-      >
-        <WorkoutAssignmentDialog
-          isOpen={isAssignmentDialogOpen}
-          onClose={handleCloseAssignmentDialog}
-          selectedMembers={selectedMembers}
-          availableMembers={availableMembers}
-          onAddEvent={onAddEvent as (event: any) => Promise<void>}
-          organizationId={organizationId}
-          teamId={teamId}
-          currentUserId={currentUser?.userId || currentUserId || ''} // Pass the same current user
-        />
-      </EventCreationProvider>
+        currentUserId={currentUser?.userId || currentUserId || ''}
+        onEventsCreated={refreshEvents}
+      />
     </div>
   );
 }

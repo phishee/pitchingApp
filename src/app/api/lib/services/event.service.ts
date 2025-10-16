@@ -95,27 +95,11 @@ export class EventService {
       }
     }
 
-    // Convert gameday-specific dates (if present)
-    if (normalized.details) {
-      const details = normalized.details as any;
-      
-      if (details.type === 'gameday') {
-        if (details.arrivalTime && !(details.arrivalTime instanceof Date)) {
-          details.arrivalTime = new Date(details.arrivalTime);
-        }
-        
-        if (details.warmupStart && !(details.warmupStart instanceof Date)) {
-          details.warmupStart = new Date(details.warmupStart);
-        }
-      }
-    }
+    // Note: Details are now stored separately and referenced by detailsId
+    // Date conversion for details would need to be handled in the respective detail services
 
-    // Convert booking summary dates (if present)
-    if (normalized.bookingSummary && normalized.bookingSummary.lastUpdated) {
-      if (!(normalized.bookingSummary.lastUpdated instanceof Date)) {
-        normalized.bookingSummary.lastUpdated = new Date(normalized.bookingSummary.lastUpdated);
-      }
-    }
+    // Note: Booking summary is now handled separately
+    // Date conversion for booking data would need to be handled in the booking service
 
     return normalized;
   }
@@ -229,34 +213,98 @@ export class EventService {
     });
   }
 
-  /**
-   * Generate recurring event instances from template
-   */
-  private generateRecurringEvents(template: Event, groupId: string): Event[] {
-    const events: Event[] = [];
-    const recurrence = template.recurrence;
+  // src/app/api/lib/services/event.service.ts
 
-    if (!recurrence || recurrence.pattern === 'none') {
-      return [];
+/**
+ * Generate recurring event instances from template
+ */
+private generateRecurringEvents(template: Event, groupId: string): Event[] {
+  const events: Event[] = [];
+  const recurrence = template.recurrence;
+
+  if (!recurrence || recurrence.pattern === 'none') {
+    return [];
+  }
+
+  const startDate = recurrence.startDate || template.startTime;
+  const endDate = recurrence.endDate;
+  const occurrences = recurrence.occurrences;
+  const eventDuration = template.endTime.getTime() - template.startTime.getTime();
+
+  let sequenceNumber = 1;
+
+  // ✅ FIXED: Better weekly recurrence logic
+  if (recurrence.pattern === 'weekly' && recurrence.daysOfWeek) {
+    const targetDays = recurrence.daysOfWeek.sort((a, b) => a - b);
+    let weekStartDate = new Date(startDate);
+    
+    // Find the start of the week (Sunday = 0)
+    const dayOfWeek = weekStartDate.getDay();
+    weekStartDate.setDate(weekStartDate.getDate() - dayOfWeek);
+
+    let currentWeek = 0;
+    const maxWeeks = 1000; // Safety limit
+
+    while (currentWeek < maxWeeks) {
+      // Check termination conditions before generating events for this week
+      const weekStart = new Date(weekStartDate);
+      weekStart.setDate(weekStart.getDate() + (currentWeek * 7 * (recurrence.interval || 1)));
+
+      if (endDate && weekStart > new Date(endDate)) break;
+      if (occurrences && sequenceNumber > occurrences) break;
+
+      // Generate events for each target day in this week
+      for (const targetDay of targetDays) {
+        const eventDate = new Date(weekStart);
+        eventDate.setDate(weekStart.getDate() + targetDay);
+
+        // Skip if before start date
+        if (eventDate < new Date(startDate)) continue;
+
+        // Skip if after end date
+        if (endDate && eventDate > new Date(endDate)) continue;
+
+        // Skip if in exceptions
+        if (this.isException(eventDate, recurrence.exceptions)) continue;
+
+        // Create event start time with original time
+        const eventStartTime = new Date(eventDate);
+        eventStartTime.setHours(template.startTime.getHours());
+        eventStartTime.setMinutes(template.startTime.getMinutes());
+        eventStartTime.setSeconds(template.startTime.getSeconds());
+
+        const eventEndTime = new Date(eventStartTime.getTime() + eventDuration);
+
+        events.push({
+          ...template,
+          id: this.generateEventId(),
+          groupId,
+          startTime: eventStartTime,
+          endTime: eventEndTime,
+          sequenceNumber,
+          totalInSequence: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        sequenceNumber++;
+
+        // Check if we've hit occurrence limit
+        if (occurrences && sequenceNumber > occurrences) break;
+      }
+
+      currentWeek++;
     }
-
-    const startDate = recurrence.startDate || template.startTime;
-    const endDate = recurrence.endDate;
-    const occurrences = recurrence.occurrences;
-
+  } 
+  // ✅ Daily pattern (unchanged)
+  else if (recurrence.pattern === 'daily') {
     let currentDate = new Date(startDate);
-    let sequenceNumber = 1;
-    const eventDuration = template.endTime.getTime() - template.startTime.getTime();
-
-    // Generate events based on pattern
+    
     while (true) {
-      // Check termination conditions
       if (endDate && currentDate > new Date(endDate)) break;
       if (occurrences && sequenceNumber > occurrences) break;
 
-      // Check if this date should generate an event
-      if (this.shouldGenerateEvent(currentDate, recurrence)) {
-        // Calculate event times for this occurrence
+      if (!this.isException(currentDate, recurrence.exceptions)) {
         const eventStartTime = new Date(currentDate);
         eventStartTime.setHours(template.startTime.getHours());
         eventStartTime.setMinutes(template.startTime.getMinutes());
@@ -264,41 +312,73 @@ export class EventService {
 
         const eventEndTime = new Date(eventStartTime.getTime() + eventDuration);
 
-        // Check if in exceptions
-        if (!this.isException(eventStartTime, recurrence.exceptions)) {
-          events.push({
-            ...template,
-            id: this.generateEventId(),
-            groupId,
-            startTime: eventStartTime,
-            endTime: eventEndTime,
-            sequenceNumber,
-            totalInSequence: 0, // Will update after we know total
-            createdAt: new Date(),
-            updatedAt: new Date()
-          });
+        events.push({
+          ...template,
+          id: this.generateEventId(),
+          groupId,
+          startTime: eventStartTime,
+          endTime: eventEndTime,
+          sequenceNumber,
+          totalInSequence: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
 
-          sequenceNumber++;
-        }
+        sequenceNumber++;
       }
 
-      // Move to next date based on pattern
-      currentDate = this.getNextDate(currentDate, recurrence);
-
-      // Safety check - prevent infinite loops
-      if (sequenceNumber > 1000) {
-        throw new Error('Recurrence pattern would generate more than 1000 events');
-      }
+      currentDate.setDate(currentDate.getDate() + (recurrence.interval || 1));
     }
-
-    // Update totalInSequence for all events
-    const totalInSequence = events.length;
-    events.forEach(event => {
-      event.totalInSequence = totalInSequence;
-    });
-
-    return events;
   }
+  // ✅ Monthly pattern (unchanged)
+  else if (recurrence.pattern === 'monthly') {
+    let currentDate = new Date(startDate);
+    
+    while (true) {
+      if (endDate && currentDate > new Date(endDate)) break;
+      if (occurrences && sequenceNumber > occurrences) break;
+
+      const shouldGenerate = recurrence.dayOfMonth 
+        ? currentDate.getDate() === recurrence.dayOfMonth
+        : recurrence.weekOfMonth 
+        ? recurrence.weekOfMonth.includes(Math.ceil(currentDate.getDate() / 7))
+        : false;
+
+      if (shouldGenerate && !this.isException(currentDate, recurrence.exceptions)) {
+        const eventStartTime = new Date(currentDate);
+        eventStartTime.setHours(template.startTime.getHours());
+        eventStartTime.setMinutes(template.startTime.getMinutes());
+        eventStartTime.setSeconds(template.startTime.getSeconds());
+
+        const eventEndTime = new Date(eventStartTime.getTime() + eventDuration);
+
+        events.push({
+          ...template,
+          id: this.generateEventId(),
+          groupId,
+          startTime: eventStartTime,
+          endTime: eventEndTime,
+          sequenceNumber,
+          totalInSequence: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        sequenceNumber++;
+      }
+
+      currentDate.setMonth(currentDate.getMonth() + (recurrence.interval || 1));
+    }
+  }
+
+  // Update totalInSequence for all events
+  const totalInSequence = events.length;
+  events.forEach(event => {
+    event.totalInSequence = totalInSequence;
+  });
+
+  return events;
+}
 
   /**
    * Check if event should be generated on this date
@@ -498,13 +578,8 @@ export class EventService {
       });
     }
 
-    if (filter.bookingStatus) {
-      filters.push({
-        field: 'bookingSummary.status',
-        operator: '$eq' as const,
-        value: filter.bookingStatus
-      });
-    }
+    // Note: Booking status filtering is no longer supported as bookingSummary was removed
+    // Booking information is now handled separately from events
 
     // Build options
     const options: any = {};

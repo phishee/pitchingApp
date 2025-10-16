@@ -60,3 +60,9 @@ export const EVENT_TYPES = {
   EventManager: Symbol.for('EventManager'),
   EventController: Symbol.for('EventController'),
 } as const;
+
+// Add workout assignment symbols
+export const WORKOUT_ASSIGNMENT_TYPES = {
+  WorkoutAssignmentService: Symbol.for('WorkoutAssignmentService'),
+  WorkoutAssignmentController: Symbol.for('WorkoutAssignmentController'),
+} as const;

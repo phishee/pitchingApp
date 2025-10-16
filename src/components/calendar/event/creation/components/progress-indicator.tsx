@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { WizardStep } from '../work-assignment-types';
 
 interface ProgressIndicatorProps {
-  steps: { id: WizardStep; title: string; icon: React.ReactNode }[];
+  steps: { id: WizardStep; title: string; icon?: React.ReactNode }[];
   currentStepIndex: number;
   onStepClick: (index: number) => void;
 }
@@ -37,7 +37,7 @@ export function ProgressIndicator({
               {index < currentStepIndex ? (
                 <Check className="h-5 w-5" />
               ) : (
-                step.icon
+                step.icon || <span className="text-sm font-bold">{index + 1}</span>
               )}
             </div>
             <div className="hidden sm:block text-left">

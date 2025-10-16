@@ -1,11 +1,29 @@
 import React from 'react';
 import { Calendar } from './calendar';
 import { CalendarProvider } from '@/providers/calendar-context';
+import { CalendarView } from '@/models/Calendar';
+
+interface CalendarVariantProps {
+  organizationId: string;
+  initialDate?: Date;
+  initialView?: CalendarView;
+  initialSelectedMember?: any;
+}
 
 // Full-screen calendar
-export function FullScreenCalendar() {
+export function FullScreenCalendar({ 
+  organizationId, 
+  initialDate, 
+  initialView = 'month',
+  initialSelectedMember 
+}: CalendarVariantProps) {
   return (
-    <CalendarProvider>
+    <CalendarProvider
+      organizationId={organizationId}
+      initialDate={initialDate}
+      initialView={initialView}
+      initialSelectedMember={initialSelectedMember}
+    >
       <Calendar 
         className="h-screen w-full"
       />
@@ -14,9 +32,19 @@ export function FullScreenCalendar() {
 }
 
 // Compact calendar
-export function CompactCalendar() {
+export function CompactCalendar({ 
+  organizationId, 
+  initialDate, 
+  initialView = 'week',
+  initialSelectedMember 
+}: CalendarVariantProps) {
   return (
-    <CalendarProvider initialView="week">
+    <CalendarProvider
+      organizationId={organizationId}
+      initialDate={initialDate}
+      initialView={initialView}
+      initialSelectedMember={initialSelectedMember}
+    >
       <Calendar 
         className="max-w-4xl mx-auto"
       />
@@ -25,9 +53,19 @@ export function CompactCalendar() {
 }
 
 // Mobile-optimized calendar
-export function MobileCalendar() {
+export function MobileCalendar({ 
+  organizationId, 
+  initialDate, 
+  initialView = 'day',
+  initialSelectedMember 
+}: CalendarVariantProps) {
   return (
-    <CalendarProvider initialView="day">
+    <CalendarProvider
+      organizationId={organizationId}
+      initialDate={initialDate}
+      initialView={initialView}
+      initialSelectedMember={initialSelectedMember}
+    >
       <Calendar 
         className="p-4"
       />

@@ -124,15 +124,8 @@ export class MongoDBProvider implements IDatabase {
             }
         }
 
-        // Handle nested date fields
-        if (converted.details) {
-            if (converted.details.arrivalTime && !(converted.details.arrivalTime instanceof Date)) {
-                converted.details.arrivalTime = new Date(converted.details.arrivalTime);
-            }
-            if (converted.details.warmupStart && !(converted.details.warmupStart instanceof Date)) {
-                converted.details.warmupStart = new Date(converted.details.warmupStart);
-            }
-        }
+        // Note: Details are now stored separately and referenced by detailsId
+        // Date conversion for details would need to be handled in the respective detail services
 
         return converted;
     }
@@ -647,13 +640,8 @@ export class MongoDBProvider implements IDatabase {
                     }
                 }
 
-                // Force convert gameday dates
-                if (processed.details?.arrivalTime) {
-                    processed.details.arrivalTime = new Date(processed.details.arrivalTime);
-                }
-                if (processed.details?.warmupStart) {
-                    processed.details.warmupStart = new Date(processed.details.warmupStart);
-                }
+                // Note: Details are now stored separately and referenced by detailsId
+                // Date conversion for details would need to be handled in the respective detail services
 
                 return processed;
             });

@@ -22,97 +22,14 @@ export interface DayAvailability {
   hours?: WorkingHours;
 }
 
-// ===== BOOKING TYPES (NEW) =====
+// ===== EVENT DETAILS (REMOVED - NO LONGER NEEDED) =====
+// Delete lines 44-106 (all the EventDetails interfaces)
 
-export type BookingStatus = 
-  | 'pending'      // Awaiting coach response
-  | 'approved'     // Coach confirmed
-  | 'rejected'     // Coach declined
-  | 'cancelled'    // Cancelled after approval
-  | 'completed';   // Event finished
-
-export interface BookingSummary {
-  status: BookingStatus;
-  coachName?: string;      // For quick display in calendar
-  coachId?: string;        // For quick filtering
-  lastUpdated: Date;
-}
-
-// ===== EVENT DETAILS (DISCRIMINATED UNION) =====
-
-export interface WorkoutEventDetails {
-  type: 'workout';
-  
-  // Workout selection
-  workoutId: string;
-  
-  // Exercise prescriptions (modified from workout defaults)
-  exercisePrescriptions?: {
-    [exerciseId: string]: {
-      prescribedMetrics: { [key: string]: any };
-      notes?: string;
-      isModified: boolean;
-    };
-  };
-  
-  // Session details
-  sessionType: 'individual' | 'group' | 'team';
-  estimatedDuration?: number;
-  equipment?: string[];
-  notes?: string;
-}
-
-export interface GamedayEventDetails {
-  type: 'gameday';
-  opponent: string;
-  venue: 'home' | 'away';
-  gameType: 'scrimmage' | 'league' | 'tournament' | 'playoff';
-  uniformRequirements?: string;
-  arrivalTime?: Date;
-  warmupStart?: Date;
-  gameNumber?: string;
-  livestreamUrl?: string;
-  roster: {
-    starters: string[];
-    bench: string[];
-    injured: string[];
-  };
-}
-
-export interface AssessmentEventDetails {
-  type: 'assessment';
-  assessmentType: 'bullpen' | 'batting_practice' | 'fitness_test' | 'skill_evaluation';
-  evaluators: UserInfo[];
-  metrics: string[];
-  equipment: string[];
-  isRecorded: boolean;
-  followUpRequired: boolean;
-  assessmentTemplate?: string;
-}
-
-export interface CoachingSessionEventDetails {
-  type: 'coaching_session';
-  sessionType: 'one_on_one' | 'small_group' | 'position_specific';
-  focus: string[];
-  relatedWorkoutSessionId?: string;
-  goals: string[];
-  materials: string[];
-  sessionFormat: 'in_person' | 'virtual' | 'film_review';
-  preparationNotes: string;
-  followUpActions: string[];
-}
-
-export type EventDetails = 
-  | WorkoutEventDetails 
-  | GamedayEventDetails 
-  | AssessmentEventDetails 
-  | CoachingSessionEventDetails;
-
-// ===== MAIN EVENT MODEL (UPDATED) =====
+// ===== MAIN EVENT MODEL =====
 
 export interface Event {
-  id: string;
-  groupId: string;
+  id: string; // MongoDB _id - unique per event instance
+  groupId: string; // Groups related events for bulk operations
   type: EventType;
   organizationId: string;
   teamId: string;
@@ -129,17 +46,19 @@ export interface Event {
   participants: {
     athletes: UserInfo[];
     coaches: UserInfo[];
-    required: string[];  // userIds who must attend
-    optional: string[];  // userIds who can attend
+    required: string[]; // userIds who must attend
+    optional: string[]; // userIds who can attend
   };
 
   // Recurrence
   recurrence: RecurrenceConfig;
   
+  // Reference to source details (replaces discriminated union)
+  detailsId: string; // FK to WorkoutAssignment | GameSchedule | AssessmentPlan | CoachingBooking
+  
   // Bulk operation tracking
-  sourceAssignmentId: string;
-  sequenceNumber: number;
-  totalInSequence: number;
+  sequenceNumber: number; // 1st occurrence, 2nd occurrence, etc.
+  totalInSequence: number; // Total events in this group
   
   // Status & Metadata
   status: EventStatus;
@@ -147,24 +66,26 @@ export interface Event {
   createdBy: UserInfo;
   createdAt: Date;
   updatedAt: Date;
-  
-  // Type-specific data
-  details: EventDetails;
-  
-  // ✅ NEW: Booking Integration
-  bookingId?: string;              // Reference to Bookings collection
-  bookingSummary?: BookingSummary; // Denormalized for quick access
 }
 
 export interface RecurrenceConfig {
   pattern: 'daily' | 'weekly' | 'monthly' | 'none';
   interval: number;
+  
+  // Start date for the recurrence
   startDate?: Date;
+  
+  // For weekly recurrence
   daysOfWeek?: number[];
-  weekOfMonth?: number[];
-  dayOfMonth?: number;
+  
+  // For monthly recurrence - choose ONE:
+  weekOfMonth?: number[];  // Week-based: "1st Monday"
+  dayOfMonth?: number;     // Date-based: "15th of month"
+  
+  // Termination
   endDate?: Date;
   occurrences?: number;
+  
   exceptions?: Date[];
 }
 
@@ -194,8 +115,8 @@ export interface Calendar {
 }
 
 export interface CalendarEvent {
-  id: string;
-  groupId: string;
+  id: string; // Event.id
+  groupId: string; // Event.groupId for bulk operations
   title: string;
   description: string;
   startTime: Date;
@@ -207,17 +128,18 @@ export interface CalendarEvent {
     isRequired: boolean;
     attendanceStatus?: 'attending' | 'not_attending' | 'maybe';
   };
-  color: string;
+  color: string; // Type-specific or user-defined
   location?: string;
   coverPhotoUrl?: string;
   
-  // Quick access to common details
-  workoutType?: string;
-  opponent?: string;
-  assessmentType?: string;
+  // Quick access to common details without fetching full event
+  workoutType?: string; // "Upper Body Strength"
+  opponent?: string; // For games
+  assessmentType?: string; // "Bullpen Assessment"
   
-  // ✅ NEW: Booking summary for calendar view
-  bookingSummary?: BookingSummary;
+  // Booking info for workouts
+  isBookable?: boolean;
+  bookingStatus?: 'none' | 'pending' | 'approved' | 'rejected' | 'cancelled';
 }
 
 export interface CalendarDay {
@@ -226,8 +148,8 @@ export interface CalendarDay {
   isToday: boolean;
   events: CalendarEvent[];
   fullDate: Date;
-  dayOfWeek: string;
-  isAvailable: boolean;
+  dayOfWeek: string; // "Monday", "Tuesday", etc.
+  isAvailable: boolean; // Based on user availability settings
 }
 
 // ===== REQUEST/RESPONSE TYPES =====
@@ -239,7 +161,7 @@ export interface RepetitionConfig {
   startDate: Date;
   endDate?: Date;
   occurrences?: number;
-  interval?: number;
+  interval?: number; // Every N days/weeks
   numberOfWeeks?: number;
   daysOfWeek?: DayOfWeek[];
   timeOverrides?: {
@@ -289,16 +211,14 @@ export interface CreateWorkoutEventRequest {
   notes?: string;
 }
 
-// ✅ UPDATED: Booking request types
-export interface BookCoachRequest {
-  coachId?: string;  // Specific coach or null for any available
+export interface BookCoachingRequest {
+  coachId: string;
   message?: string;
 }
 
-export interface BookingResponseRequest {
+export interface CoachingResponseRequest {
   approved: boolean;
-  message?: string;
-  proposedTime?: Date;  // If coach wants to reschedule
+  reason?: string; // Required if rejected
 }
 
 export interface BulkEventUpdateRequest {
@@ -307,13 +227,13 @@ export interface BulkEventUpdateRequest {
   startTime?: Date;
   endTime?: Date;
   location?: string;
-  prescriptions?: any;
+  prescriptions?: any; // Workout-specific prescriptions
   notes?: string;
 }
 
 export interface EventGroupCancelRequest {
   reason: string;
-  cancelFutureOnly?: boolean;
+  cancelFutureOnly?: boolean; // Default: true
 }
 
 // ===== UTILITY TYPES =====
@@ -342,7 +262,6 @@ export interface CalendarFilter {
   endDate?: Date;
   athleteIds?: string[];
   coachIds?: string[];
-  bookingStatus?: BookingStatus;  // ✅ NEW: Filter by booking status
 }
 
 // ===== ERROR TYPES =====
@@ -358,7 +277,7 @@ export class ConflictError extends Error {
 }
 
 export class BookingError extends Error {
-  code: 'ADVANCE_NOTICE' | 'COACH_UNAVAILABLE' | 'ALREADY_BOOKED' | 'UNAUTHORIZED' | 'LATE_CANCELLATION' | 'RATE_LIMIT_EXCEEDED';
+  code: 'ADVANCE_NOTICE' | 'COACH_UNAVAILABLE' | 'ALREADY_BOOKED' | 'UNAUTHORIZED';
   
   constructor(message: string, code: BookingError['code']) {
     super(message);
@@ -367,35 +286,8 @@ export class BookingError extends Error {
   }
 }
 
-// ===== TYPE GUARDS =====
-
-export function isWorkoutEvent(event: Event): event is Event & { details: WorkoutEventDetails } {
-  return event.type === 'workout';
-}
-
-export function isGamedayEvent(event: Event): event is Event & { details: GamedayEventDetails } {
-  return event.type === 'gameday';
-}
-
-export function isAssessmentEvent(event: Event): event is Event & { details: AssessmentEventDetails } {
-  return event.type === 'assessment';
-}
-
-export function isCoachingSessionEvent(event: Event): event is Event & { details: CoachingSessionEventDetails } {
-  return event.type === 'coaching_session';
-}
-
-// ✅ NEW: Helper to check if event is bookable
-export function isBookable(event: Event): boolean {
-  // Event must be in future and not already completed/cancelled
-  if (event.startTime < new Date()) return false;
-  if (event.status === 'completed' || event.status === 'cancelled') return false;
-  
-  // Check if already has approved booking
-  if (event.bookingSummary?.status === 'approved') return false;
-  
-  return true;
-}
+// ===== TYPE GUARDS (REMOVED - NO LONGER NEEDED) =====
+// Delete lines 219-234 (all the type guard functions)
 
 // ===== CONSTANTS =====
 
@@ -428,7 +320,8 @@ export const EVENT_COLORS = {
   }
 } as const;
 
-export const BOOKING_ADVANCE_HOURS = 24;
-export const BOOKING_CANCELLATION_HOURS = 12;
-export const DEFAULT_EVENT_DURATION = 60;
-export const MAX_BULK_UPDATE_EVENTS = 100;
+export const BOOKING_ADVANCE_HOURS = 24; // Minimum hours in advance for booking
+
+export const DEFAULT_EVENT_DURATION = 60; // Default duration in minutes
+
+export const MAX_BULK_UPDATE_EVENTS = 100; // Safety limit for bulk operations

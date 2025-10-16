@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { CalendarView, CalendarEvent, TeamMemberWithUser, CalendarDay, Event } from '@/models';
 import { calendarService } from '@/app/services-client/calendar-service';
+import { eventApi, CreateEventsResponse } from '@/app/services-client/eventApi';
 
 interface CalendarContextType {
   // Core state
@@ -32,12 +33,14 @@ interface CalendarContextType {
   // Member actions
   setSelectedMember: (member: Partial<TeamMemberWithUser> | null) => void;
   loadMemberEvents: (member: Partial<TeamMemberWithUser> | null) => Promise<void>;
+  refreshEvents: () => Promise<void>;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
 interface CalendarProviderProps {
   children: ReactNode;
+  organizationId: string; // NEW: Required
   initialDate?: Date;
   initialView?: CalendarView;
   initialEvents?: CalendarEvent[];
@@ -45,7 +48,8 @@ interface CalendarProviderProps {
 }
 
 export function CalendarProvider({ 
-  children, 
+  children,
+  organizationId, // NEW: Required
   initialDate = new Date(), 
   initialView = 'month',
   initialEvents = [],
@@ -96,19 +100,22 @@ export function CalendarProvider({
 
       if (currentView === 'month') {
         const monthData = await calendarService.getCalendarMonth(
+          organizationId, // NEW: Pass organizationId
           userId, 
           currentDate.getFullYear(), 
           currentDate.getMonth() + 1
         );
         setCalendarDays(monthData);
         
-        // Extract events from calendar days
         const allEvents = monthData.flatMap(day => day.events);
         setEvents(allEvents);
       } else {
-        // For week/day views, get events in date range
         const range = currentView === 'week' ? getWeekRange(currentDate) : getDayRange(currentDate);
-        const memberEvents = await calendarService.getEventsForDateRange(userId, range);
+        const memberEvents = await calendarService.getEventsForDateRange(
+          organizationId, // NEW: Pass organizationId
+          userId, 
+          range
+        );
         setEvents(memberEvents);
         setCalendarDays([]);
       }
@@ -119,7 +126,12 @@ export function CalendarProvider({
     } finally {
       setIsLoadingEvents(false);
     }
-  }, [currentDate, currentView]);
+  }, [organizationId, currentDate, currentView]); // NEW: Added organizationId to deps
+
+  // Refresh events for current member and date range
+  const refreshEvents = useCallback(async () => {
+    await loadMemberEvents(selectedMember);
+  }, [loadMemberEvents, selectedMember]);
 
   // Auto-reload events when member, date, or view changes
   useEffect(() => {
@@ -187,6 +199,7 @@ export function CalendarProvider({
       setEvents(prev => [...prev, calendarEvent]);
     } catch (error) {
       console.error('Error creating event:', error);
+      throw error; // Propagate error for handling
     }
   };
 
@@ -203,7 +216,7 @@ export function CalendarProvider({
         return;
       }
 
-      const updatedEvent = await calendarService.updateEvent(eventId, updates, userId);
+      const updatedEvent = await calendarService.updateEvent(eventId, updates);
       const calendarEvent = calendarService.transformToCalendarEvent(updatedEvent, userId);
       
       setEvents(prev => 
@@ -213,6 +226,7 @@ export function CalendarProvider({
       );
     } catch (error) {
       console.error('Error updating event:', error);
+      throw error;
     }
   };
 
@@ -223,11 +237,11 @@ export function CalendarProvider({
     }
 
     try {
-      const userId = getCurrentUserId();
-      await calendarService.deleteEvent(eventId, userId);
+      await calendarService.deleteEvent(eventId);
       setEvents(prev => prev.filter(event => event.id !== eventId));
     } catch (error) {
       console.error('Error deleting event:', error);
+      throw error;
     }
   };
 
@@ -255,6 +269,7 @@ export function CalendarProvider({
     deleteEvent,
     setSelectedMember,
     loadMemberEvents,
+    refreshEvents,
   };
 
   return (

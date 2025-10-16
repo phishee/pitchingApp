@@ -24,22 +24,14 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-1',
+      detailsId: 'workout-assignment-1',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
       visibility: 'team_only',
       createdBy: { userId: 'coach1', memberId: 'coach-member1' },
       createdAt: new Date('2025-01-01T10:00:00'),
-      updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'workout',
-        workoutId: 'workout-assign-1',
-        sessionType: 'group',
-        estimatedDuration: 120,
-        equipment: ['baseball', 'catcher gear'],
-        notes: 'Focus on fastball command and changeup development'
-      }
+      updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
       id: '2',
@@ -62,7 +54,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-2',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -70,14 +61,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'trainer1', memberId: 'trainer-member1' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'workout',
-        workoutId: 'workout-assign-2',
-        sessionType: 'individual',
-        estimatedDuration: 90,
-        equipment: ['dumbbells', 'barbell', 'bench'],
-        notes: 'Focus on shoulder stability and core strength'
-      }
+      detailsId: 'workout-assignment-2'
     },
     {
       id: '3',
@@ -100,7 +84,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-3',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -108,16 +91,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'coach1', memberId: 'coach-member1' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'assessment',
-        assessmentType: 'bullpen',
-        evaluators: [{ userId: 'coach1', memberId: 'coach-member1' }],
-        metrics: ['velocity', 'command', 'mechanics'],
-        equipment: ['radar gun', 'video camera'],
-        isRecorded: true,
-        followUpRequired: true,
-        assessmentTemplate: 'bullpen-template-1'
-      }
+      detailsId: 'assessment-plan-1'
     }
   ],
   'user2': [
@@ -142,7 +116,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-4',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -150,14 +123,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'coach2', memberId: 'coach-member2' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'workout',
-        workoutId: 'workout-assign-4',
-        sessionType: 'group',
-        estimatedDuration: 90,
-        equipment: ['bat', 'balls', 'tee'],
-        notes: 'Focus on swing path and contact point'
-      }
+      detailsId: 'workout-assignment-4'
     },
     {
       id: '5',
@@ -180,7 +146,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-5',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -188,14 +153,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'coach2', memberId: 'coach-member2' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'workout',
-        workoutId: 'workout-assign-5',
-        sessionType: 'individual',
-        estimatedDuration: 60,
-        equipment: ['glove', 'balls'],
-        notes: 'Ground ball and fly ball practice'
-      }
+      detailsId: 'workout-assignment-5'
     },
     {
       id: '6',
@@ -218,7 +176,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-6',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -226,14 +183,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'trainer2', memberId: 'trainer-member2' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'workout',
-        workoutId: 'workout-assign-6',
-        sessionType: 'individual',
-        estimatedDuration: 60,
-        equipment: [],
-        notes: 'Sprint intervals and endurance work'
-      }
+      detailsId: 'workout-assignment-6'
     }
   ],
   'user3': [
@@ -258,7 +208,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-7',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -266,14 +215,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'coach3', memberId: 'coach-member3' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'workout',
-        workoutId: 'workout-assign-7',
-        sessionType: 'group',
-        estimatedDuration: 90,
-        equipment: ['catcher gear', 'balls'],
-        notes: 'Blocking, framing, and throwing to bases'
-      }
+      detailsId: 'workout-assignment-7'
     },
     {
       id: '8',
@@ -296,7 +238,6 @@ export const mockMemberEvents: Record<string, Event[]> = {
         pattern: 'none',
         interval: 1
       },
-      sourceAssignmentId: 'assignment-8',
       sequenceNumber: 1,
       totalInSequence: 1,
       status: 'scheduled',
@@ -304,17 +245,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       createdBy: { userId: 'coach3', memberId: 'coach-member3' },
       createdAt: new Date('2025-01-01T10:00:00'),
       updatedAt: new Date('2025-01-01T10:00:00'),
-      details: {
-        type: 'coaching_session',
-        sessionType: 'one_on_one',
-        focus: ['pitching_mechanics', 'arm_angle'],
-        goals: ['Improve arm slot consistency', 'Reduce stress on elbow'],
-        materials: ['video-analysis-1', 'mechanics-guide'],
-        sessionFormat: 'film_review',
-        preparationNotes: 'Review recent bullpen sessions',
-        followUpActions: ['Implement mechanical changes in next bullpen'],
-        relatedWorkoutSessionId: 'workout-session-1'
-      }
+      detailsId: 'coaching-booking-3'
     }
   ]
 };
@@ -342,7 +273,6 @@ export const defaultEvents: Event[] = [
       pattern: 'none',
       interval: 1
     },
-    sourceAssignmentId: 'assignment-default1',
     sequenceNumber: 1,
     totalInSequence: 1,
     status: 'scheduled',
@@ -350,16 +280,7 @@ export const defaultEvents: Event[] = [
     createdBy: { userId: 'coach1', memberId: 'coach-member1' },
     createdAt: new Date(),
     updatedAt: new Date(),
-    details: {
-      type: 'coaching_session',
-      sessionType: 'small_group',
-      focus: ['strategy', 'game_planning'],
-      goals: ['Review opponent analysis', 'Plan lineup'],
-      materials: ['scouting-report', 'stats-sheet'],
-      sessionFormat: 'in_person',
-      preparationNotes: 'Prepare scouting materials',
-      followUpActions: ['Distribute game plan to players']
-    }
+    detailsId: 'coaching-booking-4'
   },
   {
     id: 'default2',
@@ -382,7 +303,6 @@ export const defaultEvents: Event[] = [
       pattern: 'none',
       interval: 1
     },
-    sourceAssignmentId: 'assignment-default2',
     sequenceNumber: 1,
     totalInSequence: 1,
     status: 'scheduled',
@@ -390,13 +310,6 @@ export const defaultEvents: Event[] = [
     createdBy: { userId: 'coach1', memberId: 'coach-member1' },
     createdAt: new Date(),
     updatedAt: new Date(),
-    details: {
-      type: 'workout',
-      workoutId: 'workout-assign-default2',
-      sessionType: 'team',
-      estimatedDuration: 120,
-      equipment: ['baseballs', 'bats', 'gloves'],
-      notes: 'Full team workout with scrimmage'
-    }
+    detailsId: 'workout-assignment-default2'
   }
 ];

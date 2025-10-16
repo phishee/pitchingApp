@@ -88,20 +88,12 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
           pattern: 'none',
           interval: 1
         },
-        sourceAssignmentId: 'manual-creation',
         sequenceNumber: 1,
         totalInSequence: 1,
         status: 'scheduled' as const,
         visibility: 'team_only' as const,
         createdBy: { userId, memberId: 'creator-member-id' },
-        details: {
-          type: 'workout' as const,
-          workoutId: 'manual',
-          sessionType: 'individual',
-          estimatedDuration: 120,
-          equipment: [],
-          notes: ''
-        }
+        detailsId: 'manual-workout-event'
       };
 
       await addEvent(newEvent as Event);
