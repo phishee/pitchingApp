@@ -1,42 +1,83 @@
 import { CalendarEvent, CalendarDay, Event } from '@/models';
-import { calendarApi } from './calendarApi';
+import { eventApi } from './eventApi';
 
 export const calendarService = {
   // Get calendar month data
-  async getCalendarMonth(userId: string, year: number, month: number): Promise<CalendarDay[]> {
-    const events = await calendarApi.getEventsByUserId(userId);
-    // Transform Event[] to CalendarEvent[]
+  async getCalendarMonth(
+    organizationId: string,
+    userId: string, 
+    year: number, 
+    month: number
+  ): Promise<CalendarDay[]> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const events = await eventApi.getEvents({
+      organizationId,
+      athleteIds: [userId],
+      startDate,
+      endDate,
+      includeDetails: true
+    });
+
     const calendarEvents = events.map(event => this.transformToCalendarEvent(event, userId));
     return generateCalendarDaysFromEvents(calendarEvents, year, month);
   },
 
   // Get events for date range  
-  async getEventsForDateRange(userId: string, range: { start: Date; end: Date }): Promise<CalendarEvent[]> {
-    const startDate = range.start.toISOString().split('T')[0];
-    const endDate = range.end.toISOString().split('T')[0];
-    const events = await calendarApi.getEventsByDateRange(userId, startDate, endDate);
+  async getEventsForDateRange(
+    organizationId: string,
+    userId: string, 
+    range: { start: Date; end: Date }
+  ): Promise<CalendarEvent[]> {
+    const events = await eventApi.getEvents({
+      organizationId,
+      athleteIds: [userId],
+      startDate: range.start,
+      endDate: range.end,
+      includeDetails: true
+    });
+
     return events.map(event => this.transformToCalendarEvent(event, userId));
   },
 
   // Create event
   async createEvent(eventData: Event): Promise<Event> {
-    const userId = eventData.participants?.athletes?.[0]?.userId || 'default-user';
+    const result = await eventApi.createSingleEvent(eventData);
     
-    const createdEvent = await calendarApi.createEvent(userId, eventData);
-    return createdEvent;
+    // Fetch the created event to return full details
+    if (result.success && result.summary.athleteGroups.length > 0) {
+      const events = await eventApi.getEvents({
+        organizationId: eventData.organizationId,
+        athleteIds: eventData.participants.athletes.map(a => a.userId),
+        startDate: eventData.startTime,
+        endDate: eventData.endTime,
+        limit: 1
+      });
+      return events[0] || eventData;
+    }
+    
+    return eventData;
   },
 
   // Update event
-  async updateEvent(eventId: string, updates: Partial<Event>, userId?: string): Promise<Event> {
-    const targetUserId = userId || 'default-user';
-    const updatedEvent = await calendarApi.updateEvent(targetUserId, eventId, updates);
-    return updatedEvent;
+  async updateEvent(eventId: string, updates: Partial<Event>): Promise<Event> {
+    return await eventApi.updateEvent(eventId, updates);
   },
 
   // Delete event
-  async deleteEvent(eventId: string, userId?: string): Promise<void> {
-    const targetUserId = userId || 'default-user';
-    return calendarApi.deleteEvent(targetUserId, eventId);
+  async deleteEvent(eventId: string): Promise<void> {
+    await eventApi.deleteEvent(eventId);
+  },
+
+  // Bulk update event group
+  async bulkUpdateEventGroup(groupId: string, updates: Partial<Event>): Promise<void> {
+    await eventApi.bulkUpdateEventGroup(groupId, updates);
+  },
+
+  // Bulk delete event group
+  async bulkDeleteEventGroup(groupId: string): Promise<void> {
+    await eventApi.bulkDeleteEventGroup(groupId);
   },
 
   // Transform Event to CalendarEvent
@@ -46,8 +87,8 @@ export const calendarService = {
       groupId: event.groupId,
       title: event.title,
       description: event.description,
-      startTime: event.startTime,
-      endTime: event.endTime,
+      startTime: new Date(event.startTime),
+      endTime: new Date(event.endTime),
       type: event.type,
       status: event.status,
       participants: {
@@ -60,12 +101,10 @@ export const calendarService = {
       workoutType: this.getWorkoutType(event),
       opponent: this.getOpponent(event),
       assessmentType: this.getAssessmentType(event),
-      isBookable: this.isEventBookable(event),
-      bookingStatus: this.getBookingStatus(event)
     };
   },
 
-  // Helper methods
+  // Helper methods remain the same
   getUserRole(event: Event, userId: string): 'athlete' | 'coach' | 'observer' {
     if (event.participants.athletes.some(a => a.userId === userId)) return 'athlete';
     if (event.participants.coaches.some(c => c.userId === userId)) return 'coach';
@@ -83,62 +122,51 @@ export const calendarService = {
   },
 
   getWorkoutType(event: Event): string | undefined {
-    if (event.type === 'workout' && event.details.type === 'workout') {
+    if (event.type === 'workout') {
       return event.title;
     }
     return undefined;
   },
 
   getOpponent(event: Event): string | undefined {
-    if (event.type === 'gameday' && event.details.type === 'gameday') {
-      return event.details.opponent;
+    if (event.type === 'gameday') {
+      // Note: Opponent details now stored separately, referenced by detailsId
+      return 'Game'; // Placeholder - would need to fetch from detailsId
     }
     return undefined;
   },
 
   getAssessmentType(event: Event): string | undefined {
-    if (event.type === 'assessment' && event.details.type === 'assessment') {
-      return event.details.assessmentType;
+    if (event.type === 'assessment') {
+      // Note: Assessment details now stored separately, referenced by detailsId
+      return 'Assessment'; // Placeholder - would need to fetch from detailsId
     }
     return undefined;
   },
-
-  isEventBookable(event: Event): boolean {
-    return event.type === 'workout' && event.details.type === 'workout' && 
-           event.details.bookingInfo.isBookingRequested;
-  },
-
-  getBookingStatus(event: Event): 'none' | 'pending' | 'approved' | 'rejected' | 'cancelled' | undefined {
-    if (event.type === 'workout' && event.details.type === 'workout') {
-      return event.details.bookingInfo.requestStatus;
-    }
-    return undefined;
-  }
 };
 
 // Helper function to generate calendar days
 function generateCalendarDaysFromEvents(events: CalendarEvent[], year: number, month: number): CalendarDay[] {
   const firstDay = new Date(year, month - 1, 1);
   const startDate = new Date(firstDay);
-  
-  // Adjust to start from Monday
+
   const dayOfWeek = firstDay.getDay();
   const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   startDate.setDate(startDate.getDate() - daysToSubtract);
-  
+
   const days: CalendarDay[] = [];
-  const totalDays = 42; // 6 weeks * 7 days
-  
+  const totalDays = 42;
+
   for (let i = 0; i < totalDays; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
-    
+
     const dayEvents = events.filter(event => {
       const eventDate = event.startTime.toISOString().split('T')[0];
       const currentDate = date.toISOString().split('T')[0];
       return eventDate === currentDate;
     });
-    
+
     days.push({
       date: date.getDate(),
       isCurrentMonth: date.getMonth() === month - 1,
@@ -149,7 +177,7 @@ function generateCalendarDaysFromEvents(events: CalendarEvent[], year: number, m
       isAvailable: true
     });
   }
-  
+
   return days;
 }
 

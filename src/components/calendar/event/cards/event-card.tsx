@@ -103,11 +103,11 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
             Status: {getStatusDisplay()}
           </div>
           
-          {event.isBookable && (
+          {/* {event.isBookable && (
             <div className="text-xs opacity-80 bg-white bg-opacity-20 px-2 py-1 rounded">
               Bookable for coaching
             </div>
-          )}
+          )} */}
           
           {/* Event type specific info */}
           {event.workoutType && (

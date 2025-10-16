@@ -1,21 +1,29 @@
+'use client';
+
 import React from 'react';
-import { Check, Calendar, Info, User } from 'lucide-react';
+import { Check, Calendar, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { WorkoutAssignmentData, WizardStep } from '../work-assignment-types';
+import { useAthleteSelection } from '@/providers/workout-assignment/athlete-selection.context';
+import { useWorkoutSelection } from '@/providers/workout-assignment/workout-selection.context';
+import { useScheduleConfig } from '@/providers/workout-assignment/schedule-config.context';
+
+type WizardStep = 'athletes' | 'workout' | 'prescriptions' | 'schedule' | 'review';
 
 interface SummarySidebarProps {
-  assignmentData: WorkoutAssignmentData;
   totalEvents: number;
   currentStep: WizardStep;
 }
 
 export function SummarySidebar({
-  assignmentData,
   totalEvents,
   currentStep
 }: SummarySidebarProps) {
+  const { state: athleteState } = useAthleteSelection();
+  const { state: workoutState } = useWorkoutSelection();
+  const { state: scheduleState } = useScheduleConfig();
+
   const fullDaysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   return (
@@ -30,145 +38,145 @@ export function SummarySidebar({
           {/* Athletes */}
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">ATHLETES</Label>
-            {assignmentData.selectedMembers.length === 0 ? (
+            {athleteState.selectedAthletes.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">None selected</p>
             ) : (
               <div className="space-y-1">
                 <p className="text-sm font-medium">
-                  {assignmentData.selectedMembers.length} {assignmentData.selectedMembers.length === 1 ? 'athlete' : 'athletes'} selected
+                  {athleteState.selectedAthletes.length}{' '}
+                  {athleteState.selectedAthletes.length === 1 ? 'athlete' : 'athletes'} selected
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {assignmentData.selectedMembers.slice(0, 3).map(member => {
-                    const userName = ('user' in member && member.user?.name) || 'Unknown';
-                    return (
-                      <Badge key={member._id} variant="secondary" className="text-xs">
-                        {userName.split(' ')[0]}
-                      </Badge>
-                    );
-                  })}
-                  {assignmentData.selectedMembers.length > 3 && (
+                  {athleteState.selectedAthletes.slice(0, 3).map((athlete, index) => (
+                    <Badge key={athlete.userId || index} variant="secondary" className="text-xs">
+                      Athlete {index + 1}
+                    </Badge>
+                  ))}
+                  {athleteState.selectedAthletes.length > 3 && (
                     <Badge variant="secondary" className="text-xs">
-                      +{assignmentData.selectedMembers.length - 3} more
+                      +{athleteState.selectedAthletes.length - 3} more
                     </Badge>
                   )}
                 </div>
               </div>
             )}
           </div>
-        </div>
 
-        <div className="border-t" />
+          <div className="border-t" />
 
-        {/* Workout */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">WORKOUT</Label>
-          {assignmentData.selectedWorkout ? (
-            <div>
-              <p className="text-sm font-medium">{assignmentData.selectedWorkout.name}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {assignmentData.selectedWorkout.flow.exercises.length} exercises
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">Not selected</p>
-          )}
-        </div>
-
-        <div className="border-t" />
-
-        {/* Schedule */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">SCHEDULE</Label>
-          {assignmentData.scheduleConfig.daysOfWeek.length === 0 ? (
-            <p className="text-sm text-muted-foreground italic">Not configured</p>
-          ) : (
-            <div className="space-y-2">
-              <div className="text-sm">
-                <p className="font-medium">
-                  {assignmentData.scheduleConfig.daysOfWeek.map(i => 
-                    fullDaysOfWeek[i].slice(0, 3)
-                  ).join(', ')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {assignmentData.scheduleConfig.numberOfWeeks} {assignmentData.scheduleConfig.numberOfWeeks === 1 ? 'week' : 'weeks'}
+          {/* Workout */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">WORKOUT</Label>
+            {workoutState.selectedWorkout ? (
+              <div>
+                <p className="text-sm font-medium">{workoutState.selectedWorkout.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {workoutState.selectedWorkout.flow.exercises.length} exercises
                 </p>
               </div>
-              <div className="text-xs">
-                <p className="text-muted-foreground">
-                  {assignmentData.scheduleConfig.startDate.toLocaleDateString()} - {assignmentData.scheduleConfig.endDate.toLocaleDateString()}
-                </p>
-                <p className="text-muted-foreground">
-                  {assignmentData.scheduleConfig.defaultStartTime} - {assignmentData.scheduleConfig.defaultEndTime}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="border-t" />
-
-        {/* Total Events */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">TOTAL EVENTS</Label>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" />
-            <p className="text-lg font-bold">{totalEvents}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Not selected</p>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Calendar events will be created
-          </p>
-        </div>
 
-        {/* Progress Checklist */}
-        {currentStep !== 'review' && (
-          <>
-            <div className="border-t" />
-            <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">PROGRESS</Label>
+          <div className="border-t" />
+
+          {/* Schedule */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">SCHEDULE</Label>
+            {!scheduleState.recurrenceConfig.daysOfWeek || scheduleState.recurrenceConfig.daysOfWeek.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">Not configured</p>
+            ) : (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center border-2 flex-shrink-0",
-                    assignmentData.selectedMembers.length > 0 
-                      ? "bg-green-500 border-green-500 text-white" 
-                      : "border-muted"
-                  )}>
-                    {assignmentData.selectedMembers.length > 0 && <Check className="h-3 w-3" />}
-                  </div>
-                  <span className={assignmentData.selectedMembers.length > 0 ? "text-foreground" : "text-muted-foreground"}>
-                    Athletes selected
-                  </span>
+                <div className="text-sm">
+                  <p className="font-medium">
+                    {scheduleState.recurrenceConfig.daysOfWeek.map(i => 
+                      fullDaysOfWeek[i].slice(0, 3)
+                    ).join(', ')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {scheduleState.recurrenceConfig.occurrences || 0} occurrences
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center border-2 flex-shrink-0",
-                    assignmentData.selectedWorkout 
-                      ? "bg-green-500 border-green-500 text-white" 
-                      : "border-muted"
-                  )}>
-                    {assignmentData.selectedWorkout && <Check className="h-3 w-3" />}
-                  </div>
-                  <span className={assignmentData.selectedWorkout ? "text-foreground" : "text-muted-foreground"}>
-                    Workout selected
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center border-2 flex-shrink-0",
-                    assignmentData.scheduleConfig.daysOfWeek.length > 0 
-                      ? "bg-green-500 border-green-500 text-white" 
-                      : "border-muted"
-                  )}>
-                    {assignmentData.scheduleConfig.daysOfWeek.length > 0 && <Check className="h-3 w-3" />}
-                  </div>
-                  <span className={assignmentData.scheduleConfig.daysOfWeek.length > 0 ? "text-foreground" : "text-muted-foreground"}>
-                    Schedule configured
-                  </span>
+                <div className="text-xs">
+                  {scheduleState.recurrenceConfig.startDate && (
+                    <p className="text-muted-foreground">
+                      Starts: {scheduleState.recurrenceConfig.startDate.toLocaleDateString()}
+                    </p>
+                  )}
+                  <p className="text-muted-foreground">
+                    {scheduleState.defaultStartTime} - {scheduleState.defaultEndTime}
+                  </p>
                 </div>
               </div>
+            )}
+          </div>
+
+          <div className="border-t" />
+
+          {/* Total Events */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">TOTAL EVENTS</Label>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <p className="text-lg font-bold">{totalEvents}</p>
             </div>
-          </>
-        )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Calendar events will be created
+            </p>
+          </div>
+
+          {/* Progress Checklist */}
+          {currentStep !== 'review' && (
+            <>
+              <div className="border-t" />
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">PROGRESS</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center border-2 flex-shrink-0",
+                      athleteState.selectedAthletes.length > 0 
+                        ? "bg-green-500 border-green-500 text-white" 
+                        : "border-muted"
+                    )}>
+                      {athleteState.selectedAthletes.length > 0 && <Check className="h-3 w-3" />}
+                    </div>
+                    <span className={athleteState.selectedAthletes.length > 0 ? "text-foreground" : "text-muted-foreground"}>
+                      Athletes selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center border-2 flex-shrink-0",
+                      workoutState.selectedWorkout 
+                        ? "bg-green-500 border-green-500 text-white" 
+                        : "border-muted"
+                    )}>
+                      {workoutState.selectedWorkout && <Check className="h-3 w-3" />}
+                    </div>
+                    <span className={workoutState.selectedWorkout ? "text-foreground" : "text-muted-foreground"}>
+                      Workout selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center border-2 flex-shrink-0",
+                      scheduleState.recurrenceConfig.daysOfWeek && scheduleState.recurrenceConfig.daysOfWeek.length > 0 
+                        ? "bg-green-500 border-green-500 text-white" 
+                        : "border-muted"
+                    )}>
+                      {scheduleState.recurrenceConfig.daysOfWeek && scheduleState.recurrenceConfig.daysOfWeek.length > 0 && <Check className="h-3 w-3" />}
+                    </div>
+                    <span className={scheduleState.recurrenceConfig.daysOfWeek && scheduleState.recurrenceConfig.daysOfWeek.length > 0 ? "text-foreground" : "text-muted-foreground"}>
+                      Schedule configured
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </aside>
   );

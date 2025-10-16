@@ -31,3 +31,7 @@ export interface UserProfile {
   email: string;
   profileImageUrl: string;
 }
+export interface UserInfo {
+  userId: string;
+  memberId: string;
+}

@@ -1,145 +1,125 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Target, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
-import { WorkoutAssignmentDialogProps, WizardStep } from './work-assignment-types';
-import { useWorkoutAssignment, useWorkouts, useExercisePrescriptions } from './work-assignment-hooks';
-import { calculateTotalEvents, validateStep, generateEvents } from './work-assignment-utils';
+import { Target, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { AssignmentOrchestratorProvider, useAssignmentOrchestrator } from '@/providers/workout-assignment/assignment-orchestrator.context';
+import { TeamMemberWithUser, Workout } from '@/models';
 import { ProgressIndicator } from './components/progress-indicator';
 import { SummarySidebar } from './components/summary-sidebar';
 import { Step1SelectAthletes } from './steps/step-1-athletes';
 import { Step2SelectWorkout } from './steps/step-2-workout';
 import { Step3ExercisePrescriptions } from './steps/step-3-prescriptions';
 import { Step4ConfigureSchedule } from './steps/step-4-schedule';
-import { Step5ReviewCustomize } from './steps/step-4-review';
-// Import the new event creation context
-import { useWorkoutEventCreation } from '@/providers/event-creation-context';
+import { Step5ReviewCustomize } from './steps/step-5-review';
+import { toast } from 'sonner';
+import { workoutApi } from '@/app/services-client/workoutApi';
+
+type WizardStep = 'athletes' | 'workout' | 'prescriptions' | 'schedule' | 'review';
+
+interface WorkoutAssignmentDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  availableMembers: Partial<TeamMemberWithUser>[];
+  organizationId: string;
+  teamId: string;
+  currentUserId: string;
+  onEventsCreated?: () => Promise<void>;
+}
 
 export function WorkoutAssignmentDialog({
   isOpen,
   onClose,
-  selectedMembers: initialSelectedMembers,
-  availableMembers = [],
-  onAddEvent,
-  organizationId = 'org-123',
-  teamId = 'team-456',
-  currentUserId = 'current-user'
+  availableMembers,
+  organizationId,
+  teamId,
+  currentUserId,
+  onEventsCreated
 }: WorkoutAssignmentDialogProps) {
+  return (
+    <AssignmentOrchestratorProvider
+      organizationId={organizationId}
+      teamId={teamId}
+      currentUserId={currentUserId}
+    >
+      <WorkoutAssignmentDialogContent
+        isOpen={isOpen}
+        onClose={onClose}
+        availableMembers={availableMembers}
+        organizationId={organizationId}
+        teamId={teamId}
+        onEventsCreated={onEventsCreated}
+      />
+    </AssignmentOrchestratorProvider>
+  );
+}
+
+interface WorkoutAssignmentDialogContentProps {
+  isOpen: boolean;
+  onClose: () => void;
+  availableMembers: Partial<TeamMemberWithUser>[];
+  organizationId: string;
+  teamId: string;
+  onEventsCreated?: () => Promise<void>;
+}
+
+function WorkoutAssignmentDialogContent({
+  isOpen,
+  onClose,
+  availableMembers,
+  organizationId,
+  teamId,
+  onEventsCreated
+}: WorkoutAssignmentDialogContentProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('athletes');
-  const [memberSearchQuery, setMemberSearchQuery] = useState('');
-  const [isAdvancedExpanded, setIsAdvancedExpanded] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableWorkouts, setAvailableWorkouts] = useState<Workout[]>([]);
+  const [isLoadingWorkouts, setIsLoadingWorkouts] = useState(false);
 
-  // Existing workout assignment hooks
-  const { assignmentData, updateAssignmentData } = useWorkoutAssignment(initialSelectedMembers, organizationId);
-  const { availableWorkouts, isLoadingWorkouts } = useWorkouts(organizationId, isOpen);
-  const { exercisePrescriptions, isLoadingExercises, setExercisePrescriptions } = useExercisePrescriptions(assignmentData.selectedWorkout);
+  const {
+    createAssignment,
+    isValid,
+    getTotalEvents,
+    getValidationErrors,
+    state
+  } = useAssignmentOrchestrator();
 
-  // NEW: Use the event creation context for workout events
-  const { 
-    eventCreationData,
-    updateEventData, 
-    updateWorkoutDetails, 
-    updateParticipants,
-    updateRecurrence,
-    generateEventCreationPayload,
-    isEventDataValid,
-    getValidationErrors
-  } = useWorkoutEventCreation();
-
-  // Sync assignment data with event creation context
-  useEffect(() => {
-    if (assignmentData.selectedWorkout) {
-      // Update basic event data
-      updateEventData({
-        type: 'workout',
-        title: `${assignmentData.selectedWorkout.name} - Week 1`,
-        description: assignmentData.selectedWorkout.description || '',
-        startTime: new Date(`${assignmentData.scheduleConfig.startDate.toISOString().split('T')[0]}T${assignmentData.scheduleConfig.defaultStartTime}:00`),
-        endTime: new Date(`${assignmentData.scheduleConfig.startDate.toISOString().split('T')[0]}T${assignmentData.scheduleConfig.defaultEndTime}:00`),
-        participants: {
-          athletes: assignmentData.selectedMembers.map(member => ({
-            userId: ('user' in member && member.user?.userId) || member.userId || '',
-            memberId: member._id || ''
-          })),
-          coaches: [],
-          required: assignmentData.selectedMembers.map(member => 
-            ('user' in member && member.user?.userId) || member.userId || ''
-          ).filter(Boolean),
-          optional: []
-        }
-      });
-
-      // Update workout-specific details
-      updateWorkoutDetails({
-        workoutId: assignmentData.selectedWorkout.id,
-        sessionType: assignmentData.sessionType === 'coached' ? 'individual' : assignmentData.sessionType,
-        estimatedDuration: 120, // Default 2 hours
-        equipment: [],
-        notes: assignmentData.notes,
-        bookingInfo: {
-          isBookingRequested: false,
-          requestStatus: 'none'
-        }
-      });
-
-      // Update recurrence if schedule is configured
-      if (assignmentData.scheduleConfig.daysOfWeek.length > 0) {
-        updateRecurrence({
-          pattern: 'weekly',
-          interval: 1,
-          startDate: assignmentData.scheduleConfig.startDate,
-          daysOfWeek: assignmentData.scheduleConfig.daysOfWeek,
-          occurrences: assignmentData.scheduleConfig.numberOfWeeks * assignmentData.scheduleConfig.daysOfWeek.length
-        });
-      }
-    }
-  }, [assignmentData, updateEventData, updateWorkoutDetails, updateParticipants, updateRecurrence]);
-
-  // Reset wizard when dialog opens
+  // Fetch workouts when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep('athletes');
-      updateAssignmentData({ selectedMembers: initialSelectedMembers });
+      fetchWorkouts();
+      setCurrentStep('athletes'); // Reset to first step
     }
-  }, [isOpen, initialSelectedMembers, updateAssignmentData]);
+  }, [isOpen]);
 
-  const handleAssignWorkouts = async () => {
-    setIsSubmitting(true);
+  const fetchWorkouts = async () => {
+    setIsLoadingWorkouts(true);
     try {
-      // Use the new event creation context to generate events
-      const payload = generateEventCreationPayload();
-      // For now, we'll use the old generateEvents function until we fully migrate to the new context
-      const events = generateEvents(assignmentData, organizationId, teamId, currentUserId);
-      await Promise.all(events.map(event => onAddEvent(event)));
-      onClose();
+      const response = await workoutApi.getWorkouts(
+        {
+          organizationId,
+          teamId,
+          page: 1,
+          limit: 100
+        },
+        organizationId
+      );
+      setAvailableWorkouts(response.data);
     } catch (error) {
-      console.error('Failed to assign workouts:', error);
-      // You could show validation errors here
-      const errors = getValidationErrors();
-      console.error('Validation errors:', errors);
+      console.error('Failed to fetch workouts:', error);
+      toast.error('Failed to load workouts');
+      setAvailableWorkouts([]);
     } finally {
-      setIsSubmitting(false);
+      setIsLoadingWorkouts(false);
     }
   };
 
-  const canProceedFromStep = useMemo(() => {
-    return validateStep(currentStep, assignmentData);
-  }, [currentStep, assignmentData]);
-
-  const totalEvents = useMemo(() => {
-    return calculateTotalEvents(assignmentData.scheduleConfig);
-  }, [assignmentData.scheduleConfig]);
-
-  // ... rest of your component remains the same
-  const steps: { id: WizardStep; title: string; icon: React.ReactNode }[] = [
-    { id: 'athletes', title: 'Select Athletes', icon: <Target className="h-4 w-4" /> },
-    { id: 'workout', title: 'Select Workout', icon: <Target className="h-4 w-4" /> },
-    { id: 'prescriptions', title: 'Exercise Prescriptions', icon: <Target className="h-4 w-4" /> },
-    { id: 'schedule', title: 'Configure Schedule', icon: <Calendar className="h-4 w-4" /> },
-    { id: 'review', title: 'Review & Customize', icon: <Target className="h-4 w-4" /> }
+  const steps: { id: WizardStep; title: string; icon?: React.ReactNode }[] = [
+    { id: 'athletes', title: 'Select Athletes' },
+    { id: 'workout', title: 'Select Workout' },
+    { id: 'prescriptions', title: 'Exercise Prescriptions' },
+    { id: 'schedule', title: 'Configure Schedule' },
+    { id: 'review', title: 'Review & Customize' }
   ];
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
@@ -156,53 +136,30 @@ export function WorkoutAssignmentDialog({
     }
   };
 
-  const handlePrescriptionToggle = (exerciseId: string) => {
-    updateAssignmentData({
-      exercisePrescriptions: {
-        ...assignmentData.exercisePrescriptions,
-        [exerciseId]: {
-          ...assignmentData.exercisePrescriptions[exerciseId],
-          isPrescribed: !assignmentData.exercisePrescriptions[exerciseId]?.isPrescribed
+  const handleSubmit = async () => {
+    if (!isValid()) {
+      const errors = getValidationErrors();
+      toast.error(`Cannot create assignment: ${errors.join(', ')}`);
+      return;
+    }
+
+    try {
+      const result = await createAssignment();
+
+      if (result.success) {
+        toast.success(`Created ${result.totalCreated} calendar events`);
+        
+        // Refresh calendar events if callback provided
+        if (onEventsCreated) {
+          await onEventsCreated();
         }
+        
+        onClose();
       }
-    });
-
-    setExercisePrescriptions(prev => 
-      prev.map(prescription => 
-        prescription.exerciseId === exerciseId 
-          ? { ...prescription, isPrescribed: !prescription.isPrescribed }
-          : prescription
-      )
-    );
-  };
-
-  const handleMetricChange = (exerciseId: string, metricId: string, value: any) => {
-    updateAssignmentData({
-      exercisePrescriptions: {
-        ...assignmentData.exercisePrescriptions,
-        [exerciseId]: {
-          ...assignmentData.exercisePrescriptions[exerciseId],
-          prescribedMetrics: {
-            ...assignmentData.exercisePrescriptions[exerciseId]?.prescribedMetrics,
-            [metricId]: value
-          }
-        }
-      }
-    });
-
-    setExercisePrescriptions(prev => 
-      prev.map(prescription => 
-        prescription.exerciseId === exerciseId 
-          ? {
-              ...prescription,
-              prescribedMetrics: {
-                ...prescription.prescribedMetrics,
-                [metricId]: value
-              }
-            }
-          : prescription
-      )
-    );
+    } catch (error) {
+      console.error('Failed to create assignment:', error);
+      toast.error('Failed to create assignment');
+    }
   };
 
   return (
@@ -216,8 +173,8 @@ export function WorkoutAssignmentDialog({
         </DialogHeader>
 
         {/* Progress Indicator */}
-        <ProgressIndicator 
-          steps={steps} 
+        <ProgressIndicator
+          steps={steps as { id: WizardStep; title: string; icon?: React.ReactNode }[]}
           currentStepIndex={currentStepIndex}
           onStepClick={(index) => {
             if (index <= currentStepIndex) {
@@ -230,102 +187,57 @@ export function WorkoutAssignmentDialog({
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto">
             {currentStep === 'athletes' && (
-              <Step1SelectAthletes
-                assignmentData={assignmentData}
-                onAssignmentDataChange={updateAssignmentData}
-                availableMembers={availableMembers}
-                searchQuery={memberSearchQuery}
-                onSearchChange={setMemberSearchQuery}
-              />
+              <Step1SelectAthletes availableMembers={availableMembers} />
             )}
-
             {currentStep === 'workout' && (
-              <Step2SelectWorkout
-                assignmentData={assignmentData}
-                onAssignmentDataChange={updateAssignmentData}
+              <Step2SelectWorkout 
                 availableWorkouts={availableWorkouts}
                 isLoadingWorkouts={isLoadingWorkouts}
               />
             )}
-
-            {currentStep === 'prescriptions' && (
-              <Step3ExercisePrescriptions
-                assignmentData={assignmentData}
-                onAssignmentDataChange={updateAssignmentData}
-                selectedWorkout={assignmentData.selectedWorkout}
-              />
-            )}
-
-            {currentStep === 'schedule' && (
-              <Step4ConfigureSchedule
-                assignmentData={assignmentData}
-                onAssignmentDataChange={updateAssignmentData}
-              />
-            )}
-
-            {currentStep === 'review' && (
-              <Step5ReviewCustomize
-                assignmentData={assignmentData}
-                onAssignmentDataChange={updateAssignmentData}
-                exercisePrescriptions={exercisePrescriptions}
-                isLoadingExercises={isLoadingExercises}
-                isAdvancedExpanded={isAdvancedExpanded}
-                onToggleAdvanced={() => setIsAdvancedExpanded(!isAdvancedExpanded)}
-                onPrescriptionToggle={handlePrescriptionToggle}
-                onMetricChange={handleMetricChange}
-                totalEvents={totalEvents}
-              />
-            )}
+            {currentStep === 'prescriptions' && <Step3ExercisePrescriptions />}
+            {currentStep === 'schedule' && <Step4ConfigureSchedule />}
+            {currentStep === 'review' && <Step5ReviewCustomize />}
           </div>
 
           {/* Summary Sidebar */}
-          <SummarySidebar
-            assignmentData={assignmentData}
-            totalEvents={totalEvents}
-            currentStep={currentStep}
-          />
+          <SummarySidebar totalEvents={getTotalEvents()} currentStep={currentStep} />
         </div>
 
         {/* Footer Navigation */}
         <DialogFooter className="flex items-center justify-between">
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={onClose} disabled={state.isSubmitting}>
               Cancel
             </Button>
           </div>
-          
+
           <div className="flex gap-2">
             {currentStepIndex > 0 && (
-              <Button 
-                variant="outline" 
-                onClick={handleBack}
-                disabled={isSubmitting}
-              >
+              <Button variant="outline" onClick={handleBack} disabled={state.isSubmitting}>
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Back
               </Button>
             )}
-            
+
             {currentStepIndex < steps.length - 1 ? (
-              <Button 
-                onClick={handleNext}
-                disabled={!canProceedFromStep}
-              >
+              <Button onClick={handleNext}>
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button 
-                onClick={handleAssignWorkouts}
-                disabled={!canProceedFromStep || isSubmitting || !isEventDataValid()}
-                className="flex items-center gap-2"
+              <Button
+                onClick={handleSubmit}
+                // disabled={!isValid() || state.isSubmitting}
               >
-                <Calendar className="h-4 w-4" />
-                {isSubmitting ? 'Creating...' : `Create ${totalEvents} Calendar Events`}
+                {state.isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  `Create ${getTotalEvents()} Events`
+                )}
               </Button>
             )}
           </div>

@@ -7,13 +7,15 @@ import { MemberSwitcher } from '@/app/components/layouts/common/member-switcher'
 import { useTeam } from '@/providers/team-context';
 import { useUser } from '@/providers/user.context';
 import { CoachCalendar } from '@/components/calendar/coach-calendar';
+import { useOrganization } from '@/providers/organization-context'; // ADD THIS
 
 export default function CalendarPage() {
-  const { currentTeamMember } = useTeam();
+  const { currentTeamMember, currentTeam } = useTeam();
   const { user } = useUser();
+  const { currentOrganization } = useOrganization(); // ADD THIS
   
   // Show loading state while user data is being fetched
-  if (!user) {
+  if (!user || !currentOrganization) { // UPDATE THIS
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -25,7 +27,10 @@ export default function CalendarPage() {
   }
   
   return (
-    <CalendarProvider initialSelectedMember={currentTeamMember}>
+    <CalendarProvider 
+      organizationId={currentOrganization._id} // ADD THIS
+      initialSelectedMember={currentTeamMember}
+    >
       {user.role === 'coach' ? (
         <CoachCalendar />
       ) : (

@@ -1,6 +1,6 @@
 // lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,7 +12,23 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase only once (important for Next.js hot reloading)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Check if Firebase config is valid
+const isFirebaseConfigValid = () => {
+  return Boolean(
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.appId
+  );
+};
 
-export const auth = getAuth(app);
+// Initialize Firebase only if config is valid and we're in the browser
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+
+if (typeof window !== 'undefined' && isFirebaseConfigValid()) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  auth = getAuth(app);
+}
+
+export { auth };

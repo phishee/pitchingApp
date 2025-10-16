@@ -1,3 +1,5 @@
+import { UserInfo } from "./User";
+
 // ===== BASE TYPES =====
 
 export type EventType = 'workout' | 'gameday' | 'assessment' | 'coaching_session';
@@ -5,15 +7,9 @@ export type EventStatus = 'scheduled' | 'in_progress' | 'completed' | 'abandoned
 export type EventVisibility = 'public' | 'private' | 'team_only';
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 
-export interface UserInfo {
-  userId: string;
-  memberId: string;
-}
-
-// export interface RecurrenceConfig {
-//   type: 'none' | 'daily' | 'weekly' | 'monthly';
-//   interval: number;
-//   endDate?: Date;
+// export interface UserInfo {
+//   userId: string;
+//   memberId: string;
 // }
 
 export interface WorkingHours {
@@ -26,81 +22,8 @@ export interface DayAvailability {
   hours?: WorkingHours;
 }
 
-// ===== EVENT DETAILS (DISCRIMINATED UNION) =====
-
-export interface WorkoutEventDetails {
-  type: 'workout';
-  
-  // Workout selection
-  workoutId: string; // Reference to the selected workout from library
-  
-  // Exercise prescriptions (modified from workout defaults)
-  exercisePrescriptions?: {
-    [exerciseId: string]: {
-      prescribedMetrics: { [key: string]: any }; // Modified metrics (starts with workout defaults)
-      notes?: string; // Additional notes for this exercise
-      isModified: boolean; // Track if metrics were changed from defaults
-    };
-  };
-  
-  // Session details
-  sessionType: 'individual' | 'group' | 'team';
-  estimatedDuration?: number; // in minutes
-  equipment?: string[];
-  notes?: string;
-  
-  // Booking info
-  bookingInfo?: {
-    isBookingRequested: boolean;
-    requestStatus: 'none' | 'pending' | 'approved' | 'rejected';
-  };
-}
-
-export interface GamedayEventDetails {
-  type: 'gameday';
-  opponent: string;
-  venue: 'home' | 'away';
-  gameType: 'scrimmage' | 'league' | 'tournament' | 'playoff';
-  uniformRequirements?: string;
-  arrivalTime?: Date;
-  warmupStart?: Date;
-  gameNumber?: string; // for tournaments
-  livestreamUrl?: string;
-  roster: {
-    starters: string[]; // userIds
-    bench: string[];    // userIds
-    injured: string[];  // userIds
-  };
-}
-
-export interface AssessmentEventDetails {
-  type: 'assessment';
-  assessmentType: 'bullpen' | 'batting_practice' | 'fitness_test' | 'skill_evaluation';
-  evaluators: UserInfo[]; // coaches doing the assessment
-  metrics: string[]; // what's being measured
-  equipment: string[];
-  isRecorded: boolean; // video/data recording
-  followUpRequired: boolean;
-  assessmentTemplate?: string; // reference to assessment template
-}
-
-export interface CoachingSessionEventDetails {
-  type: 'coaching_session';
-  sessionType: 'one_on_one' | 'small_group' | 'position_specific';
-  focus: string[]; // e.g., ["pitching_mechanics", "mental_game"]
-  relatedWorkoutSessionId?: string; // if tied to a workout
-  goals: string[];
-  materials: string[]; // video, documents, etc.
-  sessionFormat: 'in_person' | 'virtual' | 'film_review';
-  preparationNotes: string;
-  followUpActions: string[];
-}
-
-export type EventDetails = 
-  | WorkoutEventDetails 
-  | GamedayEventDetails 
-  | AssessmentEventDetails 
-  | CoachingSessionEventDetails;
+// ===== EVENT DETAILS (REMOVED - NO LONGER NEEDED) =====
+// Delete lines 44-106 (all the EventDetails interfaces)
 
 // ===== MAIN EVENT MODEL =====
 
@@ -117,7 +40,7 @@ export interface Event {
   startTime: Date;
   endTime: Date;
   location?: string;
-  coverPhotoUrl?: string; // Fix typo: was "corverPhotoUrl"
+  coverPhotoUrl?: string;
   
   // Participants
   participants: {
@@ -130,8 +53,10 @@ export interface Event {
   // Recurrence
   recurrence: RecurrenceConfig;
   
+  // Reference to source details (replaces discriminated union)
+  detailsId: string; // FK to WorkoutAssignment | GameSchedule | AssessmentPlan | CoachingBooking
+  
   // Bulk operation tracking
-  sourceAssignmentId: string; // Links to WorkoutAssignment, GameSchedule, etc.
   sequenceNumber: number; // 1st occurrence, 2nd occurrence, etc.
   totalInSequence: number; // Total events in this group
   
@@ -141,9 +66,6 @@ export interface Event {
   createdBy: UserInfo;
   createdAt: Date;
   updatedAt: Date;
-  
-  // Type-specific data
-  details: EventDetails;
 }
 
 export interface RecurrenceConfig {
@@ -173,7 +95,7 @@ export interface Calendar {
   _id: string;
   userId: string;
   organizationId: string;
-  teamId?: string; // Can be null for coaches who work with multiple teams
+  teamId?: string;
   timezone: string;
   preferences: {
     defaultView: CalendarView;
@@ -208,7 +130,7 @@ export interface CalendarEvent {
   };
   color: string; // Type-specific or user-defined
   location?: string;
-  coverPhotoUrl?: string; // Add this line
+  coverPhotoUrl?: string;
   
   // Quick access to common details without fetching full event
   workoutType?: string; // "Upper Body Strength"
@@ -364,23 +286,8 @@ export class BookingError extends Error {
   }
 }
 
-// ===== TYPE GUARDS =====
-
-export function isWorkoutEvent(event: Event): event is Event & { details: WorkoutEventDetails } {
-  return event.type === 'workout';
-}
-
-export function isGamedayEvent(event: Event): event is Event & { details: GamedayEventDetails } {
-  return event.type === 'gameday';
-}
-
-export function isAssessmentEvent(event: Event): event is Event & { details: AssessmentEventDetails } {
-  return event.type === 'assessment';
-}
-
-export function isCoachingSessionEvent(event: Event): event is Event & { details: CoachingSessionEventDetails } {
-  return event.type === 'coaching_session';
-}
+// ===== TYPE GUARDS (REMOVED - NO LONGER NEEDED) =====
+// Delete lines 219-234 (all the type guard functions)
 
 // ===== CONSTANTS =====
 
