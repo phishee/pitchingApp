@@ -179,16 +179,21 @@ export class MongoDBProvider implements IDatabase {
     /**
      * Finds a document by its ID with automatic ObjectId conversion
      */
-    async findById(collection: string, id: string): Promise<any> {
+    async findById(collection: string, id: string | ObjectId): Promise<any> {
         await this.ensureConnected();
         try {
-            if (!ObjectId.isValid(id)) {
+            let objectId;
+            if (id instanceof ObjectId) {
+                // If it's already an ObjectId, use it directly
+                objectId = id;
+            } else if (typeof id === 'string' && ObjectId.isValid(id)) {
+                // If it's a valid hex string, convert it to ObjectId
+                objectId = ObjectId.createFromHexString(id);
+            } else {
                 console.log(`[MongoDB] Invalid ObjectId: ${id}`);
                 return null;
             }
 
-            // ✅ Use createFromHexString (no deprecation warning)
-            const objectId = ObjectId.createFromHexString(id);
             const result = await this.db.collection(collection).findOne({ _id: objectId });
             return result;
         } catch (error) {
@@ -264,16 +269,28 @@ export class MongoDBProvider implements IDatabase {
     /**
      * Updates a document in a collection
      */
-    async update(collection: string, id: string, data: any): Promise<any> {
+    async update(collection: string, id: string | ObjectId, data: any): Promise<any> {
         await this.ensureConnected();
-        if (!ObjectId.isValid(id)) return null;
+        console.log(`[MongoDBProvider] Update called with collection: ${collection}, id: ${id}, idType: ${typeof id}, idLength: ${id?.toString().length}`);
+        
         try {
             const { _id, ...updateData } = data;
             const convertedData = this.convertDatesToObjects(updateData);
             
-            // ✅ Use createFromHexString (no deprecation warning)
+            let objectId;
+            if (id instanceof ObjectId) {
+                // If it's already an ObjectId, use it directly
+                objectId = id;
+            } else if (typeof id === 'string' && ObjectId.isValid(id)) {
+                // If it's a valid hex string, convert it to ObjectId
+                objectId = ObjectId.createFromHexString(id);
+            } else {
+                console.log(`[MongoDBProvider] Invalid ObjectId: ${id}`);
+                return null;
+            }
+            
             const result = await this.db.collection(collection).findOneAndUpdate(
-                { _id: ObjectId.createFromHexString(id) },
+                { _id: objectId },
                 { $set: { ...convertedData, updatedAt: new Date() } },
                 { returnDocument: 'after' }
             );
@@ -287,13 +304,23 @@ export class MongoDBProvider implements IDatabase {
     /**
      * Deletes a document from a collection
      */
-    async delete(collection: string, id: string): Promise<boolean> {
+    async delete(collection: string, id: string | ObjectId): Promise<boolean> {
         await this.ensureConnected();
-        if (!ObjectId.isValid(id)) return false;
         try {
-            // ✅ Use createFromHexString (no deprecation warning)
+            let objectId;
+            if (id instanceof ObjectId) {
+                // If it's already an ObjectId, use it directly
+                objectId = id;
+            } else if (typeof id === 'string' && ObjectId.isValid(id)) {
+                // If it's a valid hex string, convert it to ObjectId
+                objectId = ObjectId.createFromHexString(id);
+            } else {
+                console.log(`[MongoDB] Invalid ObjectId for delete: ${id}`);
+                return false;
+            }
+
             const result = await this.db.collection(collection).deleteOne({ 
-                _id: ObjectId.createFromHexString(id) 
+                _id: objectId 
             });
             return result.deletedCount > 0;
         } catch (error) {
@@ -424,18 +451,25 @@ export class MongoDBProvider implements IDatabase {
      */
     async findByIdWithPopulate(
         collection: string,
-        id: string,
+        id: string | ObjectId,
         populateConfig: PopulateOptions
     ): Promise<any> {
-        if (!ObjectId.isValid(id)) {
+        let objectId;
+        if (id instanceof ObjectId) {
+            // If it's already an ObjectId, use it directly
+            objectId = id;
+        } else if (typeof id === 'string' && ObjectId.isValid(id)) {
+            // If it's a valid hex string, convert it to ObjectId
+            objectId = ObjectId.createFromHexString(id);
+        } else {
             console.log(`[MongoDB] Invalid ObjectId: ${id}`);
             return null;
         }
 
-        // ✅ Use createFromHexString (no deprecation warning)
+        // Use the objectId we created above
         const results = await this.findWithPopulate(
             collection,
-            { _id: ObjectId.createFromHexString(id) },
+            { _id: objectId },
             populateConfig
         );
 

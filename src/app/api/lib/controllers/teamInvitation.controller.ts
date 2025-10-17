@@ -2,15 +2,19 @@
 
 import { inject, injectable } from 'inversify';
 import { NextRequest, NextResponse } from 'next/server';
-import { TEAM_INVITATION_TYPES, TEAM_MEMBER_TYPES } from '@/app/api/lib/symbols/Symbols';
+import { TEAM_INVITATION_TYPES, TEAM_MEMBER_TYPES, TEAM_TYPES, USER_TYPES } from '@/app/api/lib/symbols/Symbols';
 import { TeamInvitationService } from '@/app/api/lib/services/team-invitation.service';
 import { TeamMemberService } from '../services/team-member.service';
+import { TeamService } from '../services/team.service';
+import { UserService } from '../services/user.service';
 
 @injectable()
 export class TeamInvitationController {
   constructor(
     @inject(TEAM_INVITATION_TYPES.TeamInvitationService) private invitationService: TeamInvitationService,
-    @inject(TEAM_MEMBER_TYPES.TeamMemberService) private teamMemberService: TeamMemberService
+    @inject(TEAM_MEMBER_TYPES.TeamMemberService) private teamMemberService: TeamMemberService,
+    @inject(TEAM_TYPES.TeamService) private teamService: TeamService,
+    @inject(USER_TYPES.UserService) private userService: UserService
   ) {}
 
   async createInvitation(req: NextRequest, { params }: { params: Promise<{ teamId: string }> }): Promise<NextResponse> {
@@ -94,16 +98,29 @@ export class TeamInvitationController {
     try {
       const { teamId, invitationId } = await params;
       
+      // Get team details to extract organization ID
+      const team = await this.teamService.getTeamById(teamId);
+      if (!team) {
+        return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      }
+      
       // Update the invitation status to accepted
       const updatedInvitation = await this.invitationService.acceptInvitation(invitationId);
       if (!updatedInvitation) {
         return NextResponse.json({ error: 'Failed to accept invitation' }, { status: 500 });
       }
 
+      // Get the user ID from the invitation
+      const userId = updatedInvitation.invitedUserId;
+      if (userId) {
+        // Update user's organization
+        await this.userService.updateUserOrganization(userId, team.organizationId);
+      }
+
       // Create team member
       const teamMember = await this.teamMemberService.createTeamMember({
         teamId: teamId,
-        userId: updatedInvitation.invitedUserId || updatedInvitation.invitedEmail,
+        userId: userId || updatedInvitation.invitedEmail,
         role: updatedInvitation.role || 'athlete',
         status: 'active',
         joinedAt: new Date(),

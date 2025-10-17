@@ -5,5 +5,4 @@ function TeamsPage() {
     <div>TeamsPage</div>
   )
 }
-
 export default TeamsPage
