@@ -1,13 +1,15 @@
+import { ObjectId } from 'mongodb';
+
 export interface IDatabase {
     findAll(collection: string): Promise<any[]>;
     findQuery(collection: string, query: any): Promise<any[]>;
     findOne(collection: string, query: any): Promise<any>;
     create(collection: string, data: any): Promise<any>;
-    update(collection: string, id: string, data: any): Promise<any>;
-    delete(collection: string, id: string): Promise<any>;
-    findById(collection: string, id: string): Promise<any>;
+    update(collection: string, id: string | ObjectId, data: any): Promise<any>;
+    delete(collection: string, id: string | ObjectId): Promise<any>;
+    findById(collection: string, id: string | ObjectId): Promise<any>;
     findWithPopulate(collection: string, query: any, populate: PopulateOptions): Promise<any[]>;
-    findByIdWithPopulate(collection: string, id: string, populate: PopulateOptions): Promise<any>;
+    findByIdWithPopulate(collection: string, id: string | ObjectId, populate: PopulateOptions): Promise<any>;
     findWithPopulateSafe(collection: string, query: any, populate: SafePopulateConfig, options?: PopulateSafeOptions): Promise<any[]>;
 }
 

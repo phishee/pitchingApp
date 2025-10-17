@@ -25,10 +25,27 @@ export class UserController {
     try {
       const { searchParams } = new URL(req.url);
       const email = searchParams.get('email');
+      const organizationId = searchParams.get('organizationId');
+      const role = searchParams.get('role');
+      const teamId = searchParams.get('teamId');
+      const search = searchParams.get('search');
+      const status = searchParams.get('status');
       
       if (email) {
         // Handle search by email
         const users = await this.userService.searchUsersByEmail(email.trim());
+        return NextResponse.json(users);
+      }
+
+      if (organizationId) {
+        // Handle organization-based filtering
+        const filters: any = {};
+        if (role) filters.role = role as 'coach' | 'athlete' | 'admin';
+        if (teamId) filters.teamId = teamId;
+        if (search) filters.search = search;
+        if (status) filters.status = status as 'active' | 'inactive';
+
+        const users = await this.userService.getUsersWithTeamInfo(organizationId, filters);
         return NextResponse.json(users);
       }
       

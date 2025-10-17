@@ -2,15 +2,19 @@
 
 import { inject, injectable } from 'inversify';
 import { NextRequest, NextResponse } from 'next/server';
-import { TEAM_JOIN_REQUEST_TYPES, TEAM_MEMBER_TYPES } from '@/app/api/lib/symbols/Symbols';
+import { TEAM_JOIN_REQUEST_TYPES, TEAM_MEMBER_TYPES, TEAM_TYPES, USER_TYPES } from '@/app/api/lib/symbols/Symbols';
 import { TeamJoinRequestService } from '@/app/api/lib/services/team-join-request.service';
 import { TeamMemberService } from '../services/team-member.service';
+import { TeamService } from '../services/team.service';
+import { UserService } from '../services/user.service';
 
 @injectable()
 export class TeamJoinRequestController {
   constructor(
     @inject(TEAM_JOIN_REQUEST_TYPES.TeamJoinRequestService) private joinRequestService: TeamJoinRequestService,
-    @inject(TEAM_MEMBER_TYPES.TeamMemberService) private teamMemberService: TeamMemberService
+    @inject(TEAM_MEMBER_TYPES.TeamMemberService) private teamMemberService: TeamMemberService,
+    @inject(TEAM_TYPES.TeamService) private teamService: TeamService,
+    @inject(USER_TYPES.UserService) private userService: UserService
   ) { }
 
   async createJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string }> }): Promise<NextResponse> {
@@ -97,10 +101,20 @@ export class TeamJoinRequestController {
   async approveJoinRequest(req: NextRequest, { params }: { params: Promise<{ teamId: string; requestId: string }> }): Promise<NextResponse> {
     try {
       const { teamId, requestId } = await params;
+      
+      // Get team details to extract organization ID
+      const team = await this.teamService.getTeamById(teamId);
+      if (!team) {
+        return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      }
+      
       const updatedJoinRequest = await this.joinRequestService.approveJoinRequest(requestId);
       if (!updatedJoinRequest) {
         return NextResponse.json({ error: 'Failed to approve join request' }, { status: 500 });
       }
+
+      // Update user's organization
+      await this.userService.updateUserOrganization(updatedJoinRequest.requestedBy, team.organizationId);
 
       const teamMember = await this.teamMemberService.createTeamMember({
         teamId: teamId,
