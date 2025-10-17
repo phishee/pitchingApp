@@ -1,23 +1,24 @@
 // src/app/api/v1/events/[id]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, AuthenticatedRequest } from '@/app/api/lib/middleware/auth.middleware';
 import container from '@/app/api/lib/container';
 import { EVENT_TYPES, WORKOUT_ASSIGNMENT_TYPES } from '@/app/api/lib/symbols/Symbols';
 import { EventController } from '@/app/api/lib/controllers/event.controller';
 import { WorkoutAssignmentController } from '@/app/api/lib/controllers/workoutAssignment.controller';
 
-export async function GET(
-  req: NextRequest,
+export const GET = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const eventController = container.get<EventController>(EVENT_TYPES.EventController);
   return eventController.getEventById(req, { params });
-}
+});
 
-export async function PATCH(
-  req: NextRequest,
+export const PATCH = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const body = await req.json();
@@ -49,12 +50,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
-export async function DELETE(
-  req: NextRequest,
+export const DELETE = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const eventController = container.get<EventController>(EVENT_TYPES.EventController);
   return eventController.deleteEvent(req, { params });
-}
+});

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, AuthenticatedRequest } from '@/app/api/lib/middleware/auth.middleware';
 import container from '@/app/api/lib/container';
 import { WORKOUT_ASSIGNMENT_TYPES } from '@/app/api/lib/symbols/Symbols';
 import { WorkoutAssignmentController } from '@/app/api/lib/controllers/workoutAssignment.controller';
@@ -9,7 +10,7 @@ interface RouteParams {
   }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAuth(async (request: AuthenticatedRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
     const controller = container.get<WorkoutAssignmentController>(WORKOUT_ASSIGNMENT_TYPES.WorkoutAssignmentController);
@@ -31,9 +32,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -69,4 +70,4 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
-}
+});
