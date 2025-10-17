@@ -1,69 +1,35 @@
+import apiClient from '@/lib/axios-config';
 import { CreateWorkoutAssignmentPayload, UpdateWorkoutAssignmentPayload, WorkoutAssignment } from '@/models/WorkoutAssignment';
 import { Event } from '@/models';
 
 class WorkoutAssignmentApi {
-  private baseUrl = '/api/v1/workout-assignments';
+  private baseUrl = '/workout-assignments';
 
   async create(payload: CreateWorkoutAssignmentPayload): Promise<{ assignment: WorkoutAssignment; events: Event[] }> {
-    const response = await fetch(this.baseUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create workout assignment');
-    }
-
-    return response.json();
+    const response = await apiClient.post<{ assignment: WorkoutAssignment; events: Event[] }>(this.baseUrl, payload);
+    return response.data;
   }
 
   async get(assignmentId: string): Promise<WorkoutAssignment> {
-    const response = await fetch(`${this.baseUrl}/${assignmentId}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch assignment');
-    }
-    
-    return response.json();
+    const response = await apiClient.get<WorkoutAssignment>(`${this.baseUrl}/${assignmentId}`);
+    return response.data;
   }
 
   async update(
     assignmentId: string,
     updates: UpdateWorkoutAssignmentPayload
   ): Promise<{ assignment: WorkoutAssignment; updatedEvents: Event[] }> {
-    const response = await fetch(`${this.baseUrl}/${assignmentId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update assignment');
-    }
-
-    return response.json();
+    const response = await apiClient.patch<{ assignment: WorkoutAssignment; updatedEvents: Event[] }>(`${this.baseUrl}/${assignmentId}`, updates);
+    return response.data;
   }
 
   async delete(assignmentId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/${assignmentId}`, {
-      method: 'DELETE'
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete assignment');
-    }
+    await apiClient.delete(`${this.baseUrl}/${assignmentId}`);
   }
 
   async getEvents(assignmentId: string): Promise<Event[]> {
-    const response = await fetch(`${this.baseUrl}/${assignmentId}/events`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch assignment events');
-    }
-    
-    return response.json();
+    const response = await apiClient.get<Event[]>(`${this.baseUrl}/${assignmentId}/events`);
+    return response.data;
   }
 
   async getByAthlete(
@@ -75,13 +41,8 @@ class WorkoutAssignmentApi {
       ...(options?.active !== undefined && { active: String(options.active) })
     });
 
-    const response = await fetch(`${this.baseUrl}?${params}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch assignments');
-    }
-    
-    return response.json();
+    const response = await apiClient.get<WorkoutAssignment[]>(`${this.baseUrl}?${params}`);
+    return response.data;
   }
 }
 

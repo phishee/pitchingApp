@@ -1,3 +1,4 @@
+import apiClient from '@/lib/axios-config';
 import { Exercise, ExerciseResponse, ExerciseQueryParams } from '@/models/Exercise';
 import { useCache } from '@/hooks/useCache';
 
@@ -12,14 +13,8 @@ const CACHE_TTL = {
 
 // Helper function to make API requests
 const makeRequest = async <T>(endpoint: string): Promise<T> => {
-  const response = await fetch(`/api/v1${endpoint}`);
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `HTTP ${response.status}`);
-  }
-  
-  return response.json();
+  const response = await apiClient.get<T>(endpoint);
+  return response.data;
 };
 
 // Helper function to build query strings

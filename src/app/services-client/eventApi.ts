@@ -1,9 +1,9 @@
 // src/services/eventApi.ts
 
-import axios from "axios";
+import apiClient from "@/lib/axios-config";
 import { Event } from "@/models/Calendar";
 
-const API_BASE = "/api/v1/events";
+const API_BASE = "/events";
 
 // ===== REQUEST/RESPONSE TYPES =====
 
@@ -63,7 +63,7 @@ export const eventApi = {
    * POST /api/v1/events
    */
   async createEvents(request: CreateEventsRequest): Promise<CreateEventsResponse> {
-    const res = await axios.post<CreateEventsResponse>(API_BASE, request);
+    const res = await apiClient.post<CreateEventsResponse>(API_BASE, request);
     return res.data;
   },
 
@@ -110,7 +110,7 @@ export const eventApi = {
     // Details inclusion
     if (filters.includeDetails === false) params.append('includeDetails', 'false');
 
-    const res = await axios.get<Event[]>(`${API_BASE}?${params.toString()}`);
+    const res = await apiClient.get<Event[]>(`${API_BASE}?${params.toString()}`);
     return res.data;
   },
 
@@ -119,7 +119,7 @@ export const eventApi = {
    * GET /api/v1/events/:id
    */
   async getEventById(id: string): Promise<Event> {
-    const res = await axios.get<Event>(`${API_BASE}/${id}`);
+    const res = await apiClient.get<Event>(`${API_BASE}/${id}`);
     return res.data;
   },
 
@@ -128,7 +128,7 @@ export const eventApi = {
    * PATCH /api/v1/events/:id
    */
   async updateEvent(id: string, data: Partial<Event>): Promise<Event> {
-    const res = await axios.patch<Event>(`${API_BASE}/${id}`, data);
+    const res = await apiClient.patch<Event>(`${API_BASE}/${id}`, data);
     return res.data;
   },
 
@@ -137,7 +137,7 @@ export const eventApi = {
    * DELETE /api/v1/events/:id
    */
   async deleteEvent(id: string): Promise<{ message: string }> {
-    const res = await axios.delete<{ message: string }>(`${API_BASE}/${id}`);
+    const res = await apiClient.delete<{ message: string }>(`${API_BASE}/${id}`);
     return res.data;
   },
 
@@ -149,7 +149,7 @@ export const eventApi = {
     groupId: string, 
     data: Partial<Event>
   ): Promise<BulkUpdateResponse> {
-    const res = await axios.patch<BulkUpdateResponse>(
+    const res = await apiClient.patch<BulkUpdateResponse>(
       `${API_BASE}/group/${groupId}`, 
       data
     );
@@ -161,7 +161,7 @@ export const eventApi = {
    * DELETE /api/v1/events/group/:groupId
    */
   async bulkDeleteEventGroup(groupId: string): Promise<BulkDeleteResponse> {
-    const res = await axios.delete<BulkDeleteResponse>(`${API_BASE}/group/${groupId}`);
+    const res = await apiClient.delete<BulkDeleteResponse>(`${API_BASE}/group/${groupId}`);
     return res.data;
   },
 

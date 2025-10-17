@@ -1,3 +1,4 @@
+import apiClient from '@/lib/axios-config';
 import { Workout, WorkoutResponse, WorkoutQueryParams } from '@/models/Workout';
 import { useCache } from '@/hooks/useCache';
 
@@ -12,20 +13,22 @@ const CACHE_TTL = {
 
 // Helper function to make API requests
 const makeRequest = async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
-  const response = await fetch(`/api/v1${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    ...options,
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `HTTP ${response.status}`);
+  if (options?.method === 'POST') {
+    const response = await apiClient.post<T>(endpoint, JSON.parse(options.body as string));
+    return response.data;
+  } else if (options?.method === 'PUT') {
+    const response = await apiClient.put<T>(endpoint, JSON.parse(options.body as string));
+    return response.data;
+  } else if (options?.method === 'PATCH') {
+    const response = await apiClient.patch<T>(endpoint, JSON.parse(options.body as string));
+    return response.data;
+  } else if (options?.method === 'DELETE') {
+    await apiClient.delete(endpoint);
+    return {} as T;
+  } else {
+    const response = await apiClient.get<T>(endpoint);
+    return response.data;
   }
-  
-  return response.json();
 };
 
 // Helper function to build query strings

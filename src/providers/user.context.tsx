@@ -51,21 +51,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError('');
       
-      const userData = await userApi.getUser(userFromFirebase.uid);
-      setUser(userData);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+      console.log('🔍 Checking if user exists in DB:', userFromFirebase.uid);
+      
+      // Use the unauthenticated check method to see if user exists in DB
+      const result = await userApi.checkUserExists(userFromFirebase.uid);
+      
+      console.log('📊 User check result:', result);
+      
+      if (result.exists && result.user) {
+        console.log('✅ User exists in DB, setting user data');
+        setUser(result.user);
+      } else {
+        console.log('❌ User does not exist in DB, setting user to null');
         // User doesn't exist in DB yet (probably in onboarding)
         setUser(null);
-      } else if (error.code === 'ERR_NETWORK') {
-        // Network error - don't retry, just set error state
-        console.error('Network error loading user:', error);
-        setError('Network error - please check your connection');
-        setUser(null);
-      } else {
-        console.error('Error loading user:', error);
-        setError('Failed to load user data');
       }
+    } catch (error: any) {
+      console.error('❌ Error loading user:', error);
+      setError('Failed to load user data');
+      setUser(null);
     } finally {
       setIsLoading(false);
       loadingRef.current = false;
