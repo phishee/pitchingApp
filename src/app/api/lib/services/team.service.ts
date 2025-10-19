@@ -36,9 +36,14 @@ export class TeamService {
   }
 
   async getTeamsByOrganization(organizationId: string): Promise<Team[]> {
-    // TODO: Implement filtering by organization
-    const allTeams = await this.teamRepo.findAll(this.teamCollection);
-    return allTeams.filter(team => team.organizationId === organizationId);
+    try {
+      // Get all teams and filter by organizationId
+      const allTeams = await this.teamRepo.findAll(this.teamCollection);
+      return allTeams.filter(team => team.organizationId === organizationId);
+    } catch (error) {
+      console.error('Error fetching teams by organization:', error);
+      throw new Error('Failed to fetch teams by organization');
+    }
   }
 
   async getTeamByCode(code: string): Promise<Team | null> {

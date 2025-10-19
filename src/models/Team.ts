@@ -1,11 +1,17 @@
 import { User } from "./User";
 
+export interface TeamColor {
+  primary: string;    // Main color (e.g., "#3B82F6")
+  secondary: string;  // Lighter version (e.g., "#DBEAFE")
+}
+
 export interface Team {
   _id: string;
   name: string;
   logoUrl?: string;
   teamCode: string;
   description: string;
+  color?: TeamColor;
   createdAt: Date;
   updatedAt: Date;
   organizationId: string;

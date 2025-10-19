@@ -27,6 +27,7 @@ interface TeamState {
 
 interface TeamContextType extends TeamState {
   loadTeamData: () => Promise<void>;
+  refreshTeamData: () => Promise<void>;
   joinTeam: (teamCode: string) => Promise<void>;
   acceptInvitation: (invitationId: string, teamId: string) => Promise<void>;
   rejectInvitation: (invitationId: string, teamId: string) => Promise<void>;
@@ -388,6 +389,12 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
     updateState({ error: '' });
   }, [updateState]);
 
+  // Refresh team data (force reload)
+  const refreshTeamData = useCallback(async () => {
+    loadingRef.current = false; // Reset loading flag to allow refresh
+    await loadTeamData();
+  }, [loadTeamData]);
+
   const setPendingJoinRequest = useCallback((joinRequest: Partial<TeamJoinRequestWithTeamUserInfo> | null) => {
     updateState({ pendingJoinRequest: joinRequest });
   }, [updateState]);
@@ -424,6 +431,7 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   const contextValue: TeamContextType = {
     ...state,
     loadTeamData,
+    refreshTeamData,
     joinTeam,
     acceptInvitation,
     rejectInvitation,
