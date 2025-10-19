@@ -6,6 +6,8 @@ import { teamApi } from '@/app/services-client/teamApi';
 import { useRouter } from 'next/navigation';
 import { useOrganization } from '@/providers/organization-context';
 import { useTeam } from '@/providers/team-context';
+import { useUser } from '@/providers/user.context';
+import { teamMemberApi } from '@/app/services-client/teamMemberApi';
 import { toast } from 'sonner';
 import { TeamBasicInfo } from './TeamBasicInfo';
 import { TeamCodeGenerator } from './TeamCodeGenerator';
@@ -20,6 +22,7 @@ interface TeamFormProps {
 
 export function TeamForm({ onSubmit, onCancel }: TeamFormProps) {
   const router = useRouter();
+  const { user } = useUser();
   const { currentOrganization, refreshOrganizationData } = useOrganization();
   const { refreshTeamData } = useTeam();
   const { 
@@ -55,10 +58,35 @@ export function TeamForm({ onSubmit, onCancel }: TeamFormProps) {
       };
 
       if (mode === 'create') {
+        // 1. Create team first
         const newTeam = await teamApi.createTeam(teamData);
-        toast.success('Team created successfully!');
+        console.log('✅ Team created successfully:', newTeam._id);
         
-        // Refresh contexts to update team lists
+        // 2. If user is coach, create TeamMember automatically
+        if (user?.role === 'coach' && user?.userId) {
+          try {
+            const teamMemberData = {
+              teamId: newTeam._id,
+              userId: user.userId,
+              role: 'coach' as const,
+              status: 'active' as const,
+              joinedAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            
+            await teamMemberApi.createTeamMember(teamMemberData);
+            console.log('✅ TeamMember created successfully for coach');
+            toast.success('Team created successfully! You have been added as a coach.');
+          } catch (error) {
+            console.error('❌ Failed to create TeamMember:', error);
+            toast.error('Team created but failed to add you as a member. Please join manually.');
+          }
+        } else {
+          toast.success('Team created successfully!');
+        }
+        
+        // 3. Refresh contexts to update team lists
         console.log('🔄 Refreshing contexts after team creation...');
         await Promise.all([
           refreshOrganizationData(),

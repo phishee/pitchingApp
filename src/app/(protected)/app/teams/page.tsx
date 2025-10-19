@@ -171,7 +171,7 @@ function TeamsPage() {
           {user?.role === 'coach' || user?.isAdmin ? (
             <Button 
               onClick={handleCreateTeam}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 rounded-full"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Team
