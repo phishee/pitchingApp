@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Check, X } from 'lucide-react';
 import { teamApi } from '@/app/services-client/teamApi';
 import { useOnboarding } from '@/providers/onboarding-context';
+import { createTeamColor } from '@/lib/colorUtils';
 import Image from 'next/image';
 
 interface JoinTeamProps {
@@ -20,6 +21,10 @@ interface TeamInfo {
   name: string;
   description: string;
   logoUrl?: string;
+  color?: {
+    primary: string;
+    secondary: string;
+  };
 }
 
 export function JoinTeam({ onNext }: JoinTeamProps) {
@@ -32,13 +37,38 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
 
   const { joinRequestData, setJoinRequestData, userData, teamToJoin, setTeamToJoin } = useOnboarding();
 
+  // Helper function to check if image URL is valid
+  const isValidImageUrl = (url: string | undefined | null): boolean => {
+    return url != null && url.trim() !== '';
+  };
+
+  // Helper function to get team colors with fallback
+  const getTeamColors = () => {
+    if (teamInfo?.color) {
+      return {
+        primary: teamInfo.color.primary,
+        secondary: teamInfo.color.secondary
+      };
+    }
+    
+    // Generate consistent color based on team name (same as TeamCard)
+    const colors = [
+      '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B',
+      '#EF4444', '#6366F1', '#EC4899', '#14B8A6'
+    ];
+    const index = teamInfo?.name.charCodeAt(0) % colors.length;
+    const primaryColor = colors[index] || '#3B82F6';
+    return createTeamColor(primaryColor);
+  };
+
   useEffect(() => {
     if (joinRequestData && !teamInfo && teamToJoin && teamToJoin._id) {
       setTeamInfo({
         _id: teamToJoin._id || '',
         name: teamToJoin.name || '',
         description: teamToJoin.description || '',
-        logoUrl: teamToJoin.logoUrl || ''
+        logoUrl: teamToJoin.logoUrl || '',
+        color: teamToJoin.color
       });
     }
   }, [joinRequestData, teamInfo, teamToJoin]);
@@ -126,11 +156,11 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
                 placeholder="Enter 6-character code"
                 value={teamCode}
                 onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
-                disabled={hasRequested}
+                // disabled={hasRequested}
               />
               <Button
                 onClick={handleFetchTeam}
-                disabled={isLoading || hasRequested}
+                // disabled={isLoading || hasRequested}
               >
                 {isLoading ? 'Checking...' : 'Verify'}
               </Button>
@@ -151,10 +181,16 @@ export function JoinTeam({ onNext }: JoinTeamProps) {
 
           {/* Team info display (only shows after verification) */}
           {teamInfo && (
-            <Card className={hasRequested ? "border-green-500 bg-green-50" : "border-primary"}>
+            <Card 
+              className={hasRequested ? "" : "border-primary"}
+              style={hasRequested ? {
+                borderColor: getTeamColors().primary,
+                backgroundColor: getTeamColors().secondary
+              } : {}}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center gap-2">
-                  {teamInfo?.logoUrl && (
+                  {isValidImageUrl(teamInfo?.logoUrl) && (
                     <Image src={teamInfo.logoUrl} alt={teamInfo?.name} width={40} height={40} className="rounded-full" />
                   )}
                   <h3 className="text-lg font-semibold mb-2">{teamInfo?.name}</h3>

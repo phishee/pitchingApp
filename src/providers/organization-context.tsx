@@ -13,8 +13,12 @@ interface OrganizationContextType {
   setCurrentTeam: (team: Team | null) => void;
   organizations: Organization[];
   teams: Team[];
+  organizationTeams: Team[];
   setOrganizations: (orgs: Organization[]) => void;
   setTeams: (teams: Team[]) => void;
+  setOrganizationTeams: (teams: Team[]) => void;
+  loadOrganizationTeams: () => Promise<void>;
+  refreshOrganizationData: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -27,6 +31,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [organizationTeams, setOrganizationTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +42,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setCurrentTeam(null);
       setOrganizations([]);
       setTeams([]);
+      setOrganizationTeams([]);
       return;
     }
 
@@ -52,14 +58,60 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       const allOrganizations = await organizationApi.getOrganizations();
       setOrganizations(allOrganizations);
 
-      // TODO: Load teams for the current organization
-      // This would require a team API call based on the organization ID
-      // setTeams(teams);
+      // Load teams for the current organization directly (avoid circular dependency)
+      const teams = await organizationApi.getOrganizationTeams(organization._id);
+      setOrganizationTeams(teams);
 
     } catch (err) {
       console.error('Error loading organization data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load organization data');
       setCurrentOrganization(null);
+      setOrganizationTeams([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.currentOrganizationId]);
+
+  // Load organization teams
+  const loadOrganizationTeams = useCallback(async () => {
+    if (!currentOrganization?._id) {
+      setOrganizationTeams([]);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const teams = await organizationApi.getOrganizationTeams(currentOrganization._id);
+      setOrganizationTeams(teams);
+    } catch (err) {
+      console.error('Error loading organization teams:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load organization teams');
+      setOrganizationTeams([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentOrganization?._id]);
+
+  // Refresh all organization data
+  const refreshOrganizationData = useCallback(async () => {
+    if (!user?.currentOrganizationId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Refresh organization data
+      const organization = await organizationApi.getOrganization(user.currentOrganizationId);
+      setCurrentOrganization(organization);
+
+      // Refresh teams for the current organization
+      const teams = await organizationApi.getOrganizationTeams(organization._id);
+      setOrganizationTeams(teams);
+
+    } catch (err) {
+      console.error('Error refreshing organization data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh organization data');
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +122,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     loadOrganizationData();
   }, [loadOrganizationData]);
 
+  // Load organization teams when current organization changes
+  useEffect(() => {
+    loadOrganizationTeams();
+  }, [loadOrganizationTeams]);
+
   // Clear data when user logs out
   useEffect(() => {
     if (!user) {
@@ -77,6 +134,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setCurrentTeam(null);
       setOrganizations([]);
       setTeams([]);
+      setOrganizationTeams([]);
       setError(null);
     }
   }, [user]);
@@ -88,8 +146,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     setCurrentTeam,
     organizations,
     teams,
+    organizationTeams,
     setOrganizations,
     setTeams,
+    setOrganizationTeams,
+    loadOrganizationTeams,
+    refreshOrganizationData,
     isLoading,
     error,
   };

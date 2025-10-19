@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Trophy, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { createTeamColor } from '@/lib/colorUtils';
 
 interface TeamSwitcherProps {
   className?: string;
@@ -20,19 +21,25 @@ const TeamLogoOrIcon = ({
   icon: Icon, 
   iconSize = "w-3.5 h-3.5",
   containerSize = "w-7 h-7",
-  containerBgColor = "bg-blue-100",
-  iconColor = "text-blue-600"
+  useTeamColors = false
 }: {
   team: any;
   icon: React.ComponentType<{ className?: string }>;
   iconSize?: string;
   containerSize?: string;
-  containerBgColor?: string;
-  iconColor?: string;
+  useTeamColors?: boolean;
 }) => {
+  const teamColors = useTeamColors ? getTeamColors(team) : null;
   if (team.logoUrl && team.logoUrl.trim() !== '') {
+    const bgColor = useTeamColors && teamColors 
+      ? { backgroundColor: teamColors.primary }
+      : { backgroundColor: '#3B82F6' }; // Default blue fallback
+    
     return (
-      <div className={cn("flex items-center justify-center", containerSize, containerBgColor, "rounded-full overflow-hidden")}>
+      <div 
+        className={cn("flex items-center justify-center", containerSize, "rounded-full overflow-hidden")}
+        style={bgColor}
+      >
         <Image
           src={team.logoUrl}
           alt={`${team.name} logo`}
@@ -44,11 +51,41 @@ const TeamLogoOrIcon = ({
     );
   }
   
+  const bgColor = useTeamColors && teamColors 
+    ? { backgroundColor: teamColors.primary }
+    : { backgroundColor: '#3B82F6' }; // Default blue fallback
+  
+  const iconColorClass = useTeamColors && teamColors 
+    ? "text-white" // White icon on colored background
+    : "text-blue-600"; // Default blue icon
+  
   return (
-    <div className={cn("flex items-center justify-center", containerSize, "rounded-full", containerBgColor, iconColor, "flex-shrink-0")}>
-      <Icon className={iconSize} />
+    <div 
+      className={cn("flex items-center justify-center", containerSize, "rounded-full flex-shrink-0")}
+      style={bgColor}
+    >
+      <Icon className={cn(iconSize, iconColorClass)} />
     </div>
   );
+};
+
+// Helper function to get team colors or generate fallback
+const getTeamColors = (team: any) => {
+  if (team.color) {
+    return {
+      primary: team.color.primary,
+      secondary: team.color.secondary
+    };
+  }
+  
+  // Generate consistent color based on team name (same as TeamCard)
+  const colors = [
+    '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B',
+    '#EF4444', '#6366F1', '#EC4899', '#14B8A6'
+  ];
+  const index = team.name.charCodeAt(0) % colors.length;
+  const primaryColor = colors[index];
+  return createTeamColor(primaryColor);
 };
 
 export function TeamSwitcher({ 
@@ -74,22 +111,27 @@ export function TeamSwitcher({
   // If user only has one team, show a nice single team display
   if (allTeams.length <= 1) {
     const currentMember = allTeamMembers.find(member => member.teamId === currentTeam._id);
+    const teamColors = getTeamColors(currentTeam);
     
     return (
-      <div className={cn(
-        "flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50",
-        "hover:from-blue-100 hover:to-indigo-100 transition-all duration-200",
-        "min-w-[200px] w-full mx-2 my-1",
-        className
-      )}>
+      <div 
+        className={cn(
+          "flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-200",
+          "min-w-[200px] w-full mx-2 my-1",
+          className
+        )}
+        style={{
+          background: `linear-gradient(135deg, ${teamColors.secondary} 0%, ${teamColors.primary}20 100%)`,
+          borderColor: `${teamColors.primary}50`
+        }}
+      >
         {showIcon && (
           <TeamLogoOrIcon 
             team={currentTeam}
             icon={Trophy}
             iconSize="w-3.5 h-3.5"
             containerSize="w-7 h-7"
-            containerBgColor="bg-blue-100"
-            iconColor="text-blue-600"
+            useTeamColors={true}
           />
         )}
         <div className="flex flex-col min-w-0 flex-1">
@@ -109,21 +151,27 @@ export function TeamSwitcher({
 
   // If user has multiple teams, show dropdown (only for coaches)
   if (user?.role === 'coach' && allTeams.length > 1) {
+    const currentTeamColors = getTeamColors(currentTeam);
+    
     return (
-      <div className={cn(
-        "flex items-center gap-2.5 p-1.5 rounded-3xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200/50",
-        "hover:from-purple-100 hover:to-indigo-100 transition-all duration-200",
-        "min-w-[200px] w-full mx-2 my-1",
-        className
-      )}>
+      <div 
+        className={cn(
+          "flex items-center gap-2.5 p-1.5 rounded-3xl border transition-all duration-200",
+          "min-w-[200px] w-full mx-2 my-1",
+          className
+        )}
+        style={{
+          background: `linear-gradient(135deg, ${currentTeamColors.secondary} 0%, ${currentTeamColors.primary}20 100%)`,
+          borderColor: `${currentTeamColors.primary}50`
+        }}
+      >
         {showIcon && (
           <TeamLogoOrIcon 
             team={currentTeam}
             icon={Users}
             iconSize="w-3.5 h-3.5"
             containerSize="w-7 h-7"
-            containerBgColor="bg-purple-100"
-            iconColor="text-purple-600"
+            useTeamColors={true}
           />
         )}
         <Select
@@ -153,6 +201,7 @@ export function TeamSwitcher({
               {allTeams.map((team) => {
                 const teamMember = allTeamMembers.find(member => member.teamId === team._id);
                 const isCurrentTeam = team._id === currentTeam._id;
+                const teamColors = getTeamColors(team);
                 
                 return (
                   <SelectItem 
@@ -161,9 +210,13 @@ export function TeamSwitcher({
                     className={cn(
                       "relative cursor-pointer rounded-xl p-2.5 mb-1",
                       isCurrentTeam 
-                        ? "bg-blue-50 border border-blue-200" 
+                        ? "border" 
                         : "hover:bg-gray-50"
                     )}
+                    style={isCurrentTeam ? {
+                      background: `linear-gradient(135deg, ${teamColors.secondary} 0%, ${teamColors.primary}10 100%)`,
+                      borderColor: `${teamColors.primary}50`
+                    } : {}}
                   >
                     <div className="flex items-center gap-2.5">
                       <TeamLogoOrIcon 
@@ -171,19 +224,25 @@ export function TeamSwitcher({
                         icon={Building}
                         iconSize="w-3 h-3"
                         containerSize="w-6 h-6"
-                        containerBgColor={isCurrentTeam ? "bg-blue-100" : "bg-gray-100"}
-                        iconColor={isCurrentTeam ? "text-blue-600" : "text-gray-600"}
+                        useTeamColors={true}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className={cn(
                             "font-medium text-sm truncate",
-                            isCurrentTeam ? "text-blue-900" : "text-gray-900"
+                            isCurrentTeam ? "text-gray-900" : "text-gray-900"
                           )}>
                             {team.name}
                           </span>
                           {isCurrentTeam && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 flex-shrink-0 ml-2">
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs px-1.5 py-0.5 flex-shrink-0 ml-2"
+                              style={{
+                                backgroundColor: `${teamColors.primary}20`,
+                                color: teamColors.primary
+                              }}
+                            >
                               Current
                             </Badge>
                           )}
@@ -207,21 +266,27 @@ export function TeamSwitcher({
   }
 
   // Fallback for athletes with multiple teams
+  const fallbackTeamColors = getTeamColors(currentTeam);
+  
   return (
-    <div className={cn(
-      "flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50",
-      "hover:from-blue-100 hover:to-indigo-100 transition-all duration-200",
-      "min-w-[200px] w-full mx-2 my-1",
-      className
-    )}>
+    <div 
+      className={cn(
+        "flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-200",
+        "min-w-[200px] w-full mx-2 my-1",
+        className
+      )}
+      style={{
+        background: `linear-gradient(135deg, ${fallbackTeamColors.secondary} 0%, ${fallbackTeamColors.primary}20 100%)`,
+        borderColor: `${fallbackTeamColors.primary}50`
+      }}
+    >
       {showIcon && (
         <TeamLogoOrIcon 
           team={currentTeam}
           icon={Trophy}
           iconSize="w-3.5 h-3.5"
           containerSize="w-7 h-7"
-          containerBgColor="bg-blue-100"
-          iconColor="text-blue-600"
+          useTeamColors={true}
         />
       )}
       <span className="font-semibold text-sm text-gray-900">{currentTeam.name}</span>

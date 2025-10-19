@@ -1,6 +1,7 @@
 // src/app/api/lib/services/organization.service.ts
 
 import { Organization } from '@/models/Organization';
+import { Team } from '@/models/Team';
 import { DBProviderFactory } from '../factories/DBFactory';
 import { inject, injectable } from 'inversify';
 import { DB_TYPES } from '../symbols/Symbols';
@@ -8,10 +9,13 @@ import { DB_TYPES } from '../symbols/Symbols';
 @injectable()
 export class OrganizationService {
   private organizationRepo;
+  private teamRepo;
   private organizationCollection = 'organizations';
+  private teamCollection = 'teams';
 
   constructor(@inject(DB_TYPES.DBProviderFactory) private dbFactory: DBProviderFactory) {
     this.organizationRepo = this.dbFactory.createDBProvider();
+    this.teamRepo = this.dbFactory.createDBProvider();
   }
 
   async listOrganizations(): Promise<Organization[]> {
@@ -41,10 +45,15 @@ export class OrganizationService {
     return allOrganizations.filter(org => org.createdBy === createdBy);
   }
 
-  async getOrganizationTeams(organizationId: string): Promise<any[]> {
-    // TODO: Implement organization teams logic
-    // This might need to interact with a separate Team service
-    return [];
+  async getOrganizationTeams(organizationId: string): Promise<Team[]> {
+    try {
+      // Get all teams and filter by organizationId
+      const allTeams = await this.teamRepo.findAll(this.teamCollection);
+      return allTeams.filter((team: Team) => team.organizationId === organizationId);
+    } catch (error) {
+      console.error('Error fetching organization teams:', error);
+      throw new Error('Failed to fetch organization teams');
+    }
   }
 
   async getOrganizationMembers(organizationId: string): Promise<any[]> {

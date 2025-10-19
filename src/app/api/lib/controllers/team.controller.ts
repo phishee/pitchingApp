@@ -21,7 +21,7 @@ export class TeamController {
     }
   }
 
-  async getTeams(_req: NextRequest): Promise<NextResponse> { // Fix: Prefix unused param with underscore
+  async getTeams(_req: NextRequest): Promise<NextResponse> { 
     try {
       const teams = await this.teamService.listTeams();
       return NextResponse.json(teams);
