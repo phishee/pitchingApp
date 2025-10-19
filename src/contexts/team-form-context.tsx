@@ -43,7 +43,7 @@ interface TeamFormContextState {
 interface TeamFormContextActions {
   // Form data actions
   setFormData: (data: Partial<TeamFormData>) => void;
-  updateField: (field: keyof TeamFormData, value: string) => void;
+  updateField: (field: keyof TeamFormData, value: string | object) => void;
   resetForm: () => void;
   
   // Form state actions
