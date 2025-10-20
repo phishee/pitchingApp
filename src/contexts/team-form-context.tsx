@@ -14,6 +14,7 @@ export interface TeamFormData {
   logoUrl: string;
   teamCode: string;
   color: TeamColor;
+  facilityId: string;
 }
 
 // Validation errors interface
@@ -21,6 +22,7 @@ export interface TeamFormErrors {
   name?: string;
   description?: string;
   teamCode?: string;
+  facilityId?: string;
   general?: string;
 }
 
@@ -73,6 +75,7 @@ const initialFormData: TeamFormData = {
   logoUrl: '',
   teamCode: '',
   color: getDefaultTeamColor(),
+  facilityId: '',
 };
 
 // Initial context state
@@ -153,6 +156,7 @@ export function TeamFormProvider({ children }: { children: ReactNode }) {
           logoUrl: existingTeam.logoUrl || '',
           teamCode: existingTeam.teamCode,
           color: existingTeam.color || getDefaultTeamColor(),
+          facilityId: existingTeam.facilityId || '',
         },
         existingTeam,
         errors: {},
@@ -237,6 +241,10 @@ export function useTeamFormValidation() {
 
       case 'color':
         // Color validation is handled by the color picker component
+        break;
+
+      case 'facilityId':
+        // Facility ID validation is optional - can be empty
         break;
 
       default:

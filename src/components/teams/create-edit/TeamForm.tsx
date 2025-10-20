@@ -13,6 +13,7 @@ import { TeamBasicInfo } from './TeamBasicInfo';
 import { TeamCodeGenerator } from './TeamCodeGenerator';
 import { TeamImageUpload } from './TeamImageUpload';
 import { TeamColorPicker } from './TeamColorPicker';
+import { TeamFacilitySelector } from './TeamFacilitySelector';
 import { TeamFormActions } from './TeamFormActions';
 
 interface TeamFormProps {
@@ -52,6 +53,7 @@ export function TeamForm({ onSubmit, onCancel }: TeamFormProps) {
         logoUrl: formData.logoUrl,
         teamCode: formData.teamCode,
         color: formData.color, // ✅ Include color data
+        facilityId: formData.facilityId || undefined, // ✅ Include facility ID
         organizationId: existingTeam?.organizationId || currentOrganization?._id || '',
         createdAt: existingTeam?.createdAt || new Date(),
         updatedAt: new Date(),
@@ -169,6 +171,7 @@ export function TeamForm({ onSubmit, onCancel }: TeamFormProps) {
         <div className="space-y-6">
           <TeamBasicInfo />
           <TeamCodeGenerator />
+          <TeamFacilitySelector />
         </div>
 
         {/* Right Column */}
