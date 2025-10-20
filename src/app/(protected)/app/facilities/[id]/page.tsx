@@ -287,19 +287,19 @@ function FacilityDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Bookable</span>
-                <Badge variant={facility.isBookable ? "default" : "secondary"}>
+                <Badge variant={facility.isBookable ? "primary" : "secondary"}>
                   {facility.isBookable ? "Yes" : "No"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Requires Approval</span>
-                <Badge variant={facility.requiresApproval ? "default" : "secondary"}>
+                <Badge variant={facility.requiresApproval ? "primary" : "secondary"}>
                   {facility.requiresApproval ? "Yes" : "No"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Public Facility</span>
-                <Badge variant={facility.public ? "default" : "secondary"}>
+                <Badge variant={facility.public ? "primary" : "secondary"}>
                   {facility.public ? "Yes" : "No"}
                 </Badge>
               </div>
@@ -326,9 +326,9 @@ function FacilityDetailPage() {
               </div>
               <div>
                 <span className="text-sm font-medium">Created By</span>
-                <p className="text-sm text-muted-foreground">
-                  {facility.createdBy.name}
-                </p>
+                {/* <p className="text-sm text-muted-foreground">
+                  {facility.createdBy.firstName} {facility.createdBy.lastName}
+                </p> */}
               </div>
             </CardContent>
           </Card>
@@ -336,15 +336,20 @@ function FacilityDetailPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
+      {/* <ConfirmDismissDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDelete}
+        // description={`Are you sure you want to delete "${facility.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      /> */}
       <ConfirmDismissDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         onConfirm={handleDelete}
-        title="Delete Facility"
-        description={`Are you sure you want to delete "${facility.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        isLoading={isDeleting}
+        onCancel={() => setShowDeleteDialog(false)}
       />
     </div>
   );

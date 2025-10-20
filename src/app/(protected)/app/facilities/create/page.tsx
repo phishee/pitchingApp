@@ -76,9 +76,9 @@ function CreateFacilityForm() {
         organizationId: currentOrganization._id,
         createdBy: {
           userId: user.userId,
-          name: user.name,
-          email: user.email,
-          profileImageUrl: user.profileImageUrl || ''
+          // name: user.name,
+          // email: user.email,
+          // profileImageUrl: user.profileImageUrl || ''
         }
       };
 

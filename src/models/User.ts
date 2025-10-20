@@ -33,5 +33,8 @@ export interface UserProfile {
 }
 export interface UserInfo {
   userId: string;
-  memberId: string;
+  memberId?: string;
+  name?: string;
+  email?: string;
+  profileImageUrl?: string;
 }
