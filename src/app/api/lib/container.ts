@@ -9,6 +9,7 @@ import { WorkoutModule } from './modules/workout.module';
 import { EventModule } from './modules/event.module';
 import { WorkoutAssignmentModule } from './modules/workoutAssignment.module';
 import { eventManagementModule } from './modules/eventManagement.module';
+import { FacilityModule } from './modules/facility.module';
 
 const container = new Container();
 container.load(dbModule);
@@ -21,5 +22,6 @@ container.load(WorkoutModule);
 container.load(EventModule);
 container.load(WorkoutAssignmentModule);
 container.load(eventManagementModule);
+container.load(FacilityModule);
 
 export default container;

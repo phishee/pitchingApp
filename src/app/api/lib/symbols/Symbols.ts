@@ -73,3 +73,10 @@ export const EVENT_MANAGEMENT_TYPES = {
   EventGeneratorService: Symbol.for('EventGeneratorService'),
   RecurrenceCalculatorService: Symbol.for('RecurrenceCalculatorService'),
 } as const;
+
+// Add facility symbols
+export const FACILITY_TYPES = {
+  FacilityService: Symbol.for('FacilityService'),
+  FacilityManager: Symbol.for('FacilityManager'),
+  FacilityController: Symbol.for('FacilityController'),
+} as const;

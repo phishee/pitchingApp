@@ -3,8 +3,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useUser } from './user.context';
 import { organizationApi } from '@/app/services-client/organizationApi';
+import { facilityApi } from '@/app/services-client/facilityApi';
 import { Organization } from '@/models/Organization';
 import { Team } from '@/models/Team';
+import { Facility } from '@/models/Facility';
 
 interface OrganizationContextType {
   currentOrganization: Organization | null;
@@ -14,10 +16,15 @@ interface OrganizationContextType {
   organizations: Organization[];
   teams: Team[];
   organizationTeams: Team[];
+  facilities: Facility[];
+  organizationFacilities: Facility[];
   setOrganizations: (orgs: Organization[]) => void;
   setTeams: (teams: Team[]) => void;
   setOrganizationTeams: (teams: Team[]) => void;
+  setFacilities: (facilities: Facility[]) => void;
+  setOrganizationFacilities: (facilities: Facility[]) => void;
   loadOrganizationTeams: () => Promise<void>;
+  loadOrganizationFacilities: () => Promise<void>;
   refreshOrganizationData: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -32,6 +39,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [organizationTeams, setOrganizationTeams] = useState<Team[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [organizationFacilities, setOrganizationFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,6 +102,27 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
   }, [currentOrganization?._id]);
 
+  // Load organization facilities
+  const loadOrganizationFacilities = useCallback(async () => {
+    if (!currentOrganization?._id || typeof currentOrganization._id !== 'string') {
+      setOrganizationFacilities([]);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const facilities = await facilityApi.getFacilitiesByOrganization(currentOrganization._id);
+      setOrganizationFacilities(facilities);
+    } catch (err) {
+      console.error('Error loading organization facilities:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load organization facilities');
+      setOrganizationFacilities([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentOrganization?._id]);
+
   // Refresh all organization data
   const refreshOrganizationData = useCallback(async () => {
     if (!user?.currentOrganizationId) return;
@@ -108,6 +138,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       // Refresh teams for the current organization
       const teams = await organizationApi.getOrganizationTeams(organization._id);
       setOrganizationTeams(teams);
+
+      // Refresh facilities for the current organization
+      const facilities = await facilityApi.getFacilitiesByOrganization(organization._id);
+      setOrganizationFacilities(facilities);
 
     } catch (err) {
       console.error('Error refreshing organization data:', err);
@@ -127,6 +161,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     loadOrganizationTeams();
   }, [loadOrganizationTeams]);
 
+  // Load organization facilities when current organization changes
+  useEffect(() => {
+    loadOrganizationFacilities();
+  }, [loadOrganizationFacilities]);
+
   // Clear data when user logs out
   useEffect(() => {
     if (!user) {
@@ -135,6 +174,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setOrganizations([]);
       setTeams([]);
       setOrganizationTeams([]);
+      setFacilities([]);
+      setOrganizationFacilities([]);
       setError(null);
     }
   }, [user]);
@@ -147,10 +188,15 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     organizations,
     teams,
     organizationTeams,
+    facilities,
+    organizationFacilities,
     setOrganizations,
     setTeams,
     setOrganizationTeams,
+    setFacilities,
+    setOrganizationFacilities,
     loadOrganizationTeams,
+    loadOrganizationFacilities,
     refreshOrganizationData,
     isLoading,
     error,

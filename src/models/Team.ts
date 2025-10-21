@@ -15,6 +15,7 @@ export interface Team {
   createdAt: Date;
   updatedAt: Date;
   organizationId: string;
+  facilityId?: string;
 }
 
 // Original TeamMember (for database storage)

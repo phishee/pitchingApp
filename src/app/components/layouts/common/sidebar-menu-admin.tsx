@@ -1,7 +1,7 @@
 // src/app/components/layouts/common/sidebar-menu-admin.tsx
 'use client';
 
-import { Home, Users, Settings, Building2 } from 'lucide-react';
+import { Home, Users, Settings, Building2, MapPin } from 'lucide-react';
 import { AccordionMenu, AccordionMenuGroup, AccordionMenuItem } from '@/components/ui/accordion-menu';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,6 +21,11 @@ const ADMIN_MENU = [
     title: 'Users',
     path: '/app/users',
     icon: Users,
+  },
+  {
+    title: 'Facilities',
+    path: '/app/facilities',
+    icon: MapPin,
   },
   {
     title: 'Settings',

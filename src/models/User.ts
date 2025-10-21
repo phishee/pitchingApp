@@ -31,7 +31,10 @@ export interface UserProfile {
   email: string;
   profileImageUrl: string;
 }
-export interface UserInfo {
+export interface UserInfo { // updated
   userId: string;
-  memberId: string;
+  memberId?: string;
+  name?: string;
+  email?: string;
+  profileImageUrl?: string;
 }
