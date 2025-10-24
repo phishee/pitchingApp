@@ -9,10 +9,10 @@ const nextConfig = {
     ],
   },
   // Prevent auto-restart loop
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
-  },
+  // onDemandEntries: {
+  //   maxInactiveAge: 25 * 1000,
+  //   pagesBufferLength: 2,
+  // },
   // Disable webpack watch mode warnings
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
