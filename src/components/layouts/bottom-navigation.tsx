@@ -74,8 +74,7 @@ export function BottomNavigation() {
                 }`}
               >
                 <IconComponent 
-                  className="w-5 h-5" 
-                  style={{ color: 'white' }}
+                  className="w-5 h-5 text-white" 
                 />
                 {showLabels && (
                   <span className="text-xs font-medium">{item.label}</span>
