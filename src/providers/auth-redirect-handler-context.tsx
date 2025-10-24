@@ -21,14 +21,6 @@ export function AuthRedirectHandler({ children }: { children: React.ReactNode })
     const isAuthRoute = authRoutes.includes(pathname);
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-    console.log('Redirect handler:', {
-      pathname,
-      userFromFirebase: !!userFromFirebase,
-      user: !!user,
-      token: !!token,
-      isAuthRoute,
-      isProtectedRoute
-    });
 
     // If user has Firebase auth and token, but we're on auth pages
     if (userFromFirebase && token && isAuthRoute) {

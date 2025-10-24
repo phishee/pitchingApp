@@ -1,23 +1,26 @@
+// src/app/(protected)/app/layout.tsx
 "use client";
 import { Sidebar } from "@/app/components/layouts/common/sidebar";
+import { MobileHeader } from "@/components/layouts/mobile-header";
+import { BottomNavigation } from "@/components/layouts/bottom-navigation";
 import { useUser } from "@/providers/user.context";
+import { useLayout } from "@/providers/layout-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NO_TEAM_CONFIG } from '@/config/no-team.config';
 import NoTeamWrapper from "@/components/common/no-team/no-team-wrapper";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useUser(); // Add isLoading
+  const { user, isLoading } = useUser();
+  const { isMobile, sidebarOpen } = useLayout();
   const router = useRouter();
 
   useEffect(() => {
-    // Only redirect if not loading and no user
     if (!isLoading && !user) {
       router.push('/sign-in');
     }
-  }, [user, isLoading, router]); // Add isLoading dependency
+  }, [user, isLoading, router]);
 
-  // Show loading while checking auth state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -29,7 +32,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // Show redirecting state if no user (before redirect happens)
   if (!user) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -42,17 +44,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen w-full">
-      <Sidebar />
-      <main className="grow ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md">
-        <NoTeamWrapper 
-          excludePages={NO_TEAM_CONFIG.EXCLUDED_PAGES}
-          excludePatterns={NO_TEAM_CONFIG.EXCLUDED_PATTERNS}
-          showForAdmins={NO_TEAM_CONFIG.SHOW_FOR_ADMINS}
-        >
-          {children}
-        </NoTeamWrapper>
-      </main>
+    <div className="relative h-screen w-full">
+      {/* Mobile Header - Fixed at top */}
+      <MobileHeader />
+      
+      {/* Main Layout Container */}
+      <div className="flex h-full w-full">
+        {/* Desktop Sidebar */}
+        {!isMobile && sidebarOpen && <Sidebar />}
+        
+        {/* Main Content */}
+        <main className={`grow ${isMobile ? 'pt-16 pb-16' : 'ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md'}`}>
+          <NoTeamWrapper 
+            excludePages={NO_TEAM_CONFIG.EXCLUDED_PAGES}
+            excludePatterns={NO_TEAM_CONFIG.EXCLUDED_PATTERNS}
+            showForAdmins={NO_TEAM_CONFIG.SHOW_FOR_ADMINS}
+          >
+            {children}
+          </NoTeamWrapper>
+        </main>
+      </div>
+      
+      {/* Bottom Navigation for Mobile - Fixed at bottom */}
+      <BottomNavigation />
     </div>
   );
 }
