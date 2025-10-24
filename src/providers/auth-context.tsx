@@ -136,24 +136,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Separate function to handle navigation after login/signup
   const navigateAfterAuth = async (firebaseUser: FirebaseUser) => {
     try {
-      console.log('🚀 Navigating after auth for user:', firebaseUser.uid);
       
       // Check if user exists in database using the unauthenticated check method
       const result = await userApi.checkUserExists(firebaseUser.uid);
       
-      console.log('📊 Auth navigation check result:', result);
       
       if (result.exists && result.user) {
-        console.log('✅ User exists in DB, navigating to dashboard');
         // User exists - go to dashboard
         router.push('/app/dashboard');
       } else {
-        console.log('❌ User does not exist in DB, navigating to onboarding');
         // User doesn't exist - go to onboarding
         router.push('/onboarding');
       }
     } catch (error: any) {
-      console.error('❌ Error checking user during navigation:', error);
       // On any error, go to onboarding
       router.push('/onboarding');
     }
@@ -176,7 +171,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Navigate based on user status
       await navigateAfterAuth(userCredential.user);
     } catch (error: any) {
-      console.error('Login failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
