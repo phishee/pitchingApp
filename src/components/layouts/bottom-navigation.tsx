@@ -3,41 +3,86 @@
 
 import { useLayout } from '@/providers/layout-context';
 import { useUser } from '@/providers/user.context';
+import { useTeam } from '@/providers/team-context';
 import { getBottomNavItems } from '@/data/mobile-menus/mobile-menu-items';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import { getDefaultTeamColor } from '@/lib/colorUtils';
 
 export function BottomNavigation() {
   const { isMobile, bottomNavVisible } = useLayout();
   const { user } = useUser();
+  const { currentTeam } = useTeam();
   const pathname = usePathname();
+  const [showLabels, setShowLabels] = useState(false);
+  const { scrollDirection, isScrolling } = useScrollDirection();
+  const [shouldHide, setShouldHide] = useState(false);
   
+  // Update hide state based on scroll - MOVED BEFORE EARLY RETURN
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    
+    // Always show when at the top
+    if (scrollY < 50) {
+      setShouldHide(false);
+      return;
+    }
+    
+    // Hide when scrolling down, show when scrolling up
+    if (isScrolling) {
+      setShouldHide(scrollDirection === 'down');
+    }
+  }, [scrollDirection, isScrolling]);
+  
+  // Early return AFTER all hooks
   if (!isMobile || !bottomNavVisible || !user?.role) return null;
+  
+  // Get team colors with fallback
+  const teamColors = currentTeam?.color || getDefaultTeamColor();
+  const primaryColor = teamColors.primary;
+  const secondaryColor = teamColors.secondary;
   
   // Get menu items for the user's role
   const menuItems = getBottomNavItems(user.role as 'athlete' | 'coach' | 'admin');
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-1 z-40">
-      <div className="flex justify-around items-center h-12">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`flex flex-col items-center space-y-0.5 px-2 py-1 rounded-lg transition-colors ${
-                isActive 
-                  ? 'text-blue-600 bg-blue-50' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <div className="text-base">{item.icon}</div>
-              <span className="text-xs font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
+    <nav className={`fixed bottom-6 left-4 right-4 z-40 transition-transform duration-300 ease-in-out ${
+      shouldHide ? 'translate-y-full' : 'translate-y-0'
+    }`}>
+      <div 
+        className="backdrop-blur-sm rounded-full px-4 py-3 shadow-lg"
+        style={{ 
+          backgroundColor: primaryColor,
+          opacity: 0.9
+        }}
+      >
+        <div className="flex justify-around items-center">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const IconComponent = item.icon;
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-full transition-all duration-200 ${
+                  isActive 
+                    ? 'text-white bg-white/20' 
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <IconComponent 
+                  className="w-5 h-5 text-white" 
+                />
+                {showLabels && (
+                  <span className="text-xs font-medium">{item.label}</span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
