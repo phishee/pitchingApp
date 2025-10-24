@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTeamForm, useTeamFormValidation } from '@/contexts/team-form-context';
+import { useTeamForm, useTeamFormValidation } from '@/providers/team-form-context';
 import { teamApi } from '@/app/services-client/teamApi';
 import { useRouter } from 'next/navigation';
 import { useOrganization } from '@/providers/organization-context';

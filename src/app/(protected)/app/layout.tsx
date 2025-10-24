@@ -3,6 +3,8 @@
 import { Sidebar } from "@/app/components/layouts/common/sidebar";
 import { MobileHeader } from "@/components/layouts/mobile-header";
 import { BottomNavigation } from "@/components/layouts/bottom-navigation";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { useUser } from "@/providers/user.context";
 import { useLayout } from "@/providers/layout-context";
 import { useEffect } from "react";
@@ -67,6 +69,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       {/* Bottom Navigation for Mobile - Fixed at bottom */}
       <BottomNavigation />
+      
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
+      
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }

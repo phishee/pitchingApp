@@ -1,4 +1,4 @@
-// src/contexts/header-context.tsx
+// src/providers/header-context.tsx
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
