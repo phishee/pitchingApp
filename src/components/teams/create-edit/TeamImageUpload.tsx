@@ -156,11 +156,11 @@ export function TeamImageUpload() {
           </div>
         </div>
 
-        {formData.logoUrl ? (
+        {formData.logoUrl && formData.logoUrl.trim() ? (
           // Image Preview
           <div className="relative">
             <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden">
-              {/* {imageLoading ? (
+              {imageLoading ? (
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
                   <p className="text-sm text-gray-500">Loading image...</p>
@@ -173,10 +173,10 @@ export function TeamImageUpload() {
                     {formData.logoUrl}
                   </p>
                 </div>
-              ) : ( */}
+              ) : (
                 <div className="relative w-full h-full flex items-center justify-center p-4">
                   <Image
-                    src={imageUrl}
+                    src={formData.logoUrl}
                     alt="Team logo preview"
                     fill
                     className="object-contain"
@@ -185,7 +185,7 @@ export function TeamImageUpload() {
                     unoptimized
                   />
                 </div>
-              {/* )} */}
+              )}
             </div>
             <Button
               type="button"

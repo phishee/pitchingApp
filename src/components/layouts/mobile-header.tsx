@@ -1,28 +1,3 @@
-// // src/components/layouts/mobile-header.tsx
-// 'use client';
-
-// import { useLayout } from '@/providers/layout-context';
-// import { useUser } from '@/providers/user.context';
-
-// export function MobileHeader() {
-//   const { isMobile, headerVisible } = useLayout();
-//   const { user } = useUser();
-  
-//   if (!isMobile || !headerVisible) return null;
-  
-//   return (
-//     <header className="fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 py-3">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-lg font-semibold text-gray-900">
-//           {user?.role === 'coach' ? 'Coach Dashboard' : 'Athlete Dashboard'}
-//         </h1>
-//         {/* Placeholder for future mobile header actions */}
-//         <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-//       </div>
-//     </header>
-//   );
-// }
-
 // src/components/layouts/mobile-header.tsx
 'use client';
 
@@ -32,6 +7,8 @@ import { MobileUserProfile } from './mobile-user-profile';
 import { PWAStatus } from '@/components/pwa/pwa-status';
 import { ArrowLeftIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import { useState, useEffect } from 'react';
 
 export function MobileHeader() {
   const { isMobile, headerVisible } = useLayout();
@@ -44,7 +21,26 @@ export function MobileHeader() {
     isLoading 
   } = useHeader();
   const router = useRouter();
+  const { scrollDirection, isScrolling } = useScrollDirection();
+  const [shouldHide, setShouldHide] = useState(false);
   
+  // Update hide state based on scroll - MOVED BEFORE EARLY RETURN
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    
+    // Always show when at the top
+    if (scrollY < 50) {
+      setShouldHide(false);
+      return;
+    }
+    
+    // Hide when scrolling down, show when scrolling up
+    if (isScrolling) {
+      setShouldHide(scrollDirection === 'down');
+    }
+  }, [scrollDirection, isScrolling]);
+  
+  // Early return AFTER all hooks
   if (!isMobile || !headerVisible) return null;
   
   // Default back action (browser back)
@@ -63,11 +59,13 @@ export function MobileHeader() {
     }
     return <MobileUserProfile />;
   };
-  
+
   // Minimal variant
   if (variant === 'minimal') {
     return (
-      <header className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 py-2">
+      <header className={`fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 py-2 transition-transform duration-300 ease-in-out ${
+        shouldHide ? '-translate-y-full' : 'translate-y-0'
+      }`}>
         <div className="flex items-center justify-between h-10">
           {showBackButton && (
             <button
@@ -88,7 +86,9 @@ export function MobileHeader() {
   
   // Full variant (default)
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 py-3">
+    <header className={`fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 py-3 transition-transform duration-300 ease-in-out ${
+      shouldHide ? '-translate-y-full' : 'translate-y-0'
+    }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {showBackButton && (

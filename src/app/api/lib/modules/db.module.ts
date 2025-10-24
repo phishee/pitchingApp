@@ -7,8 +7,8 @@ import { DBProviderFactory } from '../factories/DBFactory';
 
 export const dbModule: ContainerModule = new ContainerModule(
     (options: ContainerModuleLoadOptions) => {
-        options.bind<IDatabase>(DB_TYPES.MongoDBProvider).to(MongoDBProvider);
-        options.bind(DB_TYPES.DBProviderFactory).to(DBProviderFactory);
+        options.bind<IDatabase>(DB_TYPES.MongoDBProvider).to(MongoDBProvider).inSingletonScope();
+        options.bind(DB_TYPES.DBProviderFactory).to(DBProviderFactory).inSingletonScope();
     }
 );
 
