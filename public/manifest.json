@@ -1,0 +1,67 @@
+{
+    "name": "Pitching App - Baseball Training",
+    "short_name": "Pitching",
+    "description": "Professional baseball pitching training and team management app",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1f2937",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en",
+    "categories": ["sports", "health", "fitness"],
+    "icons": [
+      {
+        "src": "/assets/images/logo-1.png",
+        "sizes": "204x204",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/assets/images/logo-2.png",
+        "sizes": "204x204",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/assets/images/logo-3.png",
+        "sizes": "133x133",
+        "type": "image/png",
+        "purpose": "any"
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/assets/images/logo-1.png",
+        "sizes": "204x204",
+        "type": "image/png",
+        "form_factor": "narrow"
+      }
+    ],
+    "shortcuts": [
+      {
+        "name": "Dashboard",
+        "short_name": "Dashboard",
+        "description": "View your training dashboard",
+        "url": "/app",
+        "icons": [
+          {
+            "src": "/assets/images/logo-1.png",
+            "sizes": "204x204"
+          }
+        ]
+      },
+      {
+        "name": "Workouts",
+        "short_name": "Workouts",
+        "description": "Access your workout library",
+        "url": "/app/workouts",
+        "icons": [
+          {
+            "src": "/assets/images/logo-1.png",
+            "sizes": "204x204"
+          }
+        ]
+      }
+    ]
+  }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useTeamForm } from '@/contexts/team-form-context';
+import { useTeamForm } from '@/providers/team-form-context';
 import { Upload, Image as ImageIcon, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 

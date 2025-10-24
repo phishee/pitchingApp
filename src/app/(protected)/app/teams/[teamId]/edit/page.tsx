@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import { TeamFormProvider } from '@/contexts/team-form-context';
+import { TeamFormProvider } from '@/providers/team-form-context';
 import { TeamFormPage } from '@/components/teams/create-edit';
 
 export default function EditTeamPage() {

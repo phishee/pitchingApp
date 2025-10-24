@@ -13,7 +13,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { facilityApi } from '@/app/services-client/facilityApi';
 import { useOrganization } from '@/providers/organization-context';
 import { useUser } from '@/providers/user.context';
-import { FacilityFormProvider, useFacilityForm, useFacilityFormValidation } from '@/contexts/facility-form-context';
+import { FacilityFormProvider, useFacilityForm, useFacilityFormValidation } from '@/providers/facility-form-context';
 import { toast } from 'sonner';
 
 // Available amenities options

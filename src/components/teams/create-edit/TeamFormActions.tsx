@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useTeamForm } from '@/contexts/team-form-context';
+import { useTeamForm } from '@/providers/team-form-context';
 import { Save, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 

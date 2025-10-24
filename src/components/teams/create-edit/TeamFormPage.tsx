@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useTeamForm } from '@/contexts/team-form-context';
+import { useTeamForm } from '@/providers/team-form-context';
 import { teamApi } from '@/app/services-client/teamApi';
 import { TeamForm } from './TeamForm';
 import { Container } from '@/components/common/container';

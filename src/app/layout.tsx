@@ -8,7 +8,9 @@ import { UserProvider } from '@/providers/user.context';
 import { TeamProvider } from '@/providers/team-context';
 import { AuthRedirectHandler } from '@/providers/auth-redirect-handler-context';
 import { LayoutProvider } from '@/providers/layout-context';
-import { HeaderProvider } from '@/providers/header-context'
+import { HeaderProvider } from '@/providers/header-context';
+import { PWAProvider } from '@/providers/pwa-context';
+import Script from 'next/script';
 
 export default function RootLayout({
   children,
@@ -17,6 +19,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
+      <head>
+        <meta name="application-name" content="Pitching App" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Pitching App" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#1f2937" />
+        <meta name="msapplication-TileColor" content="#1f2937" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/assets/images/logo-1.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/logo-1.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/logo-1.png" />
+      </head>
       <body
         className={cn(
           'antialiased flex h-full text-base text-foreground bg-gray-100'
@@ -28,10 +44,12 @@ export default function RootLayout({
               <TeamProvider>
                 <ThemeProvider>
                   <LayoutProvider>
-                    <HeaderProvider> {/* Add this wrapper */}
-                      <AuthRedirectHandler>
-                        {children}
-                      </AuthRedirectHandler>
+                    <HeaderProvider>
+                      <PWAProvider>
+                        <AuthRedirectHandler>
+                          {children}
+                        </AuthRedirectHandler>
+                      </PWAProvider>
                     </HeaderProvider>
                   </LayoutProvider>
                 </ThemeProvider>
@@ -39,6 +57,7 @@ export default function RootLayout({
             </OrganizationProvider>
           </UserProvider>
         </AuthProvider>
+        <Script src="/register-sw.js" strategy="afterInteractive" />
       </body>
     </html>
   );
