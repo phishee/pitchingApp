@@ -7,6 +7,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { useUser } from "@/providers/user.context";
 import { useLayout } from "@/providers/layout-context";
+import { useHeader } from "@/providers/header-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NO_TEAM_CONFIG } from '@/config/no-team.config';
@@ -15,7 +16,14 @@ import NoTeamWrapper from "@/components/common/no-team/no-team-wrapper";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useUser();
   const { isMobile, sidebarOpen } = useLayout();
+  const { setVariant, setTitle } = useHeader();
   const router = useRouter();
+
+  // Set the no-background header for all pages in this layout
+  useEffect(() => {
+    setVariant('no-background');
+    setTitle('My Plan');
+  }, [setVariant, setTitle]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -56,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {!isMobile && sidebarOpen && <Sidebar />}
         
         {/* Main Content */}
-        <main className={`grow ${isMobile ? 'pt-16 pb-16' : 'ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md'}`}>
+        <main className={`grow ${isMobile ? 'pt-20 pb-16' : 'ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md'}`}>
           <NoTeamWrapper 
             excludePages={NO_TEAM_CONFIG.EXCLUDED_PAGES}
             excludePatterns={NO_TEAM_CONFIG.EXCLUDED_PATTERNS}

@@ -11,6 +11,7 @@ import { LayoutProvider } from '@/providers/layout-context';
 import { HeaderProvider } from '@/providers/header-context';
 import { PWAProvider } from '@/providers/pwa-context';
 import Script from 'next/script';
+import { LandscapeWarning } from '@/components/common/landscape-warning';
 
 export default function RootLayout({
   children,
@@ -25,8 +26,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Pitching App" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#1f2937" />
-        <meta name="msapplication-TileColor" content="#1f2937" />
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="msapplication-TileColor" content="#ffffff" />
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/assets/images/logo-1.png" />
@@ -49,6 +50,7 @@ export default function RootLayout({
                         <AuthRedirectHandler>
                           {children}
                         </AuthRedirectHandler>
+                        {/* <LandscapeWarning /> */}
                       </PWAProvider>
                     </HeaderProvider>
                   </LayoutProvider>

@@ -7,8 +7,7 @@ import { useTeam } from '@/providers/team-context';
 import { getBottomNavItems } from '@/data/mobile-menus/mobile-menu-items';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import { useState } from 'react';
 import { getDefaultTeamColor } from '@/lib/colorUtils';
 
 export function BottomNavigation() {
@@ -17,26 +16,8 @@ export function BottomNavigation() {
   const { currentTeam } = useTeam();
   const pathname = usePathname();
   const [showLabels, setShowLabels] = useState(false);
-  const { scrollDirection, isScrolling } = useScrollDirection();
-  const [shouldHide, setShouldHide] = useState(false);
   
-  // Update hide state based on scroll - MOVED BEFORE EARLY RETURN
-  useEffect(() => {
-    const scrollY = window.scrollY;
-    
-    // Always show when at the top
-    if (scrollY < 50) {
-      setShouldHide(false);
-      return;
-    }
-    
-    // Hide when scrolling down, show when scrolling up
-    if (isScrolling) {
-      setShouldHide(scrollDirection === 'down');
-    }
-  }, [scrollDirection, isScrolling]);
-  
-  // Early return AFTER all hooks
+  // Early return
   if (!isMobile || !bottomNavVisible || !user?.role) return null;
   
   // Get team colors with fallback
@@ -48,9 +29,7 @@ export function BottomNavigation() {
   const menuItems = getBottomNavItems(user.role as 'athlete' | 'coach' | 'admin');
   
   return (
-    <nav className={`fixed bottom-6 left-4 right-4 z-40 transition-transform duration-300 ease-in-out ${
-      shouldHide ? 'translate-y-full' : 'translate-y-0'
-    }`}>
+    <nav className="fixed bottom-6 left-4 right-4 z-40">
       <div 
         className="backdrop-blur-sm rounded-full px-4 py-3 shadow-lg"
         style={{ 
