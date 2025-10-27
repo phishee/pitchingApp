@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
-export type HeaderVariant = 'minimal' | 'full';
+export type HeaderVariant = 'minimal' | 'full' | 'no-background';
 
 interface HeaderContextType {
   // Title management

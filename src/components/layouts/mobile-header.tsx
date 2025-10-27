@@ -5,7 +5,7 @@ import { useLayout } from '@/providers/layout-context';
 import { useHeader } from '@/providers/header-context';
 import { MobileUserProfile } from './mobile-user-profile';
 import { PWAStatus } from '@/components/pwa/pwa-status';
-import { ArrowLeftIcon } from 'lucide-react';
+import { ArrowLeftIcon, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { useState, useEffect } from 'react';
@@ -23,20 +23,28 @@ export function MobileHeader() {
   const router = useRouter();
   const { scrollDirection, isScrolling } = useScrollDirection();
   const [shouldHide, setShouldHide] = useState(false);
+  const [shouldShowWhiteBackground, setShouldShowWhiteBackground] = useState(false);
   
-  // Update hide state based on scroll - MOVED BEFORE EARLY RETURN
+  // Update hide state and background based on scroll
   useEffect(() => {
     const scrollY = window.scrollY;
     
-    // Always show when at the top
+    // At the very top - transparent background
     if (scrollY < 50) {
       setShouldHide(false);
+      setShouldShowWhiteBackground(false);
       return;
     }
     
-    // Hide when scrolling down, show when scrolling up
-    if (isScrolling) {
-      setShouldHide(scrollDirection === 'down');
+    // When scrolling up - white background
+    if (isScrolling && scrollDirection === 'up') {
+      setShouldHide(false);
+      setShouldShowWhiteBackground(false);
+    }
+    // When scrolling down - transparent background
+    else if (isScrolling && scrollDirection === 'down') {
+      setShouldHide(false);
+      setShouldShowWhiteBackground(true);
     }
   }, [scrollDirection, isScrolling]);
   
@@ -60,11 +68,45 @@ export function MobileHeader() {
     return <MobileUserProfile />;
   };
 
+  // No background variant (like the image)
+  if (variant === 'no-background') {
+    return (
+      <header className={`fixed top-0 left-0 right-0 z-30 px-4 py-3 transition-all duration-300 ease-in-out ${
+        shouldShowWhiteBackground ? 'bg-white shadow-sm border-b border-gray-200' : 'bg-transparent'
+      }`}>
+        <div className="flex items-center justify-between">
+          {/* Left: User Profile */}
+          <div className="flex-shrink-0">
+            <MobileUserProfile />
+          </div>
+          
+          {/* Middle: Page Title */}
+          <div className="flex-1 text-center">
+            <h1 className="text-lg font-semibold text-gray-900">
+              {isLoading ? 'Loading...' : title}
+            </h1>
+          </div>
+          
+          {/* Right: Message Icon with notification badge */}
+          <div className="flex-shrink-0 relative">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <MessageCircle className="w-6 h-6 text-gray-600" />
+              {/* Notification badge */}
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   // Minimal variant
   if (variant === 'minimal') {
     return (
-      <header className={`fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 py-2 transition-transform duration-300 ease-in-out ${
+      <header className={`fixed top-0 left-0 right-0 z-30 px-4 py-2 transition-all duration-300 ease-in-out ${
         shouldHide ? '-translate-y-full' : 'translate-y-0'
+      } ${
+        shouldShowWhiteBackground ? 'bg-white border-b border-gray-200' : 'bg-transparent'
       }`}>
         <div className="flex items-center justify-between h-10">
           {showBackButton && (
@@ -86,8 +128,10 @@ export function MobileHeader() {
   
   // Full variant (default)
   return (
-    <header className={`fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 py-3 transition-transform duration-300 ease-in-out ${
+    <header className={`fixed top-0 left-0 right-0 z-30 px-4 py-3 transition-all duration-300 ease-in-out ${
       shouldHide ? '-translate-y-full' : 'translate-y-0'
+    } ${
+      shouldShowWhiteBackground ? 'bg-white shadow-sm border-b border-gray-200' : 'bg-transparent'
     }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
