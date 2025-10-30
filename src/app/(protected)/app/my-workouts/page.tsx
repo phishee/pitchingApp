@@ -1,9 +1,8 @@
-import React from 'react'
+'use client';
 
-function MyWorkoutsPage() {
-  return (
-    <div>MyWorkoutsPage</div>
-  )
+import React from 'react';
+import { UserWorkouts } from '@/components/my-workouts/user-workouts';
+
+export default function MyWorkoutsPage() {
+  return <UserWorkouts />;
 }
-
-export default MyWorkoutsPage
