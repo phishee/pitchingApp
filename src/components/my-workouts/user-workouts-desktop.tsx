@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUserEvent } from '@/providers/user-event-context';
 import { WeekDaySelector } from './week-day-selector';
 import { UserEventCard } from './user-event-card';
 
 export function UserWorkoutsDesktop() {
+  const router = useRouter();
   const { isLoading, error, enrichedEvents } = useUserEvent();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -29,8 +31,8 @@ export function UserWorkoutsDesktop() {
   };
 
   const handleEventClick = (event: typeof enrichedEvents[0]) => {
-    // TODO: Navigate to workout detail or start workout
-    console.log('Event clicked:', event.event.id);
+    // Navigate to workout detail page
+    router.push(`/app/my-workouts/${event.event.id}`);
   };
 
   if (error) {

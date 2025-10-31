@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUserEvent } from '@/providers/user-event-context';
 import { WeekDaySelector } from './week-day-selector';
 import { UserEventCard } from './user-event-card';
 
 export function UserWorkoutsMobile() {
+  const router = useRouter();
   const { isLoading, error, enrichedEvents, loadEventsForMonth } = useUserEvent();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [offsetX, setOffsetX] = useState(0);
@@ -86,8 +88,8 @@ export function UserWorkoutsMobile() {
   };
 
   const handleEventClick = (event: typeof enrichedEvents[0]) => {
-    // TODO: Navigate to workout detail or start workout
-    console.log('Event clicked:', event.event.id);
+    // Navigate to workout detail page
+    router.push(`/app/my-workouts/${event.event.id}`);
   };
 
   // Auto-load events when navigating to a different month

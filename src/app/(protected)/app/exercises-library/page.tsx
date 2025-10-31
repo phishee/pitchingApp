@@ -11,6 +11,9 @@ import { ExerciseCard } from '@/components/exercises/ExerciseCard';
 import { getTypeColor } from '@/lib/exerciseUtils';
 import { useRouter } from 'next/navigation';
 
+// Prevent static generation since this page uses client-side hooks and context
+export const dynamic = 'force-dynamic';
+
 export default function ExercisesLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');

@@ -87,33 +87,6 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
   const { user } = useUser();
   const { currentTeamMember } = useTeam();
 
-  // Add useEffect to watch workout changes
-  useEffect(() => {
-    if (workout) {
-      console.log('Workout updated:', {
-        id: workout.id,
-        name: workout.name,
-        exerciseCount: workout.flow?.exercises?.length || 0,
-        isDirty,
-        isEditing
-      });
-      
-      // You can add other side effects here:
-      // - Validation
-      // - Auto-save (debounced)
-      // - Analytics tracking
-      // - Form state management
-    }
-  }, [
-    workout?.id, 
-    workout?.name, 
-    workout?.description, 
-    workout?.flow?.exercises?.length,
-    workout?.flow?.questionnaires?.length,
-    workout?.flow?.warmup?.length,
-    isDirty, 
-    isEditing
-  ]);
 
   // Load workout data if in editing mode
   useEffect(() => {
@@ -250,15 +223,6 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
     setWorkoutState(prev => {
       if (!prev) return null;
       
-      // const exerciseWithConfig = {
-      //   ...exercise,
-      //   default_Metrics: {
-      //     sets: 3,
-      //   reps: 10,
-      //   duration: 60,
-      //   rest: 30
-      // };
-      
       return {
         ...prev,
         flow: {
@@ -270,41 +234,6 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
     setSelectedExercises(prev => [...prev, exercise]);
     setIsDirty(true);
   };
-
-  // const addExercise = (exercise: any) => {
-  //   // Add to selectedExercises with default config
-  //   setSelectedExercises(prev => {
-  //     // Check if exercise already exists
-  //     const exists = prev.some(ex => ex.id === exercise.id);
-  //     if (exists) return prev;
-      
-  //     // Add exercise with default config
-  //     const exerciseWithConfig = {
-  //       ...exercise,
-  //       sets: 3,
-  //       reps: 10,
-  //       duration: 60,
-  //       rest: 30
-  //     };
-      
-  //     return [...prev, exerciseWithConfig];
-  //   });
-    
-  //   // Update workout flow with just the ID
-  //   setWorkoutState(prev => {
-  //     if (!prev) return null;
-      
-  //     return {
-  //       ...prev,
-  //       flow: {
-  //         ...prev.flow,
-  //         exercises: [...prev.flow.exercises, { exercise_id: exercise.id }]
-  //       }
-  //     };
-  //   });
-    
-  //   setIsDirty(true);
-  // };
 
   const removeExercise = (exerciseId: string) => {
     setWorkoutState(prev => {

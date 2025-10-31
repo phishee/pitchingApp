@@ -51,23 +51,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError('');
       
-      console.log('🔍 Checking if user exists in DB:', userFromFirebase.uid);
-      
       // Use the unauthenticated check method to see if user exists in DB
       const result = await userApi.checkUserExists(userFromFirebase.uid);
       
-      console.log('📊 User check result:', result);
-      
       if (result.exists && result.user) {
-        console.log('✅ User exists in DB, setting user data');
         setUser(result.user);
       } else {
-        console.log('❌ User does not exist in DB, setting user to null');
         // User doesn't exist in DB yet (probably in onboarding)
         setUser(null);
       }
     } catch (error: any) {
-      console.error('❌ Error loading user:', error);
       setError('Failed to load user data');
       setUser(null);
     } finally {

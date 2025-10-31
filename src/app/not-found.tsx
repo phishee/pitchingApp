@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Home, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
+// Prevent static generation for 404 page
+export const dynamic = 'force-dynamic';
+
 export default function NotFound() {
   const router = useRouter();
 
