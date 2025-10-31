@@ -33,6 +33,7 @@ export interface Workout {
   description: string;
   flow: WorkoutFlow;
   tags: string[];
+  duration?: number;
 }
 
 // Extended workout with user information

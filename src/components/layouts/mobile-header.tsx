@@ -26,27 +26,27 @@ export function MobileHeader() {
   const [shouldShowWhiteBackground, setShouldShowWhiteBackground] = useState(false);
   
   // Update hide state and background based on scroll
-  useEffect(() => {
-    const scrollY = window.scrollY;
+  // useEffect(() => {
+  //   const scrollY = window.scrollY;
     
-    // At the very top - transparent background
-    if (scrollY < 50) {
-      setShouldHide(false);
-      setShouldShowWhiteBackground(false);
-      return;
-    }
+  //   // At the very top - transparent background
+  //   if (scrollY < 50) {
+  //     setShouldHide(false);
+  //     setShouldShowWhiteBackground(false);
+  //     return;
+  //   }
     
-    // When scrolling up - white background
-    if (isScrolling && scrollDirection === 'up') {
-      setShouldHide(false);
-      setShouldShowWhiteBackground(false);
-    }
-    // When scrolling down - transparent background
-    else if (isScrolling && scrollDirection === 'down') {
-      setShouldHide(false);
-      setShouldShowWhiteBackground(true);
-    }
-  }, [scrollDirection, isScrolling]);
+  //   // When scrolling up - white background
+  //   if (isScrolling && scrollDirection === 'up') {
+  //     setShouldHide(false);
+  //     setShouldShowWhiteBackground(false);
+  //   }
+  //   // When scrolling down - transparent background
+  //   else if (isScrolling && scrollDirection === 'down') {
+  //     setShouldHide(false);
+  //     setShouldShowWhiteBackground(true);
+  //   }
+  // }, [scrollDirection, isScrolling]);
   
   // Early return AFTER all hooks
   if (!isMobile || !headerVisible) return null;
@@ -71,8 +71,7 @@ export function MobileHeader() {
   // No background variant (like the image)
   if (variant === 'no-background') {
     return (
-      <header className={`fixed top-0 left-0 right-0 z-30 px-4 py-3 transition-all duration-300 ease-in-out ${
-        shouldShowWhiteBackground ? 'bg-white shadow-sm border-b border-gray-200' : 'bg-transparent'
+      <header className={`fixed top-0 left-0 right-0 z-30 px-4 py-3 transition-all duration-300 ease-in-out bg-white
       }`}>
         <div className="flex items-center justify-between">
           {/* Left: User Profile */}

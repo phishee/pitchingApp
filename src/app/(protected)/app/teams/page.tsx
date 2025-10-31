@@ -188,10 +188,10 @@ function TeamsPage() {
             placeholder="Search teams by name, code, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 rounded-full"
           />
         </div>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Badge 
             variant={filterRole === 'all' ? 'secondary' : 'outline'}
             className="cursor-pointer"
@@ -199,7 +199,7 @@ function TeamsPage() {
           >
             All Teams
           </Badge>
-        </div>
+        </div> */}
       </div>
 
       {/* Stats */}

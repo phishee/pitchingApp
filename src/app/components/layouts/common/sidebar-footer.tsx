@@ -9,14 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 export function SidebarFooter() {
   const { user } = useUser();
   
-  // Add this debug log
-  console.log(' SidebarFooter user data:', {
-    profileImageUrl: user?.profileImageUrl,
-    name: user?.name,
-    email: user?.email,
-    fullUser: user
-  });
-
   const getInitials = (name?: string) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();

@@ -13,6 +13,9 @@ import { Facility } from '@/models';
 import { toast } from 'sonner';
 import { ConfirmDismissDialog } from '@/components/common/confirm-dismiss-dialog';
 
+// Prevent static generation since this page uses client-side hooks and context
+export const dynamic = 'force-dynamic';
+
 function FacilityDetailPage() {
   const router = useRouter();
   const params = useParams();

@@ -48,7 +48,6 @@ export function WorkoutForm() {
   }, [isEditing, isInitialized, setWorkout]);
 
   useEffect(() => {
-    console.log('currentOrganization🤖🤖🤖', currentOrganization);
     if (currentOrganization) {
       setOrganizationId(currentOrganization._id);
     }

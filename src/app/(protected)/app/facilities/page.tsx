@@ -114,7 +114,7 @@ function FacilitiesPage() {
             <h1 className="text-3xl font-bold">Facilities</h1>
             <p className="text-muted-foreground">Manage your organization's facilities</p>
           </div>
-          <Button onClick={handleCreateFacility} disabled>
+          <Button className='rounded-full' onClick={handleCreateFacility} disabled>
             <Plus className="h-4 w-4 mr-2" />
             Create Facility
           </Button>
@@ -161,10 +161,7 @@ function FacilitiesPage() {
           <p className="text-muted-foreground">Manage facilities in {currentOrganization.name}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}>
-            {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
-          </Button>
-          <Button onClick={handleCreateFacility}>
+          <Button className='rounded-full' onClick={handleCreateFacility}>
             <Plus className="h-4 w-4 mr-2" />
             Create Facility
           </Button>
@@ -181,7 +178,7 @@ function FacilitiesPage() {
                 placeholder="Search facilities..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 rounded-full"
               />
             </div>
           </div>
@@ -209,6 +206,9 @@ function FacilitiesPage() {
                 <SelectItem value="maintenance">Maintenance</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}>
+            {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+          </Button>
           </div>
         </div>
 

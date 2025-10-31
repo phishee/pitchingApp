@@ -78,9 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Listen for auth state and token changes
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Auth state changed:', firebaseUser?.uid);
-      
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {      
       // Always set the Firebase user state first
       setUserFromFirebase(firebaseUser);
       

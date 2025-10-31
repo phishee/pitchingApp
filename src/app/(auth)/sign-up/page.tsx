@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Check, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -81,9 +81,8 @@ export default function Page() {
   }
 
   return (
-    <Suspense>
-      <Form {...form}>
-        <form onSubmit={handleSubmit} className="block w-full space-y-5">
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="block w-full space-y-5">
           <div className="space-y-1.5 pb-3">
             <h1 className="text-2xl font-semibold tracking-tight text-center">
               Sign Up to Metronic
@@ -222,6 +221,5 @@ export default function Page() {
           </div>
         </form>
       </Form>
-    </Suspense>
   );
 }
