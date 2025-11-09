@@ -49,7 +49,7 @@ function WeekTimeSlot({ time, weekDays, onEventClick }: WeekTimeSlotProps) {
                 <div className="space-y-1">
                   {eventsInSlot.map((event) => (
                     <EventCard
-                      key={event.id}
+                      key={event._id}
                       event={event}
                       onClick={onEventClick}
                       compact={true}

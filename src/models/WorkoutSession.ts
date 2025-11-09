@@ -120,7 +120,22 @@ export interface WorkoutSession {
     userId: string;
     role: 'athlete' | 'coach' | 'system';
   };
+
+  // ==========================================
+  // WORKFLOW PROGRESS
+  // ==========================================
+  progress: {
+    currentStep: WorkoutSessionStep;
+    updatedAt: Date;
+  };
 }
+
+export type WorkoutSessionStep =
+  | 'pre_workout_questionnaire'
+  | 'exercises'
+  | 'rpe'
+  | 'post_workout_questionnaire'
+  | 'summary';
 
 // ==========================================
 // EXERCISE DETAIL

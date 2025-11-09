@@ -4,7 +4,7 @@ import { Event } from '@/models';
 export const mockMemberEvents: Record<string, Event[]> = {
   'user1': [
     {
-      id: '1',
+      _id: '1',
       groupId: 'group_1',
       type: 'workout',
       organizationId: 'org-123',
@@ -33,7 +33,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
-      id: '2',
+      _id: '2',
       groupId: 'group_2',
       type: 'workout',
       organizationId: 'org-123',
@@ -61,7 +61,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
-      id: '3',
+      _id: '3',
       groupId: 'group_3',
       type: 'assessment',
       organizationId: 'org-123',
@@ -91,7 +91,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
   ],
   'user2': [
     {
-      id: '4',
+      _id: '4',
       groupId: 'group_4',
       type: 'workout',
       organizationId: 'org-123',
@@ -119,7 +119,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
-      id: '5',
+      _id: '5',
       groupId: 'group_5',
       type: 'workout',
       organizationId: 'org-123',
@@ -147,7 +147,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
-      id: '6',
+      _id: '6',
       groupId: 'group_6',
       type: 'workout',
       organizationId: 'org-123',
@@ -177,7 +177,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
   ],
   'user3': [
     {
-      id: '7',
+      _id: '7',
       groupId: 'group_7',
       type: 'workout',
       organizationId: 'org-123',
@@ -205,7 +205,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
       updatedAt: new Date('2025-01-01T10:00:00')
     },
     {
-      id: '8',
+      _id: '8',
       groupId: 'group_8',
       type: 'coaching_session',
       organizationId: 'org-123',
@@ -238,7 +238,7 @@ export const mockMemberEvents: Record<string, Event[]> = {
 // Default events for when no specific member is selected
 export const defaultEvents: Event[] = [
   {
-    id: 'default1',
+    _id: 'default1',
     groupId: 'group_default1',
     type: 'coaching_session',
     organizationId: 'org-123',

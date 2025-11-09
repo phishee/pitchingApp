@@ -28,7 +28,7 @@ export interface DayAvailability {
 // ===== MAIN EVENT MODEL =====
 
 export interface Event {
-  id: string; // MongoDB _id - unique per event instance
+  _id?: string; // MongoDB _id - unique per event instance
   groupId: string; // Groups related events for bulk operations
   type: EventType;
   organizationId: string;
@@ -170,14 +170,14 @@ export interface RepetitionConfig {
   }[];
 }
 
-export type EventTemplate = Omit<Event, 'id' | 'groupId' | 'startTime' | 'endTime' | 'sequenceNumber' | 'totalInSequence' | 'createdAt' | 'updatedAt' | 'participants'> & {
+export type EventTemplate = Omit<Event, '_id' | 'groupId' | 'startTime' | 'endTime' | 'sequenceNumber' | 'totalInSequence' | 'createdAt' | 'updatedAt' | 'participants'> & {
   participants?: Partial<Event['participants']>;
 };
 
 export type CreateEventRequest = 
   | {
       creationType: 'simple';
-      event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>;
+      event: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>;
     }
   | {
       creationType: 'repeated-single-user';

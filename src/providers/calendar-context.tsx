@@ -221,7 +221,7 @@ export function CalendarProvider({
       
       setEvents(prev => 
         prev.map(event => 
-          event.id === eventId ? calendarEvent : event
+          event._id === eventId ? calendarEvent : event
         )
       );
     } catch (error) {
@@ -238,7 +238,7 @@ export function CalendarProvider({
 
     try {
       await calendarService.deleteEvent(eventId);
-      setEvents(prev => prev.filter(event => event.id !== eventId));
+      setEvents(prev => prev.filter(event => event._id !== eventId));
     } catch (error) {
       console.error('Error deleting event:', error);
       throw error;

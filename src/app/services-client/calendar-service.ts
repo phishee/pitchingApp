@@ -83,7 +83,7 @@ export const calendarService = {
   // Transform Event to CalendarEvent
   transformToCalendarEvent(event: Event, currentUserId: string): CalendarEvent {
     return {
-      id: event.id,
+      id: event._id,
       groupId: event.groupId,
       title: event.title,
       description: event.description,

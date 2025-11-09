@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { EnrichedEvent } from '@/providers/user-event-context';
 import { Exercise } from '@/models/Exercise';
+import { WorkoutSession } from '@/models/WorkoutSession';
 import { exerciseApi } from '@/app/services-client/exerciseApi';
 import { WorkoutExerciseCard } from './workout-exercise-card';
 import { Clock, Dumbbell } from 'lucide-react';
+import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
+import { useRouter } from 'next/navigation';
 
 interface UserWorkoutDetailMobileProps {
   enrichedEvent: EnrichedEvent;
@@ -14,8 +17,14 @@ interface UserWorkoutDetailMobileProps {
 
 export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobileProps) {
   const { workout, workoutAssignment, estimatedDuration } = enrichedEvent;
+  const router = useRouter();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const [isStartingWorkout, setIsStartingWorkout] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [startSuccess, setStartSuccess] = useState(false);
+  const [existingSession, setExistingSession] = useState<WorkoutSession | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
 
   // Fetch exercise details
   useEffect(() => {
@@ -44,9 +53,66 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
     console.log('Wellness Questionnaire clicked');
   };
 
-  const handleStartWorkout = () => {
-    console.log('Start Workout clicked');
+  const navigateToSessionStep = (session: WorkoutSession) => {
+    if (!session?._id) return;
+    const stepPath = mapStepToPath(session.progress?.currentStep ?? 'exercises');
+    router.push(`/app/workout-session/${session._id}/${stepPath}`);
   };
+
+  const handleStartWorkout = async () => {
+    if (!enrichedEvent?.event?._id) {
+      console.warn('Cannot start workout without event ID');
+      setStartError('Unable to locate the workout event.');
+      return;
+    }
+
+    if (existingSession) {
+      navigateToSessionStep(existingSession);
+      return;
+    }
+
+    try {
+      setStartError(null);
+      setStartSuccess(false);
+      setIsStartingWorkout(true);
+      const session = await workoutSessionApi.startSession(enrichedEvent.event._id);
+      if (session) {
+        setExistingSession(session);
+        navigateToSessionStep(session);
+      }
+      setStartSuccess(true);
+      console.log('Workout session started successfully');
+    } catch (error: any) {
+      console.error('Failed to start workout session:', error);
+      const message =
+        error?.response?.data?.error ??
+        (error instanceof Error ? error.message : 'Failed to start workout. Please try again.');
+      setStartError(message);
+    } finally {
+      setIsStartingWorkout(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadExistingSession = async () => {
+      if (!enrichedEvent?.event?._id) {
+        setExistingSession(null);
+        return;
+      }
+
+      try {
+        setIsLoadingSession(true);
+        const session = await workoutSessionApi.getSessionByEventId(enrichedEvent.event._id);
+        setExistingSession(session);
+      } catch (error) {
+        console.error('Failed to load workout session:', error);
+      } finally {
+        setIsLoadingSession(false);
+      }
+    };
+
+    loadExistingSession();
+  }, [enrichedEvent?.event?._id]);
 
   if (!workout) {
     return (
@@ -173,14 +239,43 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
 
       {/* Start Workout Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+        {startError && (
+          <p className="text-sm text-red-600 mb-2 text-center">{startError}</p>
+        )}
+        {startSuccess && !startError && (
+          <p className="text-sm text-green-600 mb-2 text-center">
+            Workout session started!
+          </p>
+        )}
         <button
           onClick={handleStartWorkout}
+          disabled={isStartingWorkout || isLoadingSession}
           className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-full transition-colors duration-200 uppercase"
         >
-          Start Workout
+          {isStartingWorkout
+            ? 'Starting...'
+            : existingSession
+            ? 'Resume Workout'
+            : 'Start Workout'}
         </button>
       </div>
     </div>
   );
+}
+
+function mapStepToPath(step: WorkoutSession['progress']['currentStep']): string {
+  switch (step) {
+    case 'pre_workout_questionnaire':
+      return 'pre-workout-questionnaire';
+    case 'exercises':
+      return 'exercises';
+    case 'rpe':
+      return 'rpe';
+    case 'post_workout_questionnaire':
+      return 'post-workout-questionnaire';
+    case 'summary':
+    default:
+      return 'summary';
+  }
 }
 

@@ -12,6 +12,30 @@ class WorkoutSessionApi {
 
     return response.data;
   }
+
+  async getSessionByEventId(eventId: string): Promise<WorkoutSession | null> {
+    try {
+      const response = await apiClient.get<WorkoutSession>(
+        `${this.baseUrl}/by-event/${eventId}`
+      );
+
+      return response.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async updateSessionProgress(sessionId: string, nextStep: WorkoutSession['progress']['currentStep']): Promise<WorkoutSession> {
+    const response = await apiClient.patch<WorkoutSession>(
+      `${this.baseUrl}/${sessionId}/progress`,
+      { nextStep }
+    );
+
+    return response.data;
+  }
 }
 
 export const workoutSessionApi = new WorkoutSessionApi();

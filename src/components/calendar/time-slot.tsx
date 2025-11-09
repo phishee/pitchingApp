@@ -24,7 +24,7 @@ export function TimeSlot({ time, events, onEventClick }: TimeSlotProps) {
           <div className="space-y-1">
             {events.map((event) => (
               <Card
-                key={event.id}
+                key={event._id}
                 className="cursor-pointer hover:shadow-sm transition-shadow p-2"
                 style={{ 
                   backgroundColor: event.color || '#9C27B0',

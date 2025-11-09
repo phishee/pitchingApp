@@ -26,13 +26,13 @@ export const calendarApi = {
   },
 
   // Create a new event
-  async createEvent(userId: string, eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Promise<Event> {
+  async createEvent(userId: string, eventData: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>): Promise<Event> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const now = new Date();
     const newEvent: Event = {
       ...eventData,
-      id: Date.now().toString(),
+      _id: Date.now().toString(),
       createdAt: now,
       updatedAt: now
     };
@@ -52,7 +52,7 @@ export const calendarApi = {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const userEvents = mockMemberEvents[userId] || defaultEvents;
-    const eventIndex = userEvents.findIndex(event => event.id === eventId);
+    const eventIndex = userEvents.findIndex(event => event._id === eventId);
     
     if (eventIndex === -1) {
       throw new Error('Event not found');
@@ -73,7 +73,7 @@ export const calendarApi = {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const userEvents = mockMemberEvents[userId] || defaultEvents;
-    const eventIndex = userEvents.findIndex(event => event.id === eventId);
+    const eventIndex = userEvents.findIndex(event => event._id === eventId);
     
     if (eventIndex === -1) {
       throw new Error('Event not found');
@@ -87,7 +87,7 @@ export const calendarApi = {
     await new Promise(resolve => setTimeout(resolve, 100));
     
     const userEvents = mockMemberEvents[userId] || defaultEvents;
-    return userEvents.find(event => event.id === eventId) || null;
+    return userEvents.find(event => event._id === eventId) || null;
   },
 
   // Get events by type

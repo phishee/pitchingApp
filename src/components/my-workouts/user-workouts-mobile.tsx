@@ -89,7 +89,7 @@ export function UserWorkoutsMobile() {
 
   const handleEventClick = (event: typeof enrichedEvents[0]) => {
     // Navigate to workout detail page
-    router.push(`/app/my-workouts/${event.event.id}`);
+    router.push(`/app/my-workouts/${event.event._id}`);
   };
 
   // Auto-load events when navigating to a different month
@@ -197,7 +197,7 @@ export function UserWorkoutsMobile() {
           <div className="space-y-3 pt-4">
             {dayEvents.map((enrichedEvent) => (
               <UserEventCard
-                key={enrichedEvent.event.id}
+                key={enrichedEvent.event._id}
                 enrichedEvent={enrichedEvent}
                 onClick={() => handleEventClick(enrichedEvent)}
               />

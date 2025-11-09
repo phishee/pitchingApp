@@ -6,12 +6,12 @@ export const generateEvents = (
   organizationId: string,
   teamId: string,
   currentUserId: string
-): Omit<Event, 'id' | 'createdAt' | 'updatedAt'>[] => {
+): Omit<Event, '_id' | 'createdAt' | 'updatedAt'>[] => {
   if (!assignmentData.selectedWorkout || assignmentData.scheduleConfig.daysOfWeek.length === 0) {
     return [];
   }
 
-  const events: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>[] = [];
+  const events: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>[] = [];
   const { daysOfWeek, numberOfWeeks, startDate, defaultStartTime, defaultEndTime } = assignmentData.scheduleConfig;
   
   const startDateObj = new Date(startDate);
@@ -31,7 +31,7 @@ export const generateEvents = (
       const eventEndTime = new Date(eventDate);
       eventEndTime.setHours(endHour, endMinute, 0, 0);
 
-      const event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
+      const event: Omit<Event, '_id' | 'createdAt' | 'updatedAt'> = {
         groupId,
         type: 'workout',
         organizationId,
