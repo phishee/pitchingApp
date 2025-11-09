@@ -1,3 +1,4 @@
+import { ExerciseMetric } from "./Metric";
 export interface Exercise {
   id: string;
   type: "exercise_template";
@@ -23,7 +24,7 @@ export interface Exercise {
     reps_counting: boolean;
   };
   
-  metrics: any[]; // You can define specific metric types later
+  metrics: ExerciseMetric[];
   
   rpe: {
     type: "number";

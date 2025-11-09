@@ -1,3 +1,4 @@
+import { ExerciseMetric, MetricValue } from "./Metric";
 export interface WorkoutFlow {
   questionnaires: string[];
   warmup: string[];
@@ -6,7 +7,7 @@ export interface WorkoutFlow {
 
 export interface WorkoutExercise {
   exercise_id: string;
-  default_Metrics: { [key: string]: any };
+  default_Metrics:  { [metricId: string]: MetricValue };
 }
 
 export interface WorkoutUser {

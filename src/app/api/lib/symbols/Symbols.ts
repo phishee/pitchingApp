@@ -54,6 +54,11 @@ export const WORKOUT_TYPES = {
   WorkoutController: Symbol.for('WorkoutController'),
 } as const;
 
+export const WORKOUT_SESSION_TYPES = {
+  WorkoutSessionService: Symbol.for('WorkoutSessionService'),
+  WorkoutSessionController: Symbol.for('WorkoutSessionController'),
+} as const;
+
 // Add event symbols
 export const EVENT_TYPES = {
   EventService: Symbol.for('EventService'),

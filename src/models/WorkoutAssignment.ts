@@ -1,5 +1,6 @@
 import { UserInfo } from "./User";
 import { RecurrenceConfig } from "./Calendar";
+import { MetricValue } from "./Metric";
 
 export interface WorkoutAssignment {
   _id: string;
@@ -16,7 +17,7 @@ export interface WorkoutAssignment {
   defaultTimeSlot: { start: string; end: string };
   
   prescriptions: Record<string, {
-    prescribedMetrics: Record<string, any>;
+    prescribedMetrics: Record<string, MetricValue>;
     notes: string;
     isModified: boolean;
   }>;
