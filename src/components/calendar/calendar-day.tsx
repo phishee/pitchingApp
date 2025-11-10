@@ -29,7 +29,7 @@ export function CalendarDayComponent({ day, onEventClick, view }: CalendarDayPro
         <div className="space-y-1">
           {day.events.map((event) => (
             <EventCard
-              key={event.id}
+              key={event._id}
               event={event}
               onClick={onEventClick}
               compact={isWeekView}

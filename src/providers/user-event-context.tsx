@@ -109,7 +109,7 @@ export function UserEventProvider({ children, organizationId, userId }: UserEven
             enriched.estimatedDuration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
           }
         } catch (err) {
-          console.error(`Error enriching event ${event.id}:`, err);
+          console.error(`Error enriching event ${event._id}:`, err);
           // Continue with partial data if enrichment fails
         }
 
@@ -120,8 +120,8 @@ export function UserEventProvider({ children, organizationId, userId }: UserEven
       
       // Merge with existing events, avoiding duplicates
       setEnrichedEvents(prevEvents => {
-        const existingIds = new Set(prevEvents.map(e => e.event.id));
-        const newEvents = enriched.filter(e => !existingIds.has(e.event.id));
+        const existingIds = new Set(prevEvents.map(e => e.event._id));
+        const newEvents = enriched.filter(e => !existingIds.has(e.event._id));
         return [...prevEvents, ...newEvents];
       });
     } catch (err) {

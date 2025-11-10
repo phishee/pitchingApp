@@ -6,3 +6,4 @@ export * from './Workout';
 export * from './Calendar';
 export * from './WorkoutAssignment';
 export * from './Facility';
+export * from './Metric';

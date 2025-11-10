@@ -32,7 +32,7 @@ export function UserWorkoutsDesktop() {
 
   const handleEventClick = (event: typeof enrichedEvents[0]) => {
     // Navigate to workout detail page
-    router.push(`/app/my-workouts/${event.event.id}`);
+    router.push(`/app/my-workouts/${event.event._id}`);
   };
 
   if (error) {
@@ -90,7 +90,7 @@ export function UserWorkoutsDesktop() {
           <div className="space-y-4 pt-6">
             {dayEvents.map((enrichedEvent) => (
               <UserEventCard
-                key={enrichedEvent.event.id}
+                key={enrichedEvent.event._id}
                 enrichedEvent={enrichedEvent}
                 onClick={() => handleEventClick(enrichedEvent)}
               />

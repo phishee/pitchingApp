@@ -7,7 +7,7 @@ import { Event, RecurrenceConfig } from '@/models/Calendar';
 import { ClientSession } from 'mongodb';
 
 // Template interface for backward compatibility with existing event creation
-interface EventTemplate extends Omit<Event, 'id' | 'groupId' | 'sourceId' | 'sourceType' | 'sequenceNumber' | 'totalInSequence' | 'isModified' | 'createdAt' | 'updatedAt'> {
+interface EventTemplate extends Omit<Event, '_id' | 'groupId' | 'sourceId' | 'sourceType' | 'sequenceNumber' | 'totalInSequence' | 'isModified' | 'createdAt' | 'updatedAt'> {
   recurrence?: RecurrenceConfig; // Optional for backward compatibility
   createdAt?: Date; // Optional for templates
   updatedAt?: Date; // Optional for templates
@@ -174,7 +174,6 @@ export class EventService {
           
           const singleEvent: Event = {
             ...normalizedTemplate,
-            id: this.generateEventId(),
             groupId,
             sequenceNumber: 1,
             totalInSequence: 1,
@@ -281,7 +280,6 @@ export class EventService {
 
         events.push({
           ...template,
-          id: this.generateEventId(),
           groupId,
           startTime: eventStartTime,
           endTime: eventEndTime,
@@ -321,7 +319,6 @@ export class EventService {
 
         events.push({
           ...template,
-          id: this.generateEventId(),
           groupId,
           startTime: eventStartTime,
           endTime: eventEndTime,
@@ -364,7 +361,6 @@ export class EventService {
 
         events.push({
           ...template,
-          id: this.generateEventId(),
           groupId,
           startTime: eventStartTime,
           endTime: eventEndTime,
@@ -474,13 +470,6 @@ export class EventService {
         throw new Error('Failed to generate unique groupId after multiple attempts');
       }
     } while (true);
-  }
-
-  /**
-   * Generate unique event ID
-   */
-  private generateEventId(): string {
-    return `event_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -610,14 +599,16 @@ export class EventService {
     }
 
 
-    return await this.dbProvider.findWithFilters(this.eventCollection, filters, options);
+    const results = await this.dbProvider.findWithFilters(this.eventCollection, filters, options);
+    return results.map(event => this.serializeEvent(event));
   }
 
   /**
    * Get single event by ID
    */
   async getEventById(id: string): Promise<Event | null> {
-    return await this.dbProvider.findById(this.eventCollection, id);
+    const event = await this.dbProvider.findById(this.eventCollection, id);
+    return event ? this.serializeEvent(event) : null;
   }
 
   /**
@@ -626,7 +617,8 @@ export class EventService {
   async updateEvent(id: string, data: Partial<Event>): Promise<Event | null> {
     // Normalize dates in update data
     const normalizedData = this.normalizeDates(data);
-    return await this.dbProvider.update(this.eventCollection, id, normalizedData);
+    const updated = await this.dbProvider.update(this.eventCollection, id, normalizedData);
+    return updated ? this.serializeEvent(updated) : null;
   }
 
   /**
@@ -657,5 +649,23 @@ export class EventService {
       this.eventCollection,
       { groupId }
     );
+  }
+
+  private serializeEvent(event: any): Event {
+    if (!event) {
+      return event;
+    }
+
+    const document = event?.value ?? event;
+    if (!document) {
+      return document;
+    }
+
+    const { _id, ...rest } = document;
+
+    return {
+      ...rest,
+      _id: typeof _id === 'string' ? _id : _id?.toString?.()
+    } as Event;
   }
 }

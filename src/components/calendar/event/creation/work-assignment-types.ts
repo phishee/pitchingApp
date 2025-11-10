@@ -26,7 +26,7 @@ export interface WorkoutAssignmentDialogProps {
   onClose: () => void;
   selectedMembers: Partial<TeamMemberWithUser>[];
   availableMembers?: Partial<TeamMemberWithUser>[];
-  onAddEvent: (event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  onAddEvent: (event: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   organizationId?: string;
   teamId?: string;
   currentUserId?: string;

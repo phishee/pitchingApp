@@ -69,7 +69,7 @@ export function CoachCalendar({ className }: CoachCalendarProps) {
       }
 
       // Create a proper Event object
-      const newEvent: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
+      const newEvent: Omit<Event, '_id' | 'createdAt' | 'updatedAt'> = {
         groupId: `manual-${Date.now()}`,
         type: getEventTypeFromString(eventType),
         organizationId: currentOrganization?._id || '', // You'll need to get this from context

@@ -73,12 +73,21 @@ export class EventGeneratorService {
         events.push(event);
       }
 
-      // Save all events to database
-      if (events.length > 0) {
-        await this.mongoProvider.bulkInsert('events', events);
+      if (events.length === 0) {
+        return [];
       }
 
-      return events;
+      const result = await this.mongoProvider.bulkInsert('events', events);
+      if (!result.insertedIds.length) {
+        return [];
+      }
+
+      const objectIds = result.insertedIds.map(id => new ObjectId(id));
+      const savedEvents = await this.mongoProvider.findQuery('events', {
+        _id: { $in: objectIds }
+      });
+
+      return savedEvents.map(event => this.normalizeEvent(event));
     } catch (error) {
       console.error('EventGeneratorService: Failed to generate workout events:', error);
       throw error;
@@ -134,12 +143,21 @@ export class EventGeneratorService {
         events.push(event);
       }
 
-      // Save all events to database
-      if (events.length > 0) {
-        await this.mongoProvider.bulkInsert('events', events);
+      if (events.length === 0) {
+        return [];
       }
 
-      return events;
+      const result = await this.mongoProvider.bulkInsert('events', events);
+      if (!result.insertedIds.length) {
+        return [];
+      }
+
+      const objectIds = result.insertedIds.map(id => new ObjectId(id));
+      const savedEvents = await this.mongoProvider.findQuery('events', {
+        _id: { $in: objectIds }
+      });
+
+      return savedEvents.map(event => this.normalizeEvent(event));
     } catch (error) {
       console.error('EventGeneratorService: Failed to generate events from template:', error);
       throw error;
@@ -184,8 +202,7 @@ export class EventGeneratorService {
     const description = workoutData?.description || `Assigned workout for ${assignment.athleteInfo.userId}`;
     const coverPhotoUrl = workoutData?.coverImage;
 
-    return {
-      id: new ObjectId().toString(),
+  return {
       groupId: options.groupId,
       type: 'workout',
       organizationId: options.organizationId,
@@ -239,8 +256,7 @@ export class EventGeneratorService {
     const startTime = this.createDateTime(eventDate, defaultTimeSlot.start);
     const endTime = this.createDateTime(eventDate, defaultTimeSlot.end);
 
-    return {
-      id: new ObjectId().toString(),
+  return {
       groupId: options.groupId,
       type: 'workout',
       organizationId: options.organizationId,
@@ -280,6 +296,24 @@ export class EventGeneratorService {
    */
   generateGroupId(): string {
     return new ObjectId().toString();
+  }
+
+  private normalizeEvent(event: any): Event {
+    if (!event) {
+      return event;
+    }
+
+    const document = event?.value ?? event;
+    if (!document) {
+      return document;
+    }
+
+    const { _id, ...rest } = document;
+
+    return {
+      ...rest,
+      _id: typeof _id === 'string' ? _id : _id?.toString?.()
+    } as Event;
   }
 
   /**
