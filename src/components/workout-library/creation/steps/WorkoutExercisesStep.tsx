@@ -118,7 +118,7 @@ export function WorkoutExercisesStep() {
                             <label className="text-gray-600">Sets</label>
                             <Input
                               type="number"
-                              value={defaultMetrics.sets || 0}
+                              value={Number(defaultMetrics.sets) || 0}
                               onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'sets', parseInt(e.target.value) || 0)}
                               className="mt-1"
                             />
@@ -129,7 +129,7 @@ export function WorkoutExercisesStep() {
                             <label className="text-gray-600">Reps</label>
                             <Input
                               type="number"
-                              value={defaultMetrics.reps || 0}
+                              value={Number(defaultMetrics.reps) || 0}
                               onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'reps', parseInt(e.target.value) || 0)}
                               className="mt-1"
                             />
@@ -140,7 +140,7 @@ export function WorkoutExercisesStep() {
                             <label className="text-gray-600">Duration (min)</label>
                             <Input
                               type="number"
-                              value={defaultMetrics.duration || 0}
+                              value={Number(defaultMetrics.duration) || 0}
                               onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'duration', parseInt(e.target.value) || 0)}
                               className="mt-1"
                             />
@@ -150,7 +150,7 @@ export function WorkoutExercisesStep() {
                           <label className="text-gray-600">Rest (sec)</label>
                           <Input
                             type="number"
-                            value={defaultMetrics.rest || 0}
+                            value={Number(defaultMetrics.rest) || 0}
                             onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'rest', parseInt(e.target.value) || 0)}
                             className="mt-1"
                           />
