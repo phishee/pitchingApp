@@ -32,6 +32,13 @@ export function UserWorkoutDetail() {
     };
   }, [setBottomNavVisible]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname + window.location.search;
+      sessionStorage.setItem('lastRouteBeforeWorkout', currentPath);
+    }
+  }, []);
+
   // Fetch enriched event data
   useEffect(() => {
     if (!eventId || !organizationId) {

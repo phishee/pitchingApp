@@ -49,10 +49,10 @@ export function WorkoutFlowStep() {
   const calculateTotalTime = () => {
     return (workoutFlow.exercises || []).reduce((total: number, exercise: any) => {
       const defaultMetrics = getDefaultMetricsForExerciseId(exercise.exercise_id);
-      const sets = defaultMetrics.sets || 3;
-      const duration = defaultMetrics.duration || 60;
-      const rest = defaultMetrics.rest || 30;
-      return total + (sets * duration) + (sets * rest);
+      const sets = Number(defaultMetrics.sets) || 3;
+      const duration = Number(defaultMetrics.duration ?? 60);
+      const rest = Number(defaultMetrics.rest ?? 30);
+      return total + sets * duration + sets * rest;
     }, 0);
   };
 

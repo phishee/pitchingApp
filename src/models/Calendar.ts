@@ -114,7 +114,7 @@ export interface Calendar {
 }
 
 export interface CalendarEvent {
-  id: string; // Event.id
+  _id?: string; // Event._id
   groupId: string; // Event.groupId for bulk operations
   title: string;
   description: string;
