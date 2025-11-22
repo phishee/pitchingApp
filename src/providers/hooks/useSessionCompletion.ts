@@ -2,15 +2,7 @@ import { useMemo } from 'react';
 import { WorkoutSession } from '@/models/WorkoutSession';
 import { WorkoutExercise } from '@/models/Workout';
 import { Exercise } from '@/models';
-
-export interface WorkoutCompletionSection {
-    totalRequiredSets: number;
-    completedSets: number;
-    completionPercentage: number;
-    exerciseCompletionStatus: Record<string, boolean>;
-    isExerciseComplete: (exerciseId: string) => boolean;
-    hasPendingSets: (exerciseId: string) => boolean;
-}
+import { WorkoutCompletionSection } from './types';
 
 export interface UseSessionCompletionProps {
     sessionData: WorkoutSession | null;

@@ -3,7 +3,7 @@ import { Exercise } from '@/models';
 import { WorkoutExercise } from '@/models/Workout';
 import { exerciseApi } from '@/app/services-client/exerciseApi';
 import { workoutSessionCache } from '@/lib/workout-session-cache';
-import { LoadingState } from './useSessionData';
+import { LoadingState } from './types';
 
 const toErrorMessage = (error: unknown, fallback: string) => {
     if (error instanceof Error) return error.message;

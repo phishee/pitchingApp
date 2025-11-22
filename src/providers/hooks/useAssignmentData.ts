@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { WorkoutAssignment } from '@/models/WorkoutAssignment';
 import { workoutAssignmentApi } from '@/app/services-client/workoutAssignmentApi';
 import { workoutSessionCache } from '@/lib/workout-session-cache';
-import { AsyncDataState } from './useSessionData';
+import { AsyncDataState } from './types';
 
 const createInitialAsyncState = <T,>(): AsyncDataState<T> => ({
     data: null,

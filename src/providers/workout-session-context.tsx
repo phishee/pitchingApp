@@ -12,13 +12,21 @@ import { WorkoutAssignment } from '@/models/WorkoutAssignment';
 import { Workout, WorkoutExercise } from '@/models/Workout';
 import { Exercise } from '@/models';
 
-import { useSessionData, AsyncDataState } from './hooks/useSessionData';
+import { useSessionData } from './hooks/useSessionData';
 import { useAssignmentData } from './hooks/useAssignmentData';
 import { useWorkoutData } from './hooks/useWorkoutData';
 import { useExercisesData } from './hooks/useExercisesData';
-import { useSessionCompletion, WorkoutCompletionSection } from './hooks/useSessionCompletion';
-
-type LoadingState = 'idle' | 'loading' | 'loaded' | 'error';
+import { useSessionCompletion } from './hooks/useSessionCompletion';
+import {
+  AsyncDataState,
+  WorkoutSessionSection,
+  WorkoutAssignmentSection,
+  WorkoutDefinitionSection,
+  WorkoutExercisesSection,
+  WorkoutSessionUiSection,
+  WorkoutCompletionSection,
+  WorkoutSessionContextValue,
+} from './hooks/types';
 
 // Props accepted by the WorkoutSessionProvider component
 interface WorkoutSessionProviderProps {
@@ -27,53 +35,6 @@ interface WorkoutSessionProviderProps {
   calendarEventId?: string;
   assignmentId?: string;
   organizationId?: string;
-}
-
-// Slice describing session data, status, and operations
-interface WorkoutSessionSection extends AsyncDataState<WorkoutSession> {
-  refresh: () => Promise<WorkoutSession | null>;
-  setSession: (value: WorkoutSession | null) => void;
-  updateProgress: (nextStep: WorkoutSessionStep) => Promise<WorkoutSession | null>;
-}
-
-// Slice describing workout assignment data and helpers
-interface WorkoutAssignmentSection extends AsyncDataState<WorkoutAssignment> {
-  refresh: () => Promise<WorkoutAssignment | null>;
-  setAssignment: (value: WorkoutAssignment | null) => void;
-}
-
-// Slice for the workout definition used to drive the flow
-interface WorkoutDefinitionSection extends AsyncDataState<Workout> {
-  flowExercises: WorkoutExercise[];
-  refresh: () => Promise<Workout | null>;
-  setWorkout: (value: Workout | null) => void;
-}
-
-// Slice exposing resolved exercise records and lookup helpers
-interface WorkoutExercisesSection {
-  list: Exercise[];
-  status: LoadingState;
-  error: string | null;
-  activeExerciseId: string | null;
-  setActiveExerciseId: (exerciseId: string | null) => void;
-  refresh: () => Promise<Exercise[]>;
-  metricsByExercise: Record<string, WorkoutExercise['default_Metrics']>;
-}
-
-// Slice for UI-centric state such as current step and loading flag
-interface WorkoutSessionUiSection {
-  currentStep: WorkoutSessionStep | null;
-  setCurrentStep: (step: WorkoutSessionStep | null) => void;
-  isInitializing: boolean;
-}
-
-interface WorkoutSessionContextValue {
-  session: WorkoutSessionSection;
-  assignment: WorkoutAssignmentSection;
-  workout: WorkoutDefinitionSection;
-  exercises: WorkoutExercisesSection;
-  ui: WorkoutSessionUiSection;
-  completion: WorkoutCompletionSection;
 }
 
 const WorkoutSessionContext = createContext<WorkoutSessionContextValue | undefined>(

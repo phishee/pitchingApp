@@ -2,14 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { WorkoutSession, WorkoutSessionStep } from '@/models/WorkoutSession';
 import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { workoutSessionCache } from '@/lib/workout-session-cache';
-
-export type LoadingState = 'idle' | 'loading' | 'loaded' | 'error';
-
-export interface AsyncDataState<T> {
-    data: T | null;
-    status: LoadingState;
-    error: string | null;
-}
+import { AsyncDataState, LoadingState } from './types';
 
 const createInitialAsyncState = <T,>(): AsyncDataState<T> => ({
     data: null,
