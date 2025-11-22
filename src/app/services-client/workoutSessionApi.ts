@@ -13,6 +13,20 @@ class WorkoutSessionApi {
     return response.data;
   }
 
+  async getSession(sessionId: string): Promise<WorkoutSession | null> {
+    try {
+      const response = await apiClient.get<WorkoutSession>(
+        `${this.baseUrl}/${sessionId}`
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   async getSessionByEventId(eventId: string): Promise<WorkoutSession | null> {
     try {
       const response = await apiClient.get<WorkoutSession>(

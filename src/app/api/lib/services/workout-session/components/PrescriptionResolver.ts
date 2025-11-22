@@ -20,7 +20,7 @@ export class PrescriptionResolver implements IPrescriptionResolver {
         throw new Error(`Exercise not found: ${workoutExercise.exercise_id}`);
       }
 
-      const exerciseId = exercise._id?.toString?.() ?? exercise.id;
+      const exerciseId = exercise.id;
       const assignmentPrescription = assignment.prescriptions?.[exerciseId];
 
       const prescribedMetrics =

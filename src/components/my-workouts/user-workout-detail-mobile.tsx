@@ -10,6 +10,7 @@ import { WorkoutExerciseCard } from './workout-exercise-card';
 import { Clock, Dumbbell } from 'lucide-react';
 import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { useRouter } from 'next/navigation';
+import { workoutSessionCache } from '@/lib/workout-session-cache';
 
 interface UserWorkoutDetailMobileProps {
   enrichedEvent: EnrichedEvent;
@@ -55,8 +56,38 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
 
   const navigateToSessionStep = (session: WorkoutSession) => {
     if (!session?._id) return;
+    
+    // Cache pre-fetched data before navigating to workout session
+    // Mark as active session since we're about to navigate to workout-session pages
+    workoutSessionCache.set(
+      session._id,
+      {
+        session,
+        assignment: workoutAssignment || undefined,
+        workout: workout || undefined,
+        exercises: exercises.length > 0 ? exercises : undefined,
+        event: enrichedEvent.event || undefined,
+      },
+      true // Mark as active session
+    );
+    
     const stepPath = mapStepToPath(session.progress?.currentStep ?? 'exercises');
-    router.push(`/app/workout-session/${session._id}/${stepPath}`);
+    
+    // Build query parameters for fallback fetching
+    const queryParams = new URLSearchParams();
+    if (enrichedEvent.event?._id) {
+      queryParams.set('eventId', enrichedEvent.event._id);
+    }
+    if (workoutAssignment?._id) {
+      queryParams.set('assignmentId', workoutAssignment._id);
+    }
+    if (workoutAssignment?.organizationId) {
+      queryParams.set('orgId', workoutAssignment.organizationId);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = `/app/workout-session/${session._id}/${stepPath}${queryString ? `?${queryString}` : ''}`;
+    router.push(url);
   };
 
   const handleStartWorkout = async () => {
