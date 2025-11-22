@@ -20,7 +20,6 @@ export interface UseExercisesDataProps {
 export function useExercisesData({
     sessionId,
     workoutExercises = [],
-    workoutId,
 }: UseExercisesDataProps) {
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [exercisesStatus, setExercisesStatus] = useState<LoadingState>('idle');
@@ -30,7 +29,7 @@ export function useExercisesData({
     // Memoize exercise IDs string for stable comparison
     const exerciseIdsKey = useMemo(() => {
         return workoutExercises.map((e) => e.exercise_id).sort().join(',');
-    }, [workoutExercises, workoutId]);
+    }, [workoutExercises]);
 
     // Memoize exercise IDs array based on the stable key
     const exerciseIds = useMemo(() => {

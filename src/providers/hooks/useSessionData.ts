@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { WorkoutSession, WorkoutSessionStep } from '@/models/WorkoutSession';
 import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { workoutSessionCache } from '@/lib/workout-session-cache';

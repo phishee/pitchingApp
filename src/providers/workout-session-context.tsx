@@ -141,7 +141,7 @@ export function WorkoutSessionProvider({
 
   // Determines whether initial data hydration is still in-flight
   const isInitializing = useMemo(() => {
-    const states: AsyncDataState<any>[] = [
+    const states: AsyncDataState<unknown>[] = [
       sessionState,
       assignmentState,
       workoutState,
@@ -225,6 +225,9 @@ export function WorkoutSessionProvider({
       setSessionState,
       setAssignmentState,
       setWorkoutState,
+      currentStep,
+      setActiveExerciseId,
+      setCurrentStep,
     ]
   );
 

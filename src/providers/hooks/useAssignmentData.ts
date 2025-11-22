@@ -102,6 +102,7 @@ export function useAssignmentData({
         fetchAssignment(targetAssignmentId);
     }, [
         assignmentId,
+        assignmentState.data,
         assignmentState.data?._id,
         assignmentState.status,
         fetchAssignment,
