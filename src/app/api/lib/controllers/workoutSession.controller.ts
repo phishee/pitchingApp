@@ -63,6 +63,35 @@ export class WorkoutSessionController {
     }
   }
 
+  async getSessionById(
+    _req: AuthenticatedRequest,
+    { params }: { params: Promise<{ sessionId: string }> }
+  ): Promise<NextResponse> {
+    try {
+      const { sessionId } = await params;
+
+      if (!sessionId) {
+        return NextResponse.json(
+          { error: 'sessionId is required' },
+          { status: 400 }
+        );
+      }
+
+      const session = await this.workoutSessionService.getSessionById(sessionId);
+
+      if (!session) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+
+      return NextResponse.json(session);
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error?.message ?? 'Failed to fetch workout session' },
+        { status: 500 }
+      );
+    }
+  }
+
   async getSessionByEvent(
     _req: AuthenticatedRequest,
     { params }: { params: Promise<{ eventId: string }> }

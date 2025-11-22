@@ -85,10 +85,10 @@ export class SessionInitializer implements ISessionInitializer {
       },
       coachInfo: coach
         ? {
-            userId: coach.userId,
-            memberId: assignment.coachInfo?.memberId,
-            name: coach.name,
-          }
+          userId: coach.userId,
+          memberId: assignment.coachInfo?.memberId,
+          name: coach.name,
+        }
         : undefined,
       workout: {
         workoutId: workout.id,
