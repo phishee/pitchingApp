@@ -56,7 +56,7 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
 
   const navigateToSessionStep = (session: WorkoutSession) => {
     if (!session?._id) return;
-    
+
     // Cache pre-fetched data before navigating to workout session
     // Mark as active session since we're about to navigate to workout-session pages
     workoutSessionCache.set(
@@ -70,9 +70,9 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
       },
       true // Mark as active session
     );
-    
+
     const stepPath = mapStepToPath(session.progress?.currentStep ?? 'exercises');
-    
+
     // Build query parameters for fallback fetching
     const queryParams = new URLSearchParams();
     if (enrichedEvent.event?._id) {
@@ -84,7 +84,7 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
     if (workoutAssignment?.organizationId) {
       queryParams.set('orgId', workoutAssignment.organizationId);
     }
-    
+
     const queryString = queryParams.toString();
     const url = `/app/workout-session/${session._id}/${stepPath}${queryString ? `?${queryString}` : ''}`;
     router.push(url);
@@ -159,36 +159,14 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
     const workoutExercise = workout.flow.exercises.find(ex => ex.exercise_id === exerciseId);
     const prescription = workoutAssignment?.prescriptions?.[exerciseId];
 
-    let sets = '';
-    let reps = '';
+    let metrics = workoutExercise?.default_Metrics || {};
 
     if (prescription?.prescribedMetrics) {
-      // Use prescribed metrics if available
-      const metrics = prescription.prescribedMetrics;
-      if (metrics.sets) sets = `${metrics.sets} Sets`;
-      if (metrics.reps) {
-        reps = typeof metrics.reps === 'string' ? metrics.reps : `${metrics.reps} Reps`;
-      } else if (metrics.reps_min && metrics.reps_max) {
-        reps = `${metrics.reps_min}-${metrics.reps_max} Reps`;
-      }
-    } else if (workoutExercise?.default_Metrics) {
-      // Fallback to default metrics
-      const metrics = workoutExercise.default_Metrics;
-      if (metrics.sets) sets = `${metrics.sets} Sets`;
-      if (metrics.reps) {
-        reps = typeof metrics.reps === 'string' ? metrics.reps : `${metrics.reps} Reps`;
-      } else if (metrics.reps_min && metrics.reps_max) {
-        reps = `${metrics.reps_min}-${metrics.reps_max} Reps`;
-      }
+      // Merge/Override with prescribed metrics
+      metrics = { ...metrics, ...prescription.prescribedMetrics };
     }
 
-    // Default fallback
-    if (!sets && !reps) {
-      sets = '3 Sets';
-      reps = '8-12 Reps';
-    }
-
-    return { sets, reps, exercise };
+    return { metrics, exercise };
   };
 
   // Get workout cover image
@@ -255,13 +233,12 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
           </div>
         ) : (
           workout.flow.exercises.map((workoutExercise) => {
-            const { sets, reps, exercise } = getExerciseData(workoutExercise.exercise_id);
+            const { metrics, exercise } = getExerciseData(workoutExercise.exercise_id);
             return (
               <WorkoutExerciseCard
                 key={workoutExercise.exercise_id}
                 exercise={exercise}
-                sets={sets}
-                reps={reps}
+                metrics={metrics}
               />
             );
           })
@@ -286,8 +263,8 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
           {isStartingWorkout
             ? 'Starting...'
             : existingSession
-            ? 'Resume Workout'
-            : 'Start Workout'}
+              ? 'Resume Workout'
+              : 'Start Workout'}
         </button>
       </div>
     </div>

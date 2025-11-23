@@ -7,29 +7,29 @@ export interface WorkoutAssignment {
   organizationId: string;
   teamId: string;
   workoutId: string;
-  
+
   athleteInfo: UserInfo;
   coachInfo: UserInfo;
-  
+
   recurrence: RecurrenceConfig;
   startDate: Date;
   endDate?: Date;
   defaultTimeSlot: { start: string; end: string };
-  
+
   prescriptions: Record<string, {
     prescribedMetrics: Record<string, MetricValue>;
     notes: string;
     isModified: boolean;
   }>;
-  
+
   sessionType: 'individual' | 'coached';
   scheduledCoach?: UserInfo;
   notes: string;
-  
+
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
-  
+
   totalEventsGenerated: number;
   lastEventDate?: Date;
 }
@@ -48,7 +48,7 @@ export interface CreateWorkoutAssignmentPayload {
   sessionType: 'individual' | 'coached';
   scheduledCoach?: UserInfo;
   notes: string;
-  
+
   // Add workout data for event generation
   workoutData?: {
     name: string;
