@@ -25,11 +25,11 @@ export default function WorkoutSessionLayout({
   const { setBottomNavVisible, setHeaderVisible } = useLayout();
   const router = useRouter();
   const [previousRoute, setPreviousRoute] = useState(FALLBACK_ROUTE);
-  
+
   // Unwrap params Promise using React.use()
   const resolvedParams = use(params);
   const sessionId = resolvedParams?.sessionId;
-  
+
   // Unwrap searchParams Promise if it exists
   const resolvedSearchParams = searchParams ? use(searchParams) : undefined;
 
@@ -89,7 +89,7 @@ export default function WorkoutSessionLayout({
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-background px-4 py-6 pt-20">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background px-4 py-6 pt-20">
           {children}
         </main>
       </div>
