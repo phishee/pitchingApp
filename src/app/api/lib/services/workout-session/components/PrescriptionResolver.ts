@@ -28,11 +28,14 @@ export class PrescriptionResolver implements IPrescriptionResolver {
         workoutExercise.default_Metrics ??
         {};
 
-      const setCount = this.getSetCount(exercise);
+      const setCount = this.getSetCount(exercise, assignmentPrescription);
+
+      // Remove 'sets' from the metrics that go into each individual set
+      const { sets: _sets, ...metricsPerSet } = prescribedMetrics;
 
       const sets = Array.from({ length: setCount }, (_, index) => ({
         setNumber: index + 1,
-        prescribed: prescribedMetrics,
+        prescribed: metricsPerSet,
       }));
 
       return {
@@ -42,7 +45,17 @@ export class PrescriptionResolver implements IPrescriptionResolver {
     });
   }
 
-  private getSetCount(exercise: any): number {
+  private getSetCount(exercise: any, assignmentPrescription: any): number {
+    // 1. Check if assignment has a specific set count override in prescribedMetrics
+    const prescribedSets = assignmentPrescription?.prescribedMetrics?.sets;
+    if (prescribedSets !== undefined && prescribedSets !== null) {
+      const parsedSets = Number(prescribedSets);
+      if (!isNaN(parsedSets) && parsedSets > 0) {
+        return parsedSets;
+      }
+    }
+
+    // 2. Fallback to exercise default settings
     const prefersSets = exercise.settings?.sets_counting;
     return prefersSets ? 3 : 1;
   }

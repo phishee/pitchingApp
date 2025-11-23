@@ -28,25 +28,35 @@ export function WorkoutExercisesStep() {
   // Helper function to determine which metrics to include based on exercise settings
   const getDefaultMetricsForExercise = useCallback((exercise: Exercise) => {
     const defaultMetrics: { [key: string]: any } = {};
-    
+
     // Add sets if sets_counting is enabled
     if (exercise.settings.sets_counting) {
       defaultMetrics.sets = 3;
     }
-    
+
     // Add reps if reps_counting is enabled
     if (exercise.settings.reps_counting) {
       defaultMetrics.reps = 10;
     }
-    
+
     // Add duration for time-based exercises
     if (exercise.exercise_type === 'cardio' || exercise.structure !== 'sets') {
       defaultMetrics.duration = 60;
     }
-    
+
     // Add rest time
     defaultMetrics.rest = 30;
-    
+
+    // Add custom metrics from the exercise definition
+    if (exercise.metrics) {
+      exercise.metrics.forEach(metric => {
+        // Avoid overwriting existing standard metrics if they were already set
+        if (defaultMetrics[metric.id] === undefined) {
+          defaultMetrics[metric.id] = metric.defaultValue ?? null;
+        }
+      });
+    }
+
     return defaultMetrics;
   }, []);
 
@@ -97,13 +107,13 @@ export function WorkoutExercisesStep() {
             <div className="space-y-4">
               {selectedExercises.map((exercise: Exercise, index: number) => {
                 const defaultMetrics = getDefaultMetricsForExerciseId(exercise.id);
-                
+
                 return (
                   <div key={exercise.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                     <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
                       {index + 1}
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h4 className="font-medium text-gray-900">{exercise.name}</h4>
@@ -111,7 +121,7 @@ export function WorkoutExercisesStep() {
                           {formatTagName(exercise.exercise_type)}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-4 gap-4 text-sm">
                         {exercise.settings.sets_counting && (
                           <div>
@@ -146,6 +156,31 @@ export function WorkoutExercisesStep() {
                             />
                           </div>
                         ) : null}
+
+                        {/* Dynamic Metrics Inputs */}
+                        {exercise.metrics?.map(metric => {
+                          // Skip metrics that are already handled explicitly above (sets, reps, duration, rest)
+                          if (['sets', 'reps', 'duration', 'rest'].includes(metric.id)) return null;
+
+                          return (
+                            <div key={metric.id}>
+                              <label className="text-gray-600 capitalize">{metric.label || metric.id} {metric.unit ? `(${metric.unit})` : ''}</label>
+                              <Input
+                                type={metric.inputType === 'text' ? 'text' : 'number'}
+                                value={String(defaultMetrics[metric.id] ?? '')}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const finalVal = metric.inputType === 'text' ? val : (val === '' ? null : Number(val));
+                                  handleUpdateExerciseConfig(exercise.id, metric.id, finalVal);
+                                }}
+                                className="mt-1"
+                                placeholder={metric.input === 'formula' ? 'Calculated automatically' : String(metric.defaultValue || '')}
+                                disabled={metric.input === 'formula'}
+                              />
+                            </div>
+                          );
+                        })}
+
                         <div>
                           <label className="text-gray-600">Rest (sec)</label>
                           <Input
@@ -157,7 +192,7 @@ export function WorkoutExercisesStep() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -179,18 +214,18 @@ export function WorkoutExercisesStep() {
   return (
     <div className="space-y-6">
       {ShowSelectedExercises}
-      
+
       <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
         <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Exercise Library</DialogTitle>
           </DialogHeader>
-          
+
           <ExerciseLibrarySelection
             selectedExercises={selectedExercises}
             onExerciseSelect={handleAddExercise}
           />
-          
+
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={handleCloseLibrary} className='bg-green-500 text-white font-bold hover:bg-green-600'>
               Done

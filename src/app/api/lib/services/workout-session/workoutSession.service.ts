@@ -31,7 +31,7 @@ export class WorkoutSessionService implements IWorkoutSessionService {
     private readonly sessionInitializer: ISessionInitializer,
     @inject(WORKOUT_SESSION_TYPES.SessionEventBus)
     private readonly eventBus: ISessionEventBus
-  ) {}
+  ) { }
 
   async startSession(calendarEventId: string, athleteUserId: string): Promise<WorkoutSession> {
     return this.mongoProvider.withTransaction(async () => {
@@ -147,7 +147,7 @@ export class WorkoutSessionService implements IWorkoutSessionService {
   private validatePrescriptions(prescriptions: ResolvedPrescription[], exercises: any[]): void {
     prescriptions.forEach((prescription) => {
       const exercise = exercises.find((item: any) => {
-        const exerciseId = item?._id?.toString?.() ?? item?.id;
+        const exerciseId = item?.id || null;
         return exerciseId === prescription.exerciseId;
       });
 
@@ -176,18 +176,18 @@ export class WorkoutSessionService implements IWorkoutSessionService {
         return;
       }
 
-    //   prescription.sets.forEach((set, index) => {
-    //     const prescribedKeys = Object.keys(set.prescribed ?? {});
-    //     const missingMetrics = requiredMetrics.filter(
-    //       (metricId: string) => !prescribedKeys.includes(metricId)
-    //     );
+      //   prescription.sets.forEach((set, index) => {
+      //     const prescribedKeys = Object.keys(set.prescribed ?? {});
+      //     const missingMetrics = requiredMetrics.filter(
+      //       (metricId: string) => !prescribedKeys.includes(metricId)
+      //     );
 
-    //     if (missingMetrics.length > 0) {
-    //       throw new ValidationError([
-    //         `Exercise "${exercise.name}" set ${index + 1} is missing required metrics: ${missingMetrics.join(', ')}`,
-    //       ]);
-    //     }
-    //   });
+      //     if (missingMetrics.length > 0) {
+      //       throw new ValidationError([
+      //         `Exercise "${exercise.name}" set ${index + 1} is missing required metrics: ${missingMetrics.join(', ')}`,
+      //       ]);
+      //     }
+      //   });
     });
   }
 
