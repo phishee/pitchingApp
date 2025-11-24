@@ -7,11 +7,6 @@ import React, {
   ReactNode,
 } from 'react';
 
-import { WorkoutSession, WorkoutSessionStep } from '@/models/WorkoutSession';
-import { WorkoutAssignment } from '@/models/WorkoutAssignment';
-import { Workout, WorkoutExercise } from '@/models/Workout';
-import { Exercise } from '@/models';
-
 import { useSessionData } from './hooks/useSessionData';
 import { useAssignmentData } from './hooks/useAssignmentData';
 import { useWorkoutData } from './hooks/useWorkoutData';
@@ -19,12 +14,6 @@ import { useExercisesData } from './hooks/useExercisesData';
 import { useSessionCompletion } from './hooks/useSessionCompletion';
 import {
   AsyncDataState,
-  WorkoutSessionSection,
-  WorkoutAssignmentSection,
-  WorkoutDefinitionSection,
-  WorkoutExercisesSection,
-  WorkoutSessionUiSection,
-  WorkoutCompletionSection,
   WorkoutSessionContextValue,
 } from './hooks/types';
 

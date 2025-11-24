@@ -18,6 +18,7 @@ import {
     Plus
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { WorkoutSessionBottomBar } from './workout-session-bottom-bar';
 
 // ==========================================
@@ -501,11 +502,14 @@ export function ExerciseSessionMobile() {
                 {/* Media & Tips */}
                 <div className="relative rounded-2xl overflow-hidden shadow-lg bg-gray-900 aspect-video">
                     {activeExerciseDef.image ? (
-                        <img
-                            src={activeExerciseDef.image}
-                            alt={activeSessionExercise.exerciseName}
-                            className="w-full h-full object-cover opacity-90"
-                        />
+                        <div className="relative w-full h-full">
+                            <Image
+                                src={activeExerciseDef.image}
+                                alt={activeSessionExercise.exerciseName}
+                                fill
+                                className="object-cover opacity-90"
+                            />
+                        </div>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-500">
                             No Image
