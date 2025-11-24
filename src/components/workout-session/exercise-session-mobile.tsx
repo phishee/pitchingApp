@@ -17,6 +17,7 @@ import {
     Maximize2,
     Plus
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { WorkoutSessionBottomBar } from './workout-session-bottom-bar';
 
 // ==========================================
@@ -154,7 +155,7 @@ interface SetCardProps {
     metrics: ExerciseMetric[];
     isActive: boolean;
     onUpdateSet: (setNumber: number, data: Record<string, MetricValue>) => void;
-    onCompleteSet: (setNumber: number) => void;
+    onCompleteSet: (setNumber: number, values: Record<string, MetricValue>) => void;
     onDeleteSet: (setNumber: number) => void;
 }
 
@@ -251,7 +252,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
 
                 <Button
                     className="w-full mt-6 bg-[#FF7F50] hover:bg-[#FF6347] text-white font-bold text-lg h-12 rounded-xl shadow-orange-200 shadow-lg"
-                    onClick={() => onCompleteSet(set.setNumber)}
+                    onClick={() => onCompleteSet(set.setNumber, localValues)}
                 >
                     <Check className="w-5 h-5 mr-2" />
                     Mark as Done
@@ -330,14 +331,23 @@ export function ExerciseSessionMobile() {
     // ==========================================
 
     const handleUpdateSet = (setNumber: number, data: Record<string, MetricValue>) => {
+        console.log('[Mobile] handleUpdateSet called:', setNumber, data);
         if (!session.data || !activeSessionExercise) return;
 
-        const newSession = { ...session.data };
-        const exerciseIndex = newSession.exercises.findIndex(e => e.exerciseId === exercises.activeExerciseId);
-        if (exerciseIndex === -1) return;
+        // Create a deep copy to ensure we trigger updates and don't mutate state directly
+        const newSession = JSON.parse(JSON.stringify(session.data));
 
-        const setIndex = newSession.exercises[exerciseIndex].sets.findIndex(s => s.setNumber === setNumber);
-        if (setIndex === -1) return;
+        const exerciseIndex = newSession.exercises.findIndex((e: any) => e.exerciseId === exercises.activeExerciseId);
+        if (exerciseIndex === -1) {
+            console.error('[Mobile] Exercise not found in session');
+            return;
+        }
+
+        const setIndex = newSession.exercises[exerciseIndex].sets.findIndex((s: any) => s.setNumber === setNumber);
+        if (setIndex === -1) {
+            console.error('[Mobile] Set not found in exercise');
+            return;
+        }
 
         // Update performed data
         newSession.exercises[exerciseIndex].sets[setIndex].performed = {
@@ -345,32 +355,49 @@ export function ExerciseSessionMobile() {
             ...data
         };
 
+        console.log('[Mobile] Updated set performed data:', newSession.exercises[exerciseIndex].sets[setIndex].performed);
+
+        // For typing updates, we just set the session state locally/optimistically
+        // We don't save to server on every keystroke
         session.setSession(newSession);
     };
 
-    const handleCompleteSet = (setNumber: number) => {
+    const handleCompleteSet = async (setNumber: number, values: Record<string, MetricValue>) => {
         if (!session.data || !activeSessionExercise) return;
 
-        const newSession = { ...session.data };
-        const exerciseIndex = newSession.exercises.findIndex(e => e.exerciseId === exercises.activeExerciseId);
+        // Create deep copy
+        const newSession = JSON.parse(JSON.stringify(session.data));
+        const exerciseIndex = newSession.exercises.findIndex((e: any) => e.exerciseId === exercises.activeExerciseId);
         if (exerciseIndex === -1) return;
 
-        const setIndex = newSession.exercises[exerciseIndex].sets.findIndex(s => s.setNumber === setNumber);
+        const setIndex = newSession.exercises[exerciseIndex].sets.findIndex((s: any) => s.setNumber === setNumber);
         if (setIndex === -1) return;
+
+        // Update performed data with the values passed from the UI (ensures defaults are captured)
+        newSession.exercises[exerciseIndex].sets[setIndex].performed = {
+            ...newSession.exercises[exerciseIndex].sets[setIndex].performed,
+            ...values
+        };
 
         // Mark as completed
         newSession.exercises[exerciseIndex].sets[setIndex].status = 'completed';
 
         // Update summary
         const sets = newSession.exercises[exerciseIndex].sets;
-        newSession.exercises[exerciseIndex].summary.completedSets = sets.filter(s => s.status === 'completed').length;
+        newSession.exercises[exerciseIndex].summary.completedSets = sets.filter((s: any) => s.status === 'completed').length;
         newSession.exercises[exerciseIndex].summary.compliancePercent =
             Math.round((newSession.exercises[exerciseIndex].summary.completedSets / newSession.exercises[exerciseIndex].summary.totalSets) * 100);
 
-        session.setSession(newSession);
+        const setBeingSaved = newSession.exercises[exerciseIndex].sets[setIndex];
+        console.log('[Mobile] Completing set:', setNumber);
+        console.log('[Mobile] Performed data:', JSON.stringify(setBeingSaved.performed));
+
+        // Save to server
+        console.log('[Mobile] Saving session after completion...');
+        await session.saveSession({ exercises: newSession.exercises });
     };
 
-    const handleAddSet = () => {
+    const handleAddSet = async () => {
         if (!session.data || !activeSessionExercise) return;
 
         const newSession = { ...session.data };
@@ -392,12 +419,13 @@ export function ExerciseSessionMobile() {
         };
 
         newSession.exercises[exerciseIndex].sets.push(newSet);
-        // Do NOT update summary.totalSets to avoid affecting progress bar denominator
 
-        session.setSession(newSession);
+        // Save to server
+        console.log('[Mobile] Saving session after adding set...');
+        await session.saveSession({ exercises: newSession.exercises });
     };
 
-    const handleDeleteSet = (setNumber: number) => {
+    const handleDeleteSet = async (setNumber: number) => {
         if (!session.data || !activeSessionExercise) return;
 
         const newSession = { ...session.data };
@@ -407,14 +435,13 @@ export function ExerciseSessionMobile() {
         // Filter out the set
         newSession.exercises[exerciseIndex].sets = newSession.exercises[exerciseIndex].sets.filter(s => s.setNumber !== setNumber);
 
-        // Re-number sets? Or keep original numbers? 
-        // If we delete set 4, set 5 becomes set 4? 
-        // For simplicity, let's re-number to keep sequence clean
+        // Re-number sets
         newSession.exercises[exerciseIndex].sets.forEach((s, idx) => {
             s.setNumber = idx + 1;
         });
 
-        session.setSession(newSession);
+        // Save to server
+        await session.saveSession({ exercises: newSession.exercises });
     };
 
     // ==========================================
@@ -435,6 +462,33 @@ export function ExerciseSessionMobile() {
     const activeSetIndex = activeSessionExercise.sets.findIndex(s => s.status === 'pending');
     const isLastSet = activeSetIndex === activeSessionExercise.sets.length - 1 || activeSetIndex === -1; // If all completed, activeSetIndex is -1, still allow adding
     const canAddSet = isLastSet;
+
+    const router = useRouter();
+
+    const handleFinishExercise = async () => {
+        if (!session.data || !activeSessionExercise) return;
+
+        // 1. Save current state one last time to be safe
+        await session.saveSession({ exercises: session.data.exercises });
+
+        // 2. Determine next step
+        const currentExerciseIndex = session.data.exercises.findIndex(e => e.exerciseId === activeExerciseId);
+        const isLastExercise = currentExerciseIndex === session.data.exercises.length - 1;
+
+        if (isLastExercise) {
+            // Go to RPE page
+            router.push(`/app/workout-session/${session.data._id}/rpe`);
+        } else {
+            // Go to next exercise
+            const nextExercise = session.data.exercises[currentExerciseIndex + 1];
+            router.push(`/app/workout-session/${session.data._id}/exercises/${nextExercise.exerciseId}`);
+        }
+    };
+
+    // Determine button label
+    const currentExerciseIndex = session.data?.exercises.findIndex(e => e.exerciseId === activeExerciseId) ?? -1;
+    const isLastExercise = session.data?.exercises ? currentExerciseIndex === session.data.exercises.length - 1 : false;
+    const buttonLabel = isLastExercise ? "Finish Workout" : "Next Exercise";
 
     return (
         <div className="min-h-screen bg-[#FFE4C4]/30 pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
@@ -491,14 +545,6 @@ export function ExerciseSessionMobile() {
                 <div className="space-y-4">
                     {activeSessionExercise.sets.map((set, index) => {
                         const isActive = index === activeSetIndex;
-                        // Upcoming if index > activeSetIndex
-                        // But if activeSetIndex is -1 (all done), nothing is upcoming?
-                        // Actually activeSetIndex is -1 if all completed.
-
-                        // If all completed, activeSetIndex is -1.
-                        // Then isActive is false for all.
-                        // But we want to show them as completed.
-
                         return (
                             <SetCard
                                 key={set.setNumber}
@@ -528,8 +574,8 @@ export function ExerciseSessionMobile() {
             {/* Fixed Footer Button */}
             <WorkoutSessionBottomBar
                 isVisible={true}
-                label="Finish Exercise"
-                onAction={() => { }}
+                label={buttonLabel}
+                onAction={handleFinishExercise}
             />
         </div>
     );

@@ -8,6 +8,11 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
   return controller.getSessionById(req, { params });
 });
 
+export const PATCH = withAuth(async (req: AuthenticatedRequest, { params }: { params: Promise<{ sessionId: string }> }) => {
+  const controller = container.get<WorkoutSessionController>(WORKOUT_SESSION_TYPES.WorkoutSessionController);
+  return controller.updateSession(req, { params });
+});
+
 
 
 

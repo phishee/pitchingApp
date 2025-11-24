@@ -169,6 +169,43 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
         [sessionState.data]
     );
 
+    // Saves the session data (exercises, sets, etc.)
+    const saveSession = useCallback(
+        async (updates: Partial<WorkoutSession>) => {
+            if (!sessionState.data?._id) {
+                return null;
+            }
+
+            // Optimistic update
+            const optimisticSession = { ...sessionState.data, ...updates };
+            setSessionState((prev) => ({ ...prev, data: optimisticSession }));
+
+            // Update cache immediately
+            workoutSessionCache.update(sessionState.data._id, { session: optimisticSession });
+
+            try {
+                console.log('[useSessionData] Calling API updateSession...', sessionState.data._id);
+                const updatedSession = await workoutSessionApi.updateSession(
+                    sessionState.data._id,
+                    updates
+                );
+                console.log('[useSessionData] API update successful');
+
+                // Confirm with server data
+                setSessionState({ data: updatedSession, status: 'loaded', error: null });
+                workoutSessionCache.update(sessionState.data._id, { session: updatedSession });
+
+                return updatedSession;
+            } catch (error) {
+                const message = toErrorMessage(error, 'Failed to save workout session.');
+                // Revert or show error? For now show error but keep optimistic data to avoid jarring UI
+                setSessionState((prev) => ({ ...prev, error: message }));
+                return null;
+            }
+        },
+        [sessionState.data]
+    );
+
     // Fetch session when sessionId or calendarEventId becomes available
     useEffect(() => {
         console.log('[useSessionData] Session fetch effect', { sessionId, calendarEventId });
@@ -210,5 +247,6 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
         setCurrentStep,
         refreshSession,
         updateSessionProgress,
+        saveSession,
     };
 }

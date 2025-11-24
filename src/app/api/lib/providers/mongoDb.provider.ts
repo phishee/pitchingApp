@@ -107,7 +107,7 @@ export class MongoDBProvider implements IDatabase {
 
         // Common date fields to convert
         const dateFields = ['startTime', 'endTime', 'createdAt', 'updatedAt', 'startDate', 'endDate'];
-        
+
         dateFields.forEach(field => {
             if (converted[field] && !(converted[field] instanceof Date)) {
                 converted[field] = new Date(converted[field]);
@@ -163,9 +163,9 @@ export class MongoDBProvider implements IDatabase {
         // Handle nested objects (for complex queries)
         for (const [key, value] of Object.entries(processedQuery)) {
             if (
-                value && 
-                typeof value === 'object' && 
-                !Array.isArray(value) && 
+                value &&
+                typeof value === 'object' &&
+                !Array.isArray(value) &&
                 !(value instanceof ObjectId) &&
                 !(value instanceof Date)  // ✅ Exclude Date objects
             ) {
@@ -253,6 +253,12 @@ export class MongoDBProvider implements IDatabase {
         await this.ensureConnected();
         try {
             const convertedData = this.convertDatesToObjects(data);
+
+            // Ensure _id is ObjectId if it exists and is a valid string
+            if (convertedData._id && typeof convertedData._id === 'string' && ObjectId.isValid(convertedData._id)) {
+                convertedData._id = ObjectId.createFromHexString(convertedData._id);
+            }
+
             const result = await this.db.collection(collection).insertOne({
                 ...convertedData,
                 createdAt: new Date(),
@@ -272,11 +278,11 @@ export class MongoDBProvider implements IDatabase {
     async update(collection: string, id: string | ObjectId, data: any): Promise<any> {
         await this.ensureConnected();
         console.log(`[MongoDBProvider] Update called with collection: ${collection}, id: ${id}, idType: ${typeof id}, idLength: ${id?.toString().length}`);
-        
+
         try {
             const { _id, ...updateData } = data;
             const convertedData = this.convertDatesToObjects(updateData);
-            
+
             let objectId;
             if (id instanceof ObjectId) {
                 // If it's already an ObjectId, use it directly
@@ -288,12 +294,23 @@ export class MongoDBProvider implements IDatabase {
                 console.log(`[MongoDBProvider] Invalid ObjectId: ${id}`);
                 return null;
             }
-            
-            const result = await this.db.collection(collection).findOneAndUpdate(
+
+            let result = await this.db.collection(collection).findOneAndUpdate(
                 { _id: objectId },
                 { $set: { ...convertedData, updatedAt: new Date() } },
                 { returnDocument: 'after' }
             );
+
+            // Fallback: If not found with ObjectId, try with String ID (for legacy documents)
+            if ((!result || (result && !result.value && !result._id)) && typeof id === 'string') {
+                console.log(`[MongoDBProvider] ObjectId update failed, retrying with String ID: ${id}`);
+                result = await this.db.collection(collection).findOneAndUpdate(
+                    { _id: id } as any,
+                    { $set: { ...convertedData, updatedAt: new Date() } },
+                    { returnDocument: 'after' }
+                );
+            }
+
             return result;
         } catch (error) {
             console.error(`Error updating document in collection ${collection}:`, error);
@@ -319,8 +336,8 @@ export class MongoDBProvider implements IDatabase {
                 return false;
             }
 
-            const result = await this.db.collection(collection).deleteOne({ 
-                _id: objectId 
+            const result = await this.db.collection(collection).deleteOne({
+                _id: objectId
             });
             return result.deletedCount > 0;
         } catch (error) {

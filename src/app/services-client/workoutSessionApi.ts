@@ -50,6 +50,14 @@ class WorkoutSessionApi {
 
     return response.data;
   }
+
+  async updateSession(sessionId: string, updates: Partial<WorkoutSession>): Promise<WorkoutSession> {
+    const response = await apiClient.patch<WorkoutSession>(
+      `${this.baseUrl}/${sessionId}`,
+      updates
+    );
+    return response.data;
+  }
 }
 
 export const workoutSessionApi = new WorkoutSessionApi();

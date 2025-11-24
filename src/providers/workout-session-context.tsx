@@ -59,6 +59,7 @@ export function WorkoutSessionProvider({
     setCurrentStep,
     refreshSession,
     updateSessionProgress,
+    saveSession,
   } = useSessionData({ sessionId, calendarEventId });
 
   // 2. Assignment Data
@@ -123,6 +124,7 @@ export function WorkoutSessionProvider({
         setSession: (value) =>
           setSessionState({ data: value, status: value ? 'loaded' : 'idle', error: null }),
         updateProgress: updateSessionProgress,
+        saveSession,
       },
       assignment: {
         ...assignmentState,
@@ -181,6 +183,7 @@ export function WorkoutSessionProvider({
       refreshSession,
       sessionState,
       updateSessionProgress,
+      saveSession,
       workoutState,
       metricsByExercise,
       setSessionState,
