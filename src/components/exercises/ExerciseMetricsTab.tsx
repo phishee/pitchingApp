@@ -11,15 +11,10 @@ interface Metric {
   formula?: string;
 }
 
-interface RPE {
-  type: string;
-  range: string;
-  description: string;
-}
+
 
 interface Exercise {
   metrics?: Metric[];
-  rpe?: RPE;
 }
 
 interface ExerciseMetricsTabProps {
@@ -145,74 +140,17 @@ function MetricCard({ metric, index }: MetricCardProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
       <MetricHeader metric={metric} />
-      
+
       {metric.input === 'formula' && metric.formula && (
         <FormulaDisplay formula={metric.formula} />
       )}
-      
+
       <InputTypeInfo input={metric.input} />
     </div>
   );
 }
 
-// RPE Scale Display Component
-interface RPEScaleDisplayProps {
-  range: string;
-}
 
-function RPEScaleDisplay({ range }: RPEScaleDisplayProps) {
-  return (
-    <div className="bg-white rounded-lg p-4 border border-orange-200">
-      <div className="text-3xl font-bold text-orange-600 text-center">
-        {range}
-      </div>
-      <div className="text-sm text-gray-600 text-center">Scale Range</div>
-    </div>
-  );
-}
-
-// RPE Description Component
-interface RPEDescriptionProps {
-  description: string;
-}
-
-function RPEDescription({ description }: RPEDescriptionProps) {
-  return (
-    <div className="bg-white rounded-lg p-4 border border-orange-200">
-      <div className="text-sm text-gray-600 mb-2">Description</div>
-      <div className="text-sm text-gray-800">{description}</div>
-    </div>
-  );
-}
-
-// RPE Section Component
-interface RPESectionProps {
-  rpe: RPE;
-}
-
-function RPESection({ rpe }: RPESectionProps) {
-  return (
-    <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-lg bg-orange-100">
-          <Activity className="w-5 h-5 text-orange-600" />
-        </div>
-        <div>
-          <h4 className="font-semibold text-gray-900">Rate of Perceived Exertion (RPE)</h4>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-gray-500">{rpe.type}</span>
-            <MetricBadge type="prescribable">Subjective</MetricBadge>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <RPEScaleDisplay range={rpe.range} />
-        <RPEDescription description={rpe.description} />
-      </div>
-    </div>
-  );
-}
 
 // Summary Stat Component
 interface SummaryStatProps {
@@ -295,8 +233,7 @@ export function ExerciseMetricsTab({ exercise }: ExerciseMetricsTabProps) {
           <MetricCard key={index} metric={metric} index={index} />
         ))}
 
-        {/* RPE Section - Always Last */}
-        {exercise.rpe && <RPESection rpe={exercise.rpe} />}
+
       </div>
 
       {/* Metrics Summary */}

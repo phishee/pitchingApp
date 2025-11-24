@@ -30,21 +30,7 @@ export function ExerciseOverviewTab({ exercise }: ExerciseOverviewTabProps) {
         </div>
       </div>
 
-      {/* RPE Information */}
-      {exercise.rpe && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Rate of Perceived Exertion</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl font-bold text-orange-600">{exercise.rpe.range}</div>
-              <div>
-                <div className="font-medium text-gray-900">{exercise.rpe.type}</div>
-                <div className="text-sm text-gray-600">{exercise.rpe.description}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Owner Information */}
       <div hidden={exercise.owner === 'system'}>

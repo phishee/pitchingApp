@@ -141,6 +141,11 @@ export class WorkoutSessionService implements IWorkoutSessionService {
     // For now, we trust the controller to filter the body
     console.log(`[Service] updateSession called for sessionId: ${sessionId}`);
 
+    // If RPE result is provided, ensure legacy sessionRPE is also set if missing
+    if (updates.rpeResult?.overall && updates.summary && !updates.summary.sessionRPE) {
+      updates.summary.sessionRPE = updates.rpeResult.overall.numeric;
+    }
+
     const updated = await this.mongoProvider.update(this.sessionsCollection, sessionId, {
       ...updates,
       updatedAt: new Date(),

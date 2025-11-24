@@ -1,17 +1,18 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
+import { SessionSummary } from '@/components/workout-session/session-summary';
+import { useWorkoutSessionContext } from '@/providers/workout-session-context';
 
 export default function WorkoutSummaryPage() {
-  const params = useParams<{ sessionId: string }>();
-  const sessionId = params?.sessionId ?? '';
+  const { session } = useWorkoutSessionContext();
+
+  if (!session.data) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-bold">Workout Summary</h1>
-      <p className="text-muted-foreground">Session ID: {sessionId}</p>
-    </div>
+    <SessionSummary session={session.data} />
   );
 }
 
