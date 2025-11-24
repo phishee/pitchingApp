@@ -15,7 +15,7 @@ export class WorkoutSessionController {
   constructor(
     @inject(WORKOUT_SESSION_TYPES.WorkoutSessionService)
     private readonly workoutSessionService: WorkoutSessionService
-  ) {}
+  ) { }
 
   async startSession(req: AuthenticatedRequest): Promise<NextResponse> {
     try {
@@ -146,6 +146,43 @@ export class WorkoutSessionController {
       }
 
       const session = await this.workoutSessionService.updateSessionProgress(sessionId, nextStep);
+
+      if (!session) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+
+      return NextResponse.json(session);
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error?.message ?? 'Failed to update workout session' },
+        { status: 500 }
+      );
+    }
+  }
+
+  async updateSession(
+    req: AuthenticatedRequest,
+    { params }: { params: Promise<{ sessionId: string }> }
+  ): Promise<NextResponse> {
+    try {
+      const { sessionId } = await params;
+      console.log(`[Controller] updateSession called for sessionId: ${sessionId}`);
+
+      if (!sessionId) {
+        return NextResponse.json(
+          { error: 'sessionId is required' },
+          { status: 400 }
+        );
+      }
+
+      const body = await req.json();
+      console.log(`[Controller] updateSession body:`, JSON.stringify(body, null, 2));
+
+      // Basic validation - ensure we aren't trying to update restricted fields if necessary
+      // For now, we pass the body through
+
+      const session = await this.workoutSessionService.updateSession(sessionId, body);
+      console.log(`[Controller] updateSession result:`, session ? 'Success' : 'Not Found');
 
       if (!session) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 });

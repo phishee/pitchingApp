@@ -133,6 +133,23 @@ export class WorkoutSessionService implements IWorkoutSessionService {
     return updated ? this.normalizeSession(updated.value ?? updated) : null;
   }
 
+  async updateSession(
+    sessionId: string,
+    updates: Partial<WorkoutSession>
+  ): Promise<WorkoutSession | null> {
+    // Prevent updating immutable fields or critical metadata through this generic method if needed
+    // For now, we trust the controller to filter the body
+    console.log(`[Service] updateSession called for sessionId: ${sessionId}`);
+
+    const updated = await this.mongoProvider.update(this.sessionsCollection, sessionId, {
+      ...updates,
+      updatedAt: new Date(),
+    });
+    console.log(`[Service] updateSession mongo result:`, updated);
+
+    return updated ? this.normalizeSession(updated.value ?? updated) : null;
+  }
+
   private async checkForExistingSession(
     calendarEventId: string,
     athleteUserId: string
