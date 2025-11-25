@@ -33,6 +33,8 @@ interface RpeCollectionProps {
     onSubmit: (result: { overall: RPEValue; exerciseValues?: Record<string, RPEValue> }) => void;
     isSubmitting?: boolean;
     onBack?: () => void;
+    workoutName?: string;
+    date?: Date;
 }
 
 export function RpeCollection({
@@ -42,7 +44,9 @@ export function RpeCollection({
     initialExerciseValues = {},
     onSubmit,
     isSubmitting = false,
-    onBack
+    onBack,
+    workoutName,
+    date
 }: RpeCollectionProps) {
     const granularity = config.granularity ?? 'session';
     const [mode, setMode] = useState<RPEMode>(config.mode);
@@ -111,6 +115,16 @@ export function RpeCollection({
         ? (mode === 'numeric' || selectedEmojiCategory !== undefined)
         : allExercisesRated;
 
+    const getMotivationalText = (category: string) => {
+        switch (category) {
+            case 'easy': return 'Great job pushing through!';
+            case 'medium': return 'Solid effort, keep it up!';
+            case 'hard': return "You're getting stronger every day!";
+            case 'extreme': return 'Incredible work today!';
+            default: return '';
+        }
+    };
+
     const renderEmojiSelector = (
         currentValue: RPEValue | undefined,
         onSelect: (val: RPEValue) => void,
@@ -127,15 +141,23 @@ export function RpeCollection({
                             emojiCategory: option.category
                         })}
                         className={cn(
-                            "flex flex-col items-center justify-center rounded-xl border-2 transition-all duration-200",
-                            compact ? "p-2" : "p-6",
+                            "flex flex-col items-center justify-center rounded-xl border transition-all duration-200 bg-white",
+                            compact ? "p-2 aspect-square" : "p-6",
                             isSelected
-                                ? "border-[#FF7F50] bg-[#FFF5EE] shadow-md scale-105"
-                                : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50"
+                                ? option.category === 'easy' ? "border-blue-200 bg-blue-50" :
+                                    option.category === 'medium' ? "border-yellow-200 bg-yellow-50" :
+                                        option.category === 'hard' ? "border-orange-200 bg-orange-50" :
+                                            "border-red-200 bg-red-50"
+                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
+                            // Specific styling for selected state based on category to match design roughly
+                            isSelected && option.category === 'easy' && "!border-blue-300 !bg-blue-50",
+                            isSelected && option.category === 'medium' && "!border-[#00C896] !bg-[#E6F9F4]", // Match design green
+                            isSelected && option.category === 'hard' && "!border-[#00C896] !bg-[#E6F9F4]", // Match design green for hard too? Or maybe orange? Image shows green for Medium and Hard. Let's use green for selected.
+                            isSelected && option.category === 'extreme' && "!border-[#00C896] !bg-[#E6F9F4]"
                         )}
                     >
-                        <span className={cn("mb-1", compact ? "text-2xl" : "text-4xl")}>{option.emoji}</span>
-                        <span className={cn("font-bold text-gray-900", compact ? "text-xs" : "")}>{option.label}</span>
+                        <span className={cn("mb-1", compact ? "text-3xl" : "text-4xl")}>{option.emoji}</span>
+                        <span className={cn("font-medium text-gray-400", compact ? "text-xs" : "", isSelected && "!text-[#00C896]")}>{option.label}</span>
                         {!compact && (
                             <span className="text-xs text-center text-gray-500 mt-1">
                                 {option.description}
@@ -177,67 +199,89 @@ export function RpeCollection({
     if (granularity === 'exercise') {
         return (
             <div className="flex flex-col min-h-screen bg-gray-50">
-                <div className="bg-white px-6 pt-12 pb-6 shadow-sm z-10 sticky top-0">
-                    <div className="flex items-center gap-4 mb-4">
-                        {onBack && (
-                            <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
-                                <ArrowLeft className="w-6 h-6 text-gray-900" />
-                            </button>
-                        )}
-                        <h1 className="text-2xl font-bold text-gray-900">How Did It Feel?</h1>
+                {/* Header */}
+                <div className="bg-white px-4 py-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+                    {onBack && (
+                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
+                            <ArrowLeft className="w-6 h-6 text-gray-900" />
+                        </button>
+                    )}
+                    <div className="flex-1 text-center pr-8">
+                        <h1 className="text-lg font-bold text-gray-900">How Did It Feel?</h1>
                     </div>
-                    <p className="text-gray-500">Rate each exercise to complete your workout.</p>
                 </div>
 
-                <div className="flex-1 p-4 space-y-4 pb-32">
-                    {exercises.map((exercise) => (
-                        <div key={exercise.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                            <div className="flex items-center gap-4 mb-4">
-                                {exercise.image ? (
-                                    <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-                                        <Image
-                                            src={exercise.image}
-                                            alt={exercise.name}
-                                            fill
-                                            className="object-cover"
-                                        />
+                <div className="flex-1 p-4 space-y-6 pb-32">
+                    {/* Workout Info Card */}
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <h2 className="text-lg font-bold text-gray-900">{workoutName || 'Workout'}</h2>
+                        <p className="text-sm text-gray-400">
+                            {date ? date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Today'}
+                        </p>
+                    </div>
+
+                    {exercises.map((exercise) => {
+                        const currentValue = exerciseValues[exercise.id];
+                        const motivationalText = currentValue?.emojiCategory ? getMotivationalText(currentValue.emojiCategory) : '';
+
+                        return (
+                            <div key={exercise.id} className="space-y-3">
+                                {/* Exercise Header */}
+                                <div className="flex items-center gap-4 px-1">
+                                    {exercise.image ? (
+                                        <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                                            <Image
+                                                src={exercise.image}
+                                                alt={exercise.name}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center text-xl">
+                                            🏋️
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h3 className="font-bold text-gray-900">{exercise.name}</h3>
+                                        <p className="text-sm text-gray-400">
+                                            {exercise.sets ? `${exercise.sets} sets` : ''}
+                                            {exercise.sets && exercise.reps ? ' of ' : ''}
+                                            {exercise.reps ? exercise.reps : ''}
+                                        </p>
                                     </div>
-                                ) : (
-                                    <div className="w-16 h-16 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center text-2xl">
-                                        🏋️
-                                    </div>
-                                )}
-                                <div>
-                                    <h3 className="font-bold text-gray-900">{exercise.name}</h3>
-                                    <p className="text-sm text-gray-500">
-                                        {exercise.sets ? `${exercise.sets} sets` : ''}
-                                        {exercise.sets && exercise.reps ? ' • ' : ''}
-                                        {exercise.reps ? exercise.reps : ''}
+                                </div>
+
+                                {/* RPE Card */}
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+                                    <p className="text-base font-bold text-gray-900">
+                                        How did {exercise.name} feel today?
                                     </p>
+
+                                    {mode === 'emoji'
+                                        ? renderEmojiSelector(
+                                            currentValue,
+                                            (val) => updateExerciseRpe(exercise.id, val),
+                                            true
+                                        )
+                                        : renderNumericSelector(
+                                            currentValue,
+                                            (val) => updateExerciseRpe(exercise.id, val)
+                                        )
+                                    }
+
+                                    {motivationalText && (
+                                        <p className="text-center text-[#00C896] font-medium text-sm animate-in fade-in slide-in-from-bottom-2">
+                                            {motivationalText}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className="space-y-3">
-                                <p className="text-sm font-medium text-gray-900">
-                                    How did {exercise.name} feel today?
-                                </p>
-                                {mode === 'emoji'
-                                    ? renderEmojiSelector(
-                                        exerciseValues[exercise.id],
-                                        (val) => updateExerciseRpe(exercise.id, val),
-                                        true
-                                    )
-                                    : renderNumericSelector(
-                                        exerciseValues[exercise.id],
-                                        (val) => updateExerciseRpe(exercise.id, val)
-                                    )
-                                }
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
-                <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+                <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 z-20">
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !canSubmit}

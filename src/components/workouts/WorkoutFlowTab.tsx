@@ -82,7 +82,7 @@ export function WorkoutFlowTab({ workout }: WorkoutFlowTabProps) {
         <div className="space-y-3">
           {workout.flow.exercises.map((workoutExercise, index: number) => {
             const exerciseDetails = getExerciseById(workoutExercise.exercise_id);
-            
+
             if (!exerciseDetails) {
               return null; // Skip if exercise details not found
             }
@@ -98,7 +98,17 @@ export function WorkoutFlowTab({ workout }: WorkoutFlowTabProps) {
           })}
         </div>
       </div>
+      {/* RPE Section */}
+      {workout.flow.rpe && (
+        <FlowSection
+          type="rpe"
+          items={[
+            `Granularity: ${workout.flow.rpe.granularity === 'exercise' ? 'Per Exercise' : 'Session Only'}`,
+            `Mode: ${workout.flow.rpe.mode === 'emoji' ? 'Emoji' : 'Numeric'}`
+          ]}
+          title="RPE Collection"
+        />
+      )}
     </div>
   );
 }
-

@@ -3,7 +3,7 @@ import { FileText, Zap } from 'lucide-react';
 import { formatTagName } from '@/lib/workoutUtils';
 
 interface FlowSectionProps {
-  type: 'questionnaires' | 'warmup';
+  type: 'questionnaires' | 'warmup' | 'rpe';
   items: string[];
   title: string;
 }
@@ -17,6 +17,8 @@ export function FlowSection({ type, items, title }: FlowSectionProps) {
         return FileText;
       case 'warmup':
         return Zap;
+      case 'rpe':
+        return FileText; // Or Star if imported
       default:
         return FileText;
     }
@@ -35,6 +37,12 @@ export function FlowSection({ type, items, title }: FlowSectionProps) {
           container: 'bg-green-50 border-green-100',
           icon: 'text-green-600',
           text: 'text-green-900'
+        };
+      case 'rpe':
+        return {
+          container: 'bg-yellow-50 border-yellow-100',
+          icon: 'text-yellow-600',
+          text: 'text-yellow-900'
         };
       default:
         return {

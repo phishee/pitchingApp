@@ -66,7 +66,7 @@ export function WorkoutForm() {
 
     try {
       setIsSubmitting(true);
-      
+
       console.log('Submitting workout:', {
         isEditing,
         workoutId: workoutMetadata.id,
@@ -76,16 +76,36 @@ export function WorkoutForm() {
           flow: workoutFlow,
         }
       });
-      
+
       if (!organizationId) {
         throw new Error('Organization ID is required');
       }
-      
+
+      // Clean up the flow - only include enabled sections
+      const cleanedFlow: any = {
+        exercises: workoutFlow.exercises || [],
+      };
+
+      // Only include questionnaires if they exist
+      if (workoutFlow.questionnaires && workoutFlow.questionnaires.length > 0) {
+        cleanedFlow.questionnaires = workoutFlow.questionnaires;
+      }
+
+      // Only include warmup if it exists
+      if (workoutFlow.warmup && workoutFlow.warmup.length > 0) {
+        cleanedFlow.warmup = workoutFlow.warmup;
+      }
+
+      // Only include RPE if it's defined
+      if (workoutFlow.rpe) {
+        cleanedFlow.rpe = workoutFlow.rpe;
+      }
+
       const workoutData = {
         ...workoutMetadata,
-        flow: workoutFlow,
+        flow: cleanedFlow,
       };
-      
+
       if (isEditing) {
         if (!workoutMetadata.id) {
           throw new Error('Workout ID is required for editing');
@@ -94,7 +114,7 @@ export function WorkoutForm() {
       } else {
         await createWorkout(workoutData, organizationId);
       }
-      
+
       // Redirect to workout library or detail page
       if (isEditing) {
         router.push(`/app/workout-library/${workoutMetadata.id}`);
@@ -116,7 +136,7 @@ export function WorkoutForm() {
       );
       if (!confirmed) return;
     }
-    
+
     clearWorkout();
     router.back();
   };
@@ -152,7 +172,7 @@ export function WorkoutForm() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="text-red-600 mb-4">Error: {error}</div>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -222,14 +242,14 @@ export function WorkoutForm() {
             >
               Previous
             </Button>
-            
+
             {currentStep < steps.length ? (
               <Button onClick={handleNext}>
                 Next
               </Button>
             ) : (
-              <Button 
-                onClick={handleSubmit} 
+              <Button
+                onClick={handleSubmit}
                 disabled={isSubmitting}
                 className="flex items-center gap-2"
               >

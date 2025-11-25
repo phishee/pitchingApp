@@ -46,10 +46,10 @@ function WorkoutOverviewCard({ workoutMetadata, workoutFlow, calculateTotalTime 
             Created by You
           </div>
         </div>
-        
+
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{workoutMetadata.name}</h3>
         <p className="text-gray-700 mb-4">{workoutMetadata.description}</p>
-        
+
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-4">
           {(workoutMetadata.tags || []).map((tag: string, index: number) => (
@@ -129,12 +129,44 @@ function WarmupRoutine({ warmup }: { warmup: string[] }) {
   );
 }
 
+// RPE Collection Component
+function RPECollection({ rpe }: { rpe?: any }) {
+  if (!rpe) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Zap className="w-5 h-5" />
+          RPE Collection
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Granularity:</span>
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+              {rpe.granularity === 'exercise' ? 'Per Exercise' : 'Session Only'}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Input Mode:</span>
+            <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+              {rpe.mode === 'emoji' ? 'Emoji' : 'Numeric (1-10)'}
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Exercise Sequence Component
-function ExerciseSequence({ 
-  workoutFlow, 
-  selectedExercises, 
-  getExerciseById, 
-  getDefaultMetricsForExerciseId 
+function ExerciseSequence({
+  workoutFlow,
+  selectedExercises,
+  getExerciseById,
+  getDefaultMetricsForExerciseId
 }: {
   workoutFlow: any;
   selectedExercises: any[];
@@ -154,7 +186,7 @@ function ExerciseSequence({
           {workoutFlow.exercises.map((workoutExercise: any, index: number) => {
             const exerciseInfo = getExerciseById(workoutExercise.exercise_id);
             const defaultMetrics = getDefaultMetricsForExerciseId(workoutExercise.exercise_id);
-            
+
             if (!exerciseInfo) {
               return null; // Skip if exercise info not found
             }
@@ -235,7 +267,7 @@ export function WorkoutPreviewStep() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Workout Info */}
             <div className="lg:col-span-1">
-              <WorkoutOverviewCard 
+              <WorkoutOverviewCard
                 workoutMetadata={workoutMetadata}
                 workoutFlow={workoutFlow}
                 calculateTotalTime={calculateTotalTime}
@@ -246,12 +278,13 @@ export function WorkoutPreviewStep() {
             <div className="lg:col-span-2 space-y-6">
               <PreWorkoutQuestionnaires questionnaires={workoutFlow.questionnaires || []} />
               <WarmupRoutine warmup={workoutFlow.warmup || []} />
-              <ExerciseSequence 
+              <ExerciseSequence
                 workoutFlow={workoutFlow}
                 selectedExercises={selectedExercises}
                 getExerciseById={getExerciseById}
                 getDefaultMetricsForExerciseId={getDefaultMetricsForExerciseId}
               />
+              <RPECollection rpe={workoutFlow.rpe} />
             </div>
           </div>
         </CardContent>

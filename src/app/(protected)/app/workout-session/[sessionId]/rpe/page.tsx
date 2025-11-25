@@ -82,6 +82,8 @@ export default function WorkoutRpePage() {
         onSubmit={handleRpeSubmit}
         isSubmitting={isSubmitting}
         onBack={() => router.back()}
+        workoutName={session.data.workout.name}
+        date={new Date(session.data.scheduledDate)}
       />
     </div>
   );
