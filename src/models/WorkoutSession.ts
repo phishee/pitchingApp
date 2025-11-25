@@ -1,5 +1,6 @@
 import { MetricValue } from "./Metric";
 import { UserInfo } from "./User";
+import { RPEValue, RPEResult, RPEConfig } from "./RPE";
 
 export interface WorkoutSession {
   _id: string;
@@ -34,6 +35,7 @@ export interface WorkoutSession {
     description: string;
     coverImage?: string;
     tags: string[];
+    rpe?: RPEConfig;
   };
 
   // ==========================================
@@ -75,9 +77,13 @@ export interface WorkoutSession {
     averageIntensityPercent?: number; // Avg % of prescribed weight
 
     // RPE
-    sessionRPE: number;           // 1-10, REQUIRED on completion
+    sessionRPE: number;           // 1-10, REQUIRED on completion (Kept as number for backward compatibility, use rpeResult for full data)
+    sessionRpe?: RPEValue;        // New structured RPE value
     averageExerciseRPE: number;   // Mean of all exercise RPEs
   };
+
+  // RPE Result (if configured in workout)
+  rpeResult?: RPEResult;
 
   // ==========================================
   // PROGRESSION (vs Last Same Workout)
@@ -90,7 +96,6 @@ export interface WorkoutSession {
     volumeChangeLbs?: number;     // +50, -20
     volumeChangePercent?: number; // +5%, -10%
     rpeChange?: number;           // +1, -2
-
     trend: 'improving' | 'plateauing' | 'regressing' | 'first_session';
   };
 
@@ -149,7 +154,8 @@ export interface WorkoutSessionExercise {
   exerciseImage?: string;
 
   // Exercise-level RPE (REQUIRED after completing exercise)
-  exerciseRPE?: number;           // 1-10
+  exerciseRPE?: number;           // 1-10 (Legacy/Simple)
+  exerciseRpe?: RPEValue;         // New structured RPE
   exerciseNotes?: string;
 
   // Sets data

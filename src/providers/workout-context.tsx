@@ -8,6 +8,7 @@ import { exerciseApi } from '@/app/services-client/exerciseApi';
 import { useUser } from './user.context';
 import { useTeam } from './team-context';
 
+import { RPEConfig } from '@/models/RPE';
 
 interface WorkoutContextType {
   // Core workout metadata
@@ -18,14 +19,15 @@ interface WorkoutContextType {
     coverImage: string;
     tags: string[];
   };
-  
+
   // Flow-specific data
   workoutFlow: {
     exercises: Array<WorkoutExercise>;
     questionnaires: string[];
     warmup: string[];
+    rpe?: RPEConfig;
   };
-  
+
   // Organization and permissions
   workoutPermissions: {
     organizationId: string;
@@ -33,7 +35,7 @@ interface WorkoutContextType {
     createdBy: WorkoutUser;
     updatedBy: WorkoutUser;
   };
-  
+
   // UI state
   uiState: {
     loading: boolean;
@@ -41,16 +43,16 @@ interface WorkoutContextType {
     isEditing: boolean;
     isDirty: boolean;
   };
-  
+
   // Exercise management
   exerciseState: {
     selectedExercises: Exercise[];
     availableExercises: Exercise[];
   };
-  
+
   // Add organization info
   organizationId: string;
-  
+
   // Actions (add these back)
   createWorkout: (workoutData: Partial<Workout>, organizationId: string) => Promise<void>;
   updateWorkout: (workoutId: string, workoutData: Partial<Workout>, organizationId: string) => Promise<void>;
@@ -60,7 +62,7 @@ interface WorkoutContextType {
   setError: (error: string | null) => void;
   setIsDirty: (isDirty: boolean) => void;
   clearWorkout: () => void;
-  
+
   // Form helpers
   updateWorkoutField: (field: string, value: any) => void;
   addExercise: (exerciseWithConfig: WorkoutExercise, exercise: Exercise) => void;
@@ -98,7 +100,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
   // Add this function to load selected exercises
   const loadSelectedExercises = async (exerciseIds: string[]) => {
     if (exerciseIds.length === 0) return;
-    
+
     try {
       const exercises = await exerciseApi.getExercisesByIds(exerciseIds);
       setSelectedExercises(exercises);
@@ -122,7 +124,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
 
       // create the flow exercises with the selected exercises ids
       const flowExercises = selectedExercises.map(ex => ({ exercise_id: ex.id, default_Metrics: { sets: 3, reps: 10, duration: 60, rest: 30 } }));
-      
+
       // Ensure required fields are present
       const workoutToCreate: Omit<Workout, 'id'> = {
         name: workoutData.name || '',
@@ -141,7 +143,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
         },
         flow: workoutData.flow
       };
-      
+
       const createdWorkout = await workoutApi.createWorkout(workoutToCreate, orgId);
       setWorkoutState(createdWorkout);
       setIsDirty(false);
@@ -158,7 +160,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
     try {
       setLoading(true);
       setError(null);
-      
+
       // Ensure required fields are present for the API
       const workoutToUpdate: Partial<Workout> = {
         ...workoutData,
@@ -168,7 +170,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
           memberId: currentTeamMember?._id || ''
         }
       };
-      
+
       const updatedWorkout = await workoutApi.updateWorkout(id, orgId, workoutToUpdate);
       setWorkoutState(updatedWorkout);
       setIsDirty(false);
@@ -185,7 +187,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
     try {
       setLoading(true);
       setError(null);
-      
+
       const workoutData = await workoutApi.getWorkoutById(id, orgId);
       setWorkoutState(workoutData);
       setIsDirty(false);
@@ -222,7 +224,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
   const addExercise = (exerciseWithConfig: WorkoutExercise, exercise: Exercise) => {
     setWorkoutState(prev => {
       if (!prev) return null;
-      
+
       return {
         ...prev,
         flow: {
@@ -238,7 +240,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
   const removeExercise = (exerciseId: string) => {
     setWorkoutState(prev => {
       if (!prev) return null;
-      
+
       return {
         ...prev,
         flow: {
@@ -256,20 +258,20 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
   const updateExercise = (exerciseId: string, field: string, value: any) => {
     setWorkoutState(prev => {
       if (!prev) return null;
-      
+
       return {
         ...prev,
         flow: {
           ...prev.flow,
           exercises: prev.flow.exercises.map((ex: any) =>
-            ex.exercise_id === exerciseId 
-              ? { 
-                  ...ex, 
-                  default_Metrics: {
-                    ...ex.default_Metrics,
-                    [field]: value
-                  }
-                } 
+            ex.exercise_id === exerciseId
+              ? {
+                ...ex,
+                default_Metrics: {
+                  ...ex.default_Metrics,
+                  [field]: value
+                }
+              }
               : ex
           )
         }
@@ -281,11 +283,11 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
   const reorderExercises = (fromIndex: number, toIndex: number) => {
     setWorkoutState(prev => {
       if (!prev) return null;
-      
+
       const exercises = [...prev.flow.exercises];
       const [movedExercise] = exercises.splice(fromIndex, 1);
       exercises.splice(toIndex, 0, movedExercise);
-      
+
       return {
         ...prev,
         flow: {
@@ -306,14 +308,15 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
       coverImage: workout?.coverImage || '',
       tags: workout?.tags || [],
     },
-    
+
     // Flow-specific data
     workoutFlow: {
       exercises: workout?.flow?.exercises || [],
       questionnaires: workout?.flow?.questionnaires || [],
       warmup: workout?.flow?.warmup || [],
+      rpe: workout?.flow?.rpe,
     },
-    
+
     // Organization and permissions
     workoutPermissions: {
       organizationId: workout?.organizationId || '',
@@ -321,7 +324,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
       createdBy: workout?.createdBy || { userId: '', memberId: '' },
       updatedBy: workout?.updatedBy || { userId: '', memberId: '' },
     },
-    
+
     // UI state
     uiState: {
       loading,
@@ -329,16 +332,16 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
       isEditing,
       isDirty,
     },
-    
+
     // Exercise management
     exerciseState: {
       selectedExercises,
       availableExercises: [], // This will need to be populated from the exerciseApi
     },
-    
+
     // Add organization info
     organizationId,
-    
+
     // Actions (add these back)
     createWorkout,
     updateWorkout,
@@ -348,7 +351,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
     setError,
     setIsDirty,
     clearWorkout,
-    
+
     // Form helpers
     updateWorkoutField,
     addExercise,
@@ -375,8 +378,8 @@ export function useWorkout() {
 // Helper hooks for specific concerns
 export function useWorkoutMetadata() {
   const { workoutMetadata, updateWorkoutField } = useWorkout();
-  return { 
-    workoutMetadata, 
+  return {
+    workoutMetadata,
     updateWorkoutField,
     // Convenience methods for common metadata updates
     updateName: (name: string) => updateWorkoutField('name', name),
@@ -388,41 +391,42 @@ export function useWorkoutMetadata() {
 
 export function useWorkoutFlow() {
   const { workoutFlow, addExercise, removeExercise, updateExercise, reorderExercises, updateWorkoutField } = useWorkout();
-  return { 
-    workoutFlow, 
-    addExercise, 
-    removeExercise, 
-    updateExercise, 
+  return {
+    workoutFlow,
+    addExercise,
+    removeExercise,
+    updateExercise,
     reorderExercises,
     // Convenience methods for flow updates
     updateQuestionnaires: (questionnaires: string[]) => updateWorkoutField('flow', { ...workoutFlow, questionnaires }),
     updateWarmup: (warmup: string[]) => updateWorkoutField('flow', { ...workoutFlow, warmup }),
+    updateRpe: (rpe: RPEConfig | undefined) => updateWorkoutField('flow', { ...workoutFlow, rpe }),
     addQuestionnaire: (questionnaire: string) => {
       if (!workoutFlow.questionnaires.includes(questionnaire)) {
-        updateWorkoutField('flow', { 
-          ...workoutFlow, 
-          questionnaires: [...workoutFlow.questionnaires, questionnaire] 
+        updateWorkoutField('flow', {
+          ...workoutFlow,
+          questionnaires: [...workoutFlow.questionnaires, questionnaire]
         });
       }
     },
     removeQuestionnaire: (questionnaire: string) => {
-      updateWorkoutField('flow', { 
-        ...workoutFlow, 
-        questionnaires: workoutFlow.questionnaires.filter(q => q !== questionnaire) 
+      updateWorkoutField('flow', {
+        ...workoutFlow,
+        questionnaires: workoutFlow.questionnaires.filter(q => q !== questionnaire)
       });
     },
     addWarmup: (warmup: string) => {
       if (!workoutFlow.warmup.includes(warmup)) {
-        updateWorkoutField('flow', { 
-          ...workoutFlow, 
-          warmup: [...workoutFlow.warmup, warmup] 
+        updateWorkoutField('flow', {
+          ...workoutFlow,
+          warmup: [...workoutFlow.warmup, warmup]
         });
       }
     },
     removeWarmup: (warmup: string) => {
-      updateWorkoutField('flow', { 
-        ...workoutFlow, 
-        warmup: workoutFlow.warmup.filter(w => w !== warmup) 
+      updateWorkoutField('flow', {
+        ...workoutFlow,
+        warmup: workoutFlow.warmup.filter(w => w !== warmup)
       });
     },
   };
@@ -430,22 +434,22 @@ export function useWorkoutFlow() {
 
 export function useWorkoutUI() {
   const { uiState, setLoading, setError, setIsDirty } = useWorkout();
-  return { 
-    ...uiState, 
-    setLoading, 
-    setError, 
-    setIsDirty 
+  return {
+    ...uiState,
+    setLoading,
+    setError,
+    setIsDirty
   };
 }
 
 export function useWorkoutExercises() {
   const { exerciseState, addExercise, removeExercise, updateExercise, reorderExercises } = useWorkout();
-  return { 
-    ...exerciseState, 
-    addExercise, 
-    removeExercise, 
-    updateExercise, 
-    reorderExercises 
+  return {
+    ...exerciseState,
+    addExercise,
+    removeExercise,
+    updateExercise,
+    reorderExercises
   };
 }
 
@@ -455,19 +459,19 @@ export function useWorkoutPermissions() {
 }
 
 export function useWorkoutActions() {
-  const { 
-    createWorkout, 
-    updateWorkout, 
-    loadWorkout, 
-    setWorkout, 
-    clearWorkout 
+  const {
+    createWorkout,
+    updateWorkout,
+    loadWorkout,
+    setWorkout,
+    clearWorkout
   } = useWorkout();
-  return { 
-    createWorkout, 
-    updateWorkout, 
-    loadWorkout, 
-    setWorkout, 
-    clearWorkout 
+  return {
+    createWorkout,
+    updateWorkout,
+    loadWorkout,
+    setWorkout,
+    clearWorkout
   };
 }
 

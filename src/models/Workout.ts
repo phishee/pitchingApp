@@ -1,13 +1,16 @@
 import { ExerciseMetric, MetricValue } from "./Metric";
+import { RPEConfig } from "./RPE";
+
 export interface WorkoutFlow {
   questionnaires: string[];
   warmup: string[];
   exercises: Array<WorkoutExercise>;
+  rpe?: RPEConfig;
 }
 
 export interface WorkoutExercise {
   exercise_id: string;
-  default_Metrics:  { [metricId: string]: MetricValue };
+  default_Metrics: { [metricId: string]: MetricValue };
 }
 
 export interface WorkoutUser {

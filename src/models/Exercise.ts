@@ -10,27 +10,22 @@ export interface Exercise {
   exercise_type: string;
   tags: string[];
   owner: string;
-  
+
   instructions: {
     text?: string[];
     video?: string; // URL
     animationPicture?: string;
   };
-  
+
   structure: string | "sets";
-  
+
   settings: {
     sets_counting: boolean;
     reps_counting: boolean;
   };
-  
+
   metrics: ExerciseMetric[];
-  
-  rpe: {
-    type: "number";
-    range: "1-10";
-    description: string;
-  };
+
 }
 
 // Query parameters interface

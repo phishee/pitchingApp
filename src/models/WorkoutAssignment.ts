@@ -1,6 +1,7 @@
 import { UserInfo } from "./User";
 import { RecurrenceConfig } from "./Calendar";
 import { MetricValue } from "./Metric";
+import { RPEConfig, RPEValue, RPEResult } from "./RPE";
 
 export interface WorkoutAssignment {
   _id: string;
