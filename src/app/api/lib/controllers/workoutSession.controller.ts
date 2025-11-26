@@ -136,16 +136,16 @@ export class WorkoutSessionController {
       }
 
       const body = await req.json();
-      const { nextStep } = body ?? {};
+      const { progress } = body ?? {};
 
-      if (!nextStep || !this.isValidStep(nextStep)) {
+      if (!progress || !progress.currentStep || !this.isValidStep(progress.currentStep)) {
         return NextResponse.json(
-          { error: 'nextStep is required and must be a valid step' },
+          { error: 'progress object with valid currentStep is required' },
           { status: 400 }
         );
       }
 
-      const session = await this.workoutSessionService.updateSessionProgress(sessionId, nextStep);
+      const session = await this.workoutSessionService.updateSessionProgress(sessionId, progress);
 
       if (!session) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 });

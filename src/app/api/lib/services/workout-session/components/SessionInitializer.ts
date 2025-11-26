@@ -97,6 +97,7 @@ export class SessionInitializer implements ISessionInitializer {
         coverImage: workout.coverImage,
         tags: workout.tags ?? [],
         rpe: workout.flow?.rpe,
+        flow: workout.flow,
       },
       scheduledDate: new Date(event.startTime),
       actualStartTime: now,

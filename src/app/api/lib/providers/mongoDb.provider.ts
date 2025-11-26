@@ -5,6 +5,10 @@ import { MongoClient, Db, ObjectId, Collection, MongoClientOptions, Document } f
 import { injectable } from "inversify";
 import { ClientSession } from "mongodb";
 
+declare global {
+    var _mongoClient: MongoClient | undefined;
+}
+
 @injectable()
 export class MongoDBProvider implements IDatabase {
     private db!: Db;
@@ -32,7 +36,22 @@ export class MongoDBProvider implements IDatabase {
             maxIdleTimeMS: 30000
         };
 
-        this.client = new MongoClient(uri, options);
+        if (process.env.NODE_ENV === 'development') {
+            // In development mode, use a global variable so that the value
+            // is preserved across module reloads caused by HMR (Hot Module Replacement).
+            if (!global._mongoClient) {
+                console.log('[MongoDB] Creating new MongoClient instance (Development)');
+                global._mongoClient = new MongoClient(uri, options);
+            } else {
+                console.log('[MongoDB] Reusing existing MongoClient instance (Development)');
+            }
+            this.client = global._mongoClient;
+        } else {
+            // In production mode, it's best to not use a global variable.
+            console.log('[MongoDB] Creating new MongoClient instance (Production)');
+            this.client = new MongoClient(uri, options);
+        }
+
         this.initPromise = this.initializeWithRetry();
     }
 

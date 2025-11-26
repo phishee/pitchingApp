@@ -42,10 +42,10 @@ class WorkoutSessionApi {
     }
   }
 
-  async updateSessionProgress(sessionId: string, nextStep: WorkoutSession['progress']['currentStep']): Promise<WorkoutSession> {
+  async updateSessionProgress(sessionId: string, progress: Partial<WorkoutSession['progress']>): Promise<WorkoutSession> {
     const response = await apiClient.patch<WorkoutSession>(
       `${this.baseUrl}/${sessionId}/progress`,
-      { nextStep }
+      { progress }
     );
 
     return response.data;

@@ -120,11 +120,11 @@ export class WorkoutSessionService implements IWorkoutSessionService {
 
   async updateSessionProgress(
     sessionId: string,
-    nextStep: WorkoutSessionStep
+    progress: Partial<WorkoutSession['progress']>
   ): Promise<WorkoutSession | null> {
     const updated = await this.mongoProvider.update(this.sessionsCollection, sessionId, {
       progress: {
-        currentStep: nextStep,
+        ...progress,
         updatedAt: new Date(),
       },
       updatedAt: new Date(),
@@ -142,15 +142,25 @@ export class WorkoutSessionService implements IWorkoutSessionService {
     console.log(`[Service] updateSession called for sessionId: ${sessionId}`);
 
     // If RPE result is provided, ensure legacy sessionRPE is also set if missing
-    if (updates.rpeResult?.overall && updates.summary && !updates.summary.sessionRPE) {
-      updates.summary.sessionRPE = updates.rpeResult.overall.numeric;
+    if (updates.summary?.sessionRpe && !updates.summary.sessionRPE) {
+      updates.summary.sessionRPE = updates.summary.sessionRpe.numeric;
     }
 
     const updated = await this.mongoProvider.update(this.sessionsCollection, sessionId, {
       ...updates,
       updatedAt: new Date(),
     });
-    console.log(`[Service] updateSession mongo result:`, updated);
+
+    // If the session is marked as completed, also complete the calendar event
+    if (updates.status === 'completed' && updated?.value) {
+      const session = updated.value;
+      if (session.calendarEventId) {
+        await this.mongoProvider.update(this.eventsCollection, session.calendarEventId, {
+          status: 'completed',
+          updatedAt: new Date(),
+        });
+      }
+    }
 
     return updated ? this.normalizeSession(updated.value ?? updated) : null;
   }
