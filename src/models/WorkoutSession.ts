@@ -1,6 +1,7 @@
 import { MetricValue } from "./Metric";
 import { UserInfo } from "./User";
 import { RPEValue, RPEResult, RPEConfig } from "./RPE";
+import { WorkoutFlow } from "./Workout";
 
 export interface WorkoutSession {
   _id: string;
@@ -36,6 +37,7 @@ export interface WorkoutSession {
     coverImage?: string;
     tags: string[];
     rpe?: RPEConfig;
+    flow?: WorkoutFlow;
   };
 
   // ==========================================
@@ -82,8 +84,7 @@ export interface WorkoutSession {
     averageExerciseRPE: number;   // Mean of all exercise RPEs
   };
 
-  // RPE Result (if configured in workout)
-  rpeResult?: RPEResult;
+
 
   // ==========================================
   // PROGRESSION (vs Last Same Workout)
@@ -131,6 +132,9 @@ export interface WorkoutSession {
   // ==========================================
   progress: {
     currentStep: WorkoutSessionStep;
+    stepName?: string;      // e.g., 'exercises', 'rpe'
+    positionId?: string;    // e.g., exerciseId
+    currentUrl?: string;    // Full relative URL
     updatedAt: Date;
   };
 }

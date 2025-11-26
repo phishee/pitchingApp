@@ -142,7 +142,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
     // Advances the workout session to the next progress step server-side
     // Updates cache when session changes
     const updateSessionProgress = useCallback(
-        async (nextStep: WorkoutSessionStep) => {
+        async (progress: Partial<WorkoutSession['progress']>) => {
             if (!sessionState.data?._id) {
                 return null;
             }
@@ -151,10 +151,10 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
             try {
                 const updatedSession = await workoutSessionApi.updateSessionProgress(
                     sessionState.data._id,
-                    nextStep
+                    progress
                 );
                 setSessionState({ data: updatedSession, status: 'loaded', error: null });
-                setCurrentStep(updatedSession.progress?.currentStep ?? nextStep);
+                setCurrentStep(updatedSession.progress?.currentStep ?? progress.currentStep ?? null);
 
                 // Update cache with fresh session data
                 workoutSessionCache.update(sessionState.data._id, { session: updatedSession });

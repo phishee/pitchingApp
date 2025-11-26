@@ -21,10 +21,7 @@ export default function WorkoutRpePage() {
     setIsSubmitting(true);
     try {
       const updates: any = {
-        rpeResult: {
-          config: rpeConfig,
-          overall: result.overall
-        },
+
         // Also update legacy field for backward compatibility
         summary: {
           ...session.data.summary,
@@ -79,6 +76,12 @@ export default function WorkoutRpePage() {
       <RpeCollection
         config={rpeConfig}
         exercises={exercises}
+        initialExerciseValues={session.data.exercises.reduce((acc, ex) => {
+          if (ex.exerciseRpe) {
+            acc[ex.exerciseId] = ex.exerciseRpe;
+          }
+          return acc;
+        }, {} as Record<string, RPEValue>)}
         onSubmit={handleRpeSubmit}
         isSubmitting={isSubmitting}
         onBack={() => router.back()}

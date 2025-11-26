@@ -14,7 +14,7 @@ export interface AsyncDataState<T> {
 export interface WorkoutSessionSection extends AsyncDataState<WorkoutSession> {
     refresh: () => Promise<WorkoutSession | null>;
     setSession: (value: WorkoutSession | null) => void;
-    updateProgress: (nextStep: WorkoutSessionStep) => Promise<WorkoutSession | null>;
+    updateProgress: (progress: Partial<WorkoutSession['progress']>) => Promise<WorkoutSession | null>;
     saveSession: (updates: Partial<WorkoutSession>) => Promise<WorkoutSession | null>;
 }
 
