@@ -1,6 +1,6 @@
 import apiClient from '@/lib/axios-config';
 import { Workout, WorkoutResponse, WorkoutQueryParams } from '@/models/Workout';
-import { useCache } from '@/hooks/useCache';
+import { sessionStorageService } from '@/services/storage';
 
 // Cache configuration
 const CACHE_KEYS = {
@@ -10,6 +10,8 @@ const CACHE_KEYS = {
 const CACHE_TTL = {
   WORKOUTS_LIBRARY: 30 * 60 * 1000, // 30 minutes
 } as const;
+
+const CACHE_COLLECTION = 'cache';
 
 // Helper function to make API requests
 const makeRequest = async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
@@ -34,7 +36,7 @@ const makeRequest = async <T>(endpoint: string, options?: RequestInit): Promise<
 // Helper function to build query strings
 const buildQueryString = (params: Record<string, any>): string => {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       if (Array.isArray(value)) {
@@ -44,177 +46,67 @@ const buildQueryString = (params: Record<string, any>): string => {
       }
     }
   });
-  
+
   const queryString = searchParams.toString();
   return queryString ? `?${queryString}` : '';
-};
-
-// Helper function to get cache key
-const getCacheKey = (): string => {
-  return CACHE_KEYS.WORKOUTS_LIBRARY;
-};
-
-// Create cache instance
-let cacheInstance: ReturnType<typeof useCache> | null = null;
-
-const getCache = () => {
-  if (!cacheInstance) {
-    cacheInstance = {
-      get: (key: string) => {
-        try {
-          const cached = sessionStorage.getItem(key);
-          if (!cached) return null;
-          const { data, expiresAt } = JSON.parse(cached);
-          if (expiresAt && Date.now() > expiresAt) {
-            sessionStorage.removeItem(key);
-            return null;
-          }
-          return data;
-        } catch {
-          return null;
-        }
-      },
-      set: (key: string, data: any, options?: { ttl?: number }) => {
-        try {
-          const cacheItem = {
-            data,
-            timestamp: Date.now(),
-            expiresAt: options?.ttl ? Date.now() + options.ttl : undefined
-          };
-          sessionStorage.setItem(key, JSON.stringify(cacheItem));
-        } catch (error) {
-          console.warn('Failed to cache data:', error);
-        }
-      },
-      has: (key: string) => {
-        try {
-          const cached = sessionStorage.getItem(key);
-          if (!cached) return false;
-          const { expiresAt } = JSON.parse(cached);
-          return expiresAt ? Date.now() < expiresAt : true;
-        } catch {
-          return false;
-        }
-      },
-      delete: (key: string) => {
-        try {
-          sessionStorage.removeItem(key);
-        } catch (error) {
-          console.warn('Failed to delete cache:', error);
-        }
-      },
-      clear: () => {
-        try {
-          const keys = Object.keys(sessionStorage);
-          keys.forEach(key => {
-            if (key.includes('workouts') || key.includes('workout_')) {
-              sessionStorage.removeItem(key);
-            }
-          });
-        } catch (error) {
-          console.warn('Failed to clear cache:', error);
-        }
-      },
-      keys: () => {
-        try {
-          return Object.keys(sessionStorage).filter(key => 
-            key.includes('workouts') || key.includes('workout_')
-          );
-        } catch {
-          return [];
-        }
-      },
-      isExpired: (key: string) => {
-        try {
-          const cached = sessionStorage.getItem(key);
-          if (!cached) return true;
-          const { expiresAt } = JSON.parse(cached);
-          return expiresAt ? Date.now() > expiresAt : false;
-        } catch {
-          return true;
-        }
-      },
-      getWithTTL: (key: string) => {
-        try {
-          const cached = sessionStorage.getItem(key);
-          if (!cached) return { data: null, ttl: null };
-          const { data, expiresAt } = JSON.parse(cached);
-          const ttl = expiresAt ? Math.max(0, expiresAt - Date.now()) : null;
-          return { data, ttl };
-        } catch {
-          return { data: null, ttl: null };
-        }
-      },
-      size: () => {
-        try {
-          const keys = Object.keys(sessionStorage).filter(key => 
-            key.includes('workouts') || key.includes('workout_')
-          );
-          return keys.length;
-        } catch {
-          return 0;
-        }
-      }
-    };
-  }
-  return cacheInstance;
 };
 
 // Main workout API object
 export const workoutApi = {
   // Get all workouts with caching
   async getWorkouts(params: WorkoutQueryParams = {}, organizationId: string): Promise<WorkoutResponse> {
-    const cache = getCache();
-    const cacheKey = getCacheKey();
-    
+    const cacheKey = CACHE_KEYS.WORKOUTS_LIBRARY;
+
     // Check cache first
-    if (cache.has(cacheKey)) {
-      const cached = cache.get(cacheKey) as WorkoutResponse | null;
-      if (cached) {
-        // Reset expiration when accessing cache
-        cache.set(cacheKey, cached, { ttl: CACHE_TTL.WORKOUTS_LIBRARY });
-        return cached;
-      }
+    const cached = sessionStorageService.getItem<WorkoutResponse>(cacheKey, CACHE_COLLECTION);
+    if (cached) {
+      // Reset expiration when accessing cache
+      sessionStorageService.setItem(cacheKey, cached, {
+        ttl: CACHE_TTL.WORKOUTS_LIBRARY,
+        collection: CACHE_COLLECTION
+      });
+      return cached;
     }
-    
+
     // Fetch from API
     const queryParams = { ...params, organizationId };
     const queryString = buildQueryString(queryParams);
     const response = await makeRequest<WorkoutResponse>(`/workouts${queryString}`);
-    
-    // Cache the response with single key
-    cache.set(cacheKey, response, { ttl: CACHE_TTL.WORKOUTS_LIBRARY });
-    
+
+    // Cache the response
+    sessionStorageService.setItem(cacheKey, response, {
+      ttl: CACHE_TTL.WORKOUTS_LIBRARY,
+      collection: CACHE_COLLECTION
+    });
+
     return response;
   },
 
   // Get single workout by ID
   async getWorkoutById(id: string, organizationId: string): Promise<Workout> {
-    const cache = getCache();
-    const workoutsCacheKey = getCacheKey();
-    
+    const cacheKey = CACHE_KEYS.WORKOUTS_LIBRARY;
+
     // 1. Get cache with key WORKOUTS_LIBRARY (contains all workouts)
-    if (cache.has(workoutsCacheKey)) {
-      const cachedWorkouts = cache.get(workoutsCacheKey) as WorkoutResponse | null;
-      if (cachedWorkouts) {
-        // 2. Filter all workouts from cache to find the specific id
-        const workout = cachedWorkouts.data.find(workout => workout.id === id);
-        if (workout) {
-          // 3. If found, return the workout
-          return workout;
-        }
+    const cachedWorkouts = sessionStorageService.getItem<WorkoutResponse>(cacheKey, CACHE_COLLECTION);
+
+    if (cachedWorkouts) {
+      // 2. Filter all workouts from cache to find the specific id
+      const workout = cachedWorkouts.data.find(workout => workout.id === id);
+      if (workout) {
+        // 3. If found, return the workout
+        return workout;
       }
     }
-    
+
     // 4. If not found, fetch using the API
     const queryString = buildQueryString({ organizationId });
     const response = await makeRequest<Workout>(`/workouts/${id}${queryString}`);
-    
+
     // 5. Reset the WORKOUTS_LIBRARY cache by calling getWorkouts (all of them) - no await
-    workoutApi.getWorkouts({}, organizationId).catch(err => 
+    workoutApi.getWorkouts({}, organizationId).catch(err =>
       console.warn('Failed to refresh workouts cache:', err)
     );
-    
+
     // 6. Return the workout fetched earlier by the id
     return response;
   },
@@ -228,8 +120,7 @@ export const workoutApi = {
       });
 
       // Clear cache after creating
-      const cache = getCache();
-      cache.delete(getCacheKey());
+      sessionStorageService.removeItem(CACHE_KEYS.WORKOUTS_LIBRARY, CACHE_COLLECTION);
 
       return response;
     } catch (error) {
@@ -248,8 +139,7 @@ export const workoutApi = {
       });
 
       // Clear cache after updating
-      const cache = getCache();
-      cache.delete(getCacheKey());
+      sessionStorageService.removeItem(CACHE_KEYS.WORKOUTS_LIBRARY, CACHE_COLLECTION);
 
       return response;
     } catch (error) {
@@ -267,8 +157,7 @@ export const workoutApi = {
       });
 
       // Clear cache after deleting
-      const cache = getCache();
-      cache.delete(getCacheKey());
+      sessionStorageService.removeItem(CACHE_KEYS.WORKOUTS_LIBRARY, CACHE_COLLECTION);
 
       return response;
     } catch (error) {
@@ -296,11 +185,9 @@ export const workoutApi = {
 
   // Cache management
   clearCache: () => {
-    const cache = getCache();
-    cache.delete(CACHE_KEYS.WORKOUTS_LIBRARY);
+    sessionStorageService.removeItem(CACHE_KEYS.WORKOUTS_LIBRARY, CACHE_COLLECTION);
   },
   clearWorkoutCache: () => {
-    const cache = getCache();
-    cache.delete(CACHE_KEYS.WORKOUTS_LIBRARY);
+    sessionStorageService.removeItem(CACHE_KEYS.WORKOUTS_LIBRARY, CACHE_COLLECTION);
   }
 };

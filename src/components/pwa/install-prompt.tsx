@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Download } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useStorage';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -17,6 +18,7 @@ export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const { value: dismissedTime, setValue: setDismissedTime } = useLocalStorage<string>('pwa-install-dismissed');
 
   useEffect(() => {
     // Check if app is already installed
@@ -53,13 +55,13 @@ export function InstallPrompt() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
     } else {
       console.log('User dismissed the install prompt');
     }
-    
+
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
   };
@@ -67,7 +69,7 @@ export function InstallPrompt() {
   const handleDismiss = () => {
     setShowInstallPrompt(false);
     // Store dismissal in localStorage to avoid showing again for a while
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    setDismissedTime(Date.now().toString());
   };
 
   // Don't show if already installed or if user recently dismissed
@@ -76,7 +78,6 @@ export function InstallPrompt() {
   }
 
   // Check if user recently dismissed (within 7 days)
-  const dismissedTime = localStorage.getItem('pwa-install-dismissed');
   if (dismissedTime) {
     const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
     if (daysSinceDismissed < 7) {

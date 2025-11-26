@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { WorkoutAssignment } from '@/models/WorkoutAssignment';
 import { workoutAssignmentApi } from '@/app/services-client/workoutAssignmentApi';
-import { workoutSessionCache } from '@/lib/workout-session-cache';
+import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { AsyncDataState } from './types';
 
 const createInitialAsyncState = <T,>(): AsyncDataState<T> => ({
@@ -37,7 +37,7 @@ export function useAssignmentData({
             console.log('[useAssignmentData] Fetching assignment:', id);
             // Check cache first if we have a sessionId
             if (sessionId) {
-                const cached = workoutSessionCache.get(sessionId, true);
+                const cached = workoutSessionApi.getCache(sessionId, true);
                 if (cached?.assignment) {
                     console.log('[useAssignmentData] Using cached assignment');
                     setAssignmentState({ data: cached.assignment, status: 'loaded', error: null });
@@ -46,7 +46,7 @@ export function useAssignmentData({
                         .then((assignment) => {
                             console.log('[useAssignmentData] Assignment refreshed:', assignment);
                             setAssignmentState({ data: assignment, status: 'loaded', error: null });
-                            workoutSessionCache.update(sessionId, { assignment });
+                            workoutSessionApi.updateCache(sessionId, { assignment });
                         })
                         .catch((err) => {
                             console.warn('[useAssignmentData] Background assignment refresh failed:', err);

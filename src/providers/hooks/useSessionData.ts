@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { WorkoutSession, WorkoutSessionStep } from '@/models/WorkoutSession';
 import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
-import { workoutSessionCache } from '@/lib/workout-session-cache';
 import { AsyncDataState, LoadingState } from './types';
 
 const createInitialAsyncState = <T,>(): AsyncDataState<T> => ({
@@ -45,7 +44,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
 
         // Check cache first if we have a sessionId
         if (targetSessionId) {
-            const cached = workoutSessionCache.get(targetSessionId, isOnWorkoutSessionPage);
+            const cached = workoutSessionApi.getCache(targetSessionId, isOnWorkoutSessionPage);
             if (cached?.session) {
                 // Use cached session immediately
                 setSessionState({ data: cached.session, status: 'loaded', error: null });
@@ -58,7 +57,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
                         setSessionState({ data: updated, status: 'loaded', error: null });
                         setCurrentStep(updated.progress?.currentStep ?? null);
                         // Update cache with fresh data
-                        workoutSessionCache.update(targetSessionId, { session: updated });
+                        workoutSessionApi.updateCache(targetSessionId, { session: updated });
                     }
                 } catch (error) {
                     // Silent fail for background refresh - we have cached data
@@ -121,7 +120,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
 
             // Update cache with fetched data (mark as active since we're in workout-session)
             if (session._id) {
-                workoutSessionCache.update(session._id, { session });
+                workoutSessionApi.updateCache(session._id, { session });
             }
 
             return session;
@@ -157,7 +156,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
                 setCurrentStep(updatedSession.progress?.currentStep ?? progress.currentStep ?? null);
 
                 // Update cache with fresh session data
-                workoutSessionCache.update(sessionState.data._id, { session: updatedSession });
+                workoutSessionApi.updateCache(sessionState.data._id, { session: updatedSession });
 
                 return updatedSession;
             } catch (error) {
@@ -181,7 +180,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
             setSessionState((prev) => ({ ...prev, data: optimisticSession }));
 
             // Update cache immediately
-            workoutSessionCache.update(sessionState.data._id, { session: optimisticSession });
+            workoutSessionApi.updateCache(sessionState.data._id, { session: optimisticSession });
 
             try {
                 console.log('[useSessionData] Calling API updateSession...', sessionState.data._id);
@@ -193,7 +192,7 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
 
                 // Confirm with server data
                 setSessionState({ data: updatedSession, status: 'loaded', error: null });
-                workoutSessionCache.update(sessionState.data._id, { session: updatedSession });
+                workoutSessionApi.updateCache(sessionState.data._id, { session: updatedSession });
 
                 return updatedSession;
             } catch (error) {
@@ -222,9 +221,9 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
         return () => {
             if (sessionId) {
                 // Reset this specific session's active flag
-                const cached = workoutSessionCache.get(sessionId, true);
+                const cached = workoutSessionApi.getCache(sessionId, true);
                 if (cached?.isActiveSession) {
-                    workoutSessionCache.set(
+                    workoutSessionApi.setCache(
                         sessionId,
                         {
                             session: cached.session,

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Exercise } from '@/models';
 import { WorkoutExercise } from '@/models/Workout';
 import { exerciseApi } from '@/app/services-client/exerciseApi';
-import { workoutSessionCache } from '@/lib/workout-session-cache';
+import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { LoadingState } from './types';
 
 const toErrorMessage = (error: unknown, fallback: string) => {
@@ -50,7 +50,7 @@ export function useExercisesData({
 
             // Check cache first if we have a sessionId
             if (sessionId) {
-                const cached = workoutSessionCache.get(sessionId, true);
+                const cached = workoutSessionApi.getCache(sessionId, true);
                 if (cached?.exercises && cached.exercises.length > 0) {
                     setExercises(cached.exercises);
                     setExercisesStatus('loaded');
