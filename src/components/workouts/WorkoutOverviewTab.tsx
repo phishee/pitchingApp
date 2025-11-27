@@ -13,20 +13,20 @@ export function WorkoutOverviewTab({ workout }: WorkoutOverviewTabProps) {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Workout Structure</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <WorkoutStatCard 
-            value={workout.flow.exercises.length} 
-            label="Total Exercises" 
-            color="blue" 
+          <WorkoutStatCard
+            value={workout.flow?.exercises?.length || 0}
+            label="Total Exercises"
+            color="blue"
           />
-          <WorkoutStatCard 
-            value={workout.flow.questionnaires.length} 
-            label="Questionnaires" 
-            color="green" 
+          <WorkoutStatCard
+            value={workout.flow?.questionnaires?.length || 0}
+            label="Questionnaires"
+            color="green"
           />
-          <WorkoutStatCard 
-            value={workout.flow.warmup.length} 
-            label="Warmup Items" 
-            color="purple" 
+          <WorkoutStatCard
+            value={workout.flow?.warmup?.length || 0}
+            label="Warmup Items"
+            color="purple"
           />
         </div>
       </div>
@@ -40,7 +40,7 @@ export function WorkoutOverviewTab({ workout }: WorkoutOverviewTabProps) {
             <span className="font-medium text-gray-900">Assigned Teams</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {workout.teamIds.map((teamId: string, index: number) => (
+            {(workout.teamIds || []).map((teamId: string, index: number) => (
               <span
                 key={index}
                 className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"

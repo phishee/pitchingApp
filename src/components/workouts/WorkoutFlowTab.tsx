@@ -38,14 +38,14 @@ export function WorkoutFlowTab({ workout }: WorkoutFlowTabProps) {
         {/* Questionnaires */}
         <FlowSection
           type="questionnaires"
-          items={workout.flow.questionnaires}
+          items={workout.flow?.questionnaires || []}
           title="Pre-Workout Questionnaires"
         />
 
         {/* Warmup */}
         <FlowSection
           type="warmup"
-          items={workout.flow.warmup}
+          items={workout.flow?.warmup || []}
           title="Warmup Routine"
         />
 
@@ -65,14 +65,14 @@ export function WorkoutFlowTab({ workout }: WorkoutFlowTabProps) {
       {/* Questionnaires */}
       <FlowSection
         type="questionnaires"
-        items={workout.flow.questionnaires}
+        items={workout.flow?.questionnaires || []}
         title="Pre-Workout Questionnaires"
       />
 
       {/* Warmup */}
       <FlowSection
         type="warmup"
-        items={workout.flow.warmup}
+        items={workout.flow?.warmup || []}
         title="Warmup Routine"
       />
 
@@ -80,7 +80,7 @@ export function WorkoutFlowTab({ workout }: WorkoutFlowTabProps) {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Exercise Sequence</h3>
         <div className="space-y-3">
-          {workout.flow.exercises.map((workoutExercise, index: number) => {
+          {(workout.flow?.exercises || []).map((workoutExercise, index: number) => {
             const exerciseDetails = getExerciseById(workoutExercise.exercise_id);
 
             if (!exerciseDetails) {
@@ -99,7 +99,7 @@ export function WorkoutFlowTab({ workout }: WorkoutFlowTabProps) {
         </div>
       </div>
       {/* RPE Section */}
-      {workout.flow.rpe && (
+      {workout.flow?.rpe && (
         <FlowSection
           type="rpe"
           items={[
