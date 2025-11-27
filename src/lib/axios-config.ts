@@ -1,5 +1,6 @@
 // src/lib/axios-config.ts
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import { localStorageService } from '@/services/storage';
 
 // Create axios instance with base configuration
 const apiClient: AxiosInstance = axios.create({
@@ -14,12 +15,12 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage
-    const token = localStorage.getItem('firebase_id_token');
-    
+    const token = localStorageService.getItem<string>('firebase_id_token', 'auth');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -34,11 +35,11 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Handle 401 errors (unauthorized)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         // Try to refresh the token
         const refreshResponse = await fetch('/api/auth/refresh', {
@@ -47,11 +48,11 @@ apiClient.interceptors.response.use(
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (refreshResponse.ok) {
           const { token } = await refreshResponse.json();
-          localStorage.setItem('firebase_id_token', token);
-          
+          localStorageService.setItem('firebase_id_token', token, { collection: 'auth' });
+
           // Retry the original request with new token
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return apiClient(originalRequest);
@@ -59,11 +60,11 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         // Redirect to login or clear auth state
-        localStorage.removeItem('firebase_id_token');
+        localStorageService.removeItem('firebase_id_token', 'auth');
         window.location.href = '/sign-in';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

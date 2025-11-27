@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Workout } from '@/models/Workout';
 import { workoutApi } from '@/app/services-client/workoutApi';
-import { workoutSessionCache } from '@/lib/workout-session-cache';
+import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { AsyncDataState } from './types';
 
 const createInitialAsyncState = <T,>(): AsyncDataState<T> => ({
@@ -52,14 +52,14 @@ export function useWorkoutData({
 
             // Check cache first if we have a sessionId
             if (sessionId) {
-                const cached = workoutSessionCache.get(sessionId, true);
+                const cached = workoutSessionApi.getCache(sessionId, true);
                 if (cached?.workout) {
                     setWorkoutState({ data: cached.workout, status: 'loaded', error: null });
                     // Background refresh
                     workoutApi.getWorkoutById(workoutId, orgId)
                         .then((workout) => {
                             setWorkoutState({ data: workout, status: 'loaded', error: null });
-                            workoutSessionCache.update(sessionId, { workout });
+                            workoutSessionApi.updateCache(sessionId, { workout });
                         })
                         .catch(() => { }); // Silent fail
                     return cached.workout;
@@ -73,7 +73,7 @@ export function useWorkoutData({
 
                 // Update cache if we have a sessionId
                 if (sessionId) {
-                    workoutSessionCache.update(sessionId, { workout });
+                    workoutSessionApi.updateCache(sessionId, { workout });
                 }
 
                 return workout;

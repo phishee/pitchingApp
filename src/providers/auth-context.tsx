@@ -17,6 +17,7 @@ import { auth } from '@/lib/firebase';
 import { userApi } from '@/app/services-client/userApi';
 import { useRouter } from 'next/navigation';
 import { usePathname } from "next/navigation";
+import { localStorageService, sessionStorageService } from '@/services/storage';
 
 interface AuthContextType {
   // Firebase authentication only
@@ -25,14 +26,14 @@ interface AuthContextType {
   isLoading: boolean;
   token: string | null;
   isOnboardingComplete: boolean;
-  
+
   // Auth methods
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   refreshToken: () => Promise<string | null>;
-  
+
   // Firebase user management
   setUserFromFirebase: (user: FirebaseUser | null) => void;
 }
@@ -42,31 +43,42 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Token storage keys
 const TOKEN_KEY = 'firebase_id_token';
 const ONBOARDING_COMPLETE_KEY = 'onboarding_complete';
+const PWA_INSTALL_DISMISSED_KEY = 'pwa-install-dismissed';
 
 // Token management functions
 const saveToken = (token: string) => {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch (error) {
-    console.error('Error saving token:', error);
-  }
+  localStorageService.setItem(TOKEN_KEY, token, { collection: 'auth' });
 };
 
 const clearTokens = () => {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch (error) {
-    console.error('Error clearing tokens:', error);
-  }
+  localStorageService.removeItem(TOKEN_KEY, 'auth');
 };
 
 const isOnboardingComplete = (): boolean => {
-  try {
-    return localStorage.getItem(ONBOARDING_COMPLETE_KEY) === 'true';
-  } catch (error) {
-    return false;
+  return localStorageService.getItem<string>(ONBOARDING_COMPLETE_KEY, 'user') === 'true';
+};
+
+const clearUserLocalStorage = () => {
+  const keysToRemove = [
+    { key: TOKEN_KEY, collection: 'auth' },
+    { key: ONBOARDING_COMPLETE_KEY, collection: 'user' },
+    { key: PWA_INSTALL_DISMISSED_KEY, collection: 'app' }
+  ];
+
+  keysToRemove.forEach(({ key, collection }) => {
+    localStorageService.removeItem(key, collection);
+  });
+
+  // Cleanup legacy keys (without namespaces)
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(TOKEN_KEY);
+    window.localStorage.removeItem(ONBOARDING_COMPLETE_KEY);
   }
 };
+
+// ... (inside AuthProvider)
+
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userFromFirebase, setUserFromFirebase] = useState<FirebaseUser | null>(null);
@@ -75,26 +87,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  
+
   // Listen for auth state and token changes
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {      
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       // Always set the Firebase user state first
       setUserFromFirebase(firebaseUser);
-      
+
       if (firebaseUser) {
         try {
           const idToken = await getIdToken(firebaseUser, true);
           setToken(idToken);
           saveToken(idToken);
-          
+
           // Set onboarding status from localStorage
           const onboardingStatus = isOnboardingComplete();
           setOnboardingCompleteState(onboardingStatus);
-          
+
           // Don't fetch user data here - let UserProvider handle it
           // Just handle token and basic auth state
-          
+
         } catch (error: any) {
           console.error('Error getting token:', error);
           setToken(null);
@@ -134,11 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Separate function to handle navigation after login/signup
   const navigateAfterAuth = async (firebaseUser: FirebaseUser) => {
     try {
-      
+
       // Check if user exists in database using the unauthenticated check method
       const result = await userApi.checkUserExists(firebaseUser.uid);
-      
-      
+
+
       if (result.exists && result.user) {
         // User exists - go to dashboard
         router.push('/app/dashboard');
@@ -156,16 +168,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
+
       // Get fresh token
       const idToken = await getIdToken(userCredential.user, true);
       setToken(idToken);
       saveToken(idToken);
-      
+
       // Check onboarding status
       const onboardingStatus = isOnboardingComplete();
       setOnboardingCompleteState(onboardingStatus);
-      
+
       // Navigate based on user status
       await navigateAfterAuth(userCredential.user);
     } catch (error: any) {
@@ -179,15 +191,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Dispatch logout event to clear all provider data
       window.dispatchEvent(new CustomEvent('auth:logout'));
-      
+
       // Firebase sign out
       await signOut(auth);
       setUserFromFirebase(null);
       setIsLoading(false);
       setToken(null);
       setOnboardingCompleteState(false);
-      clearTokens();
-      
+
+      // Clear all session storage (caches, etc.)
+      sessionStorageService.clear();
+
+      // Clear specific local storage items
+      clearUserLocalStorage();
+
       // Navigate to sign-in
       router.push('/sign-in');
     } catch (error: any) {
@@ -209,9 +226,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const idToken = await getIdToken(userCredential.user);
       setToken(idToken);
       saveToken(idToken);
-      
+
       setOnboardingCompleteState(false);
-      
+
       // Navigate based on user status
       await navigateAfterAuth(userCredential.user);
     } catch (error: any) {
@@ -236,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if this is a new user (no onboarding complete flag)
       const onboardingStatus = isOnboardingComplete();
       setOnboardingCompleteState(onboardingStatus);
-      
+
       // Navigate based on user status
       await navigateAfterAuth(userCredential.user);
     } catch (error: any) {

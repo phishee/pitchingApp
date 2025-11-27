@@ -10,7 +10,7 @@ import { WorkoutExerciseCard } from './workout-exercise-card';
 import { Clock, Dumbbell } from 'lucide-react';
 import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 import { useRouter } from 'next/navigation';
-import { workoutSessionCache } from '@/lib/workout-session-cache';
+
 
 interface UserWorkoutDetailMobileProps {
   enrichedEvent: EnrichedEvent;
@@ -58,8 +58,10 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
     if (!session?._id) return;
 
     // Cache pre-fetched data before navigating to workout session
-    // Mark as active session since we're about to navigate to workout-session pages
-    workoutSessionCache.set(
+    // Reset active session flags when leaving the workout flow
+    workoutSessionApi.resetActiveSessions();
+
+    workoutSessionApi.setCache(
       session._id,
       {
         session,
