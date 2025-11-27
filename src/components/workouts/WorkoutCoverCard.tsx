@@ -9,8 +9,9 @@ interface WorkoutCoverCardProps {
 }
 
 export function WorkoutCoverCard({ workout }: WorkoutCoverCardProps) {
-  const WorkoutIcon = getWorkoutIcon(workout.tags);
-  const workoutColor = getWorkoutColor(workout.tags);
+  const tags = workout.tags || [];
+  const WorkoutIcon = getWorkoutIcon(tags);
+  const workoutColor = getWorkoutColor(tags);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-gray-100">
@@ -23,12 +24,12 @@ export function WorkoutCoverCard({ workout }: WorkoutCoverCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         <div className="absolute top-4 left-4">
-          <WorkoutTagBadge tag={workout.tags[0]} variant="primary" />
+          <WorkoutTagBadge tag={tags[0]} variant="primary" />
         </div>
         <div className="absolute bottom-4 right-4">
           <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 text-xs font-medium text-gray-700">
             <Clock className="w-3 h-3" />
-            <span>~{Math.round(workout.flow.exercises.length * 15)} min</span>
+            <span>~{Math.round((workout.flow?.exercises?.length || 0) * 15)} min</span>
           </div>
         </div>
       </div>
@@ -60,18 +61,18 @@ export function WorkoutCoverCard({ workout }: WorkoutCoverCardProps) {
             </div>
           </div>
         </div>
-        
+
         {/* Description */}
         <p className="text-gray-600 mb-4 line-clamp-2 leading-relaxed">{workout.description}</p>
-        
+
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {workout.tags.slice(0, 3).map((tag: string, index: number) => (
+          {tags.slice(0, 3).map((tag: string, index: number) => (
             <WorkoutTagBadge key={index} tag={tag} />
           ))}
-          {workout.tags.length > 3 && (
+          {tags.length > 3 && (
             <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
-              +{workout.tags.length - 3} more
+              +{tags.length - 3} more
             </span>
           )}
         </div>
@@ -80,19 +81,19 @@ export function WorkoutCoverCard({ workout }: WorkoutCoverCardProps) {
         <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600 mb-1">
-              {workout.flow.exercises.length}
+              {workout.flow?.exercises?.length || 0}
             </div>
             <div className="text-xs text-gray-500 font-medium">Exercises</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600 mb-1">
-              {workout.teamIds.length}
+              {workout.teamIds?.length || 0}
             </div>
             <div className="text-xs text-gray-500 font-medium">Teams</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600 mb-1">
-              {workout.flow.questionnaires.length + workout.flow.warmup.length}
+              {(workout.flow?.questionnaires?.length || 0) + (workout.flow?.warmup?.length || 0)}
             </div>
             <div className="text-xs text-gray-500 font-medium">Extras</div>
           </div>

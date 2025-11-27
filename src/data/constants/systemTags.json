@@ -1,0 +1,452 @@
+[
+    {
+        "name": "strength",
+        "color": "#4CAF50",
+        "icon": "💪",
+        "category": "training_types"
+    },
+    {
+        "name": "power",
+        "color": "#FF5722",
+        "icon": "⚡",
+        "category": "training_types"
+    },
+    {
+        "name": "cardio",
+        "color": "#FF9800",
+        "icon": "❤️",
+        "category": "training_types"
+    },
+    {
+        "name": "conditioning",
+        "color": "#2196F3",
+        "icon": "🏃",
+        "category": "training_types"
+    },
+    {
+        "name": "mobility",
+        "color": "#9C27B0",
+        "icon": "🧘",
+        "category": "training_types"
+    },
+    {
+        "name": "flexibility",
+        "color": "#E91E63",
+        "icon": "🤸",
+        "category": "training_types"
+    },
+    {
+        "name": "stability",
+        "color": "#795548",
+        "icon": "⚖️",
+        "category": "training_types"
+    },
+    {
+        "name": "plyometrics",
+        "color": "#FF4081",
+        "icon": "🦘",
+        "category": "training_types"
+    },
+    {
+        "name": "agility",
+        "color": "#00BCD4",
+        "icon": "⚡",
+        "category": "training_types"
+    },
+    {
+        "name": "speed",
+        "color": "#FFC107",
+        "icon": "🏃‍♂️",
+        "category": "training_types"
+    },
+    {
+        "name": "pitching",
+        "color": "#D32F2F",
+        "icon": "⚾",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "batting",
+        "color": "#1976D2",
+        "icon": "🏏",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "fielding",
+        "color": "#388E3C",
+        "icon": "🥎",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "throwing",
+        "color": "#F57C00",
+        "icon": "🎯",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "catching",
+        "color": "#7B1FA2",
+        "icon": "🧤",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "baserunning",
+        "color": "#0097A7",
+        "icon": "🏃",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "arm_care",
+        "color": "#C62828",
+        "icon": "💉",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "bullpen",
+        "color": "#AD1457",
+        "icon": "🎯",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "batting_practice",
+        "color": "#6A1B9A",
+        "icon": "⚾",
+        "category": "baseball_specific"
+    },
+    {
+        "name": "upper_body",
+        "color": "#5D4037",
+        "icon": "💪",
+        "category": "body_regions"
+    },
+    {
+        "name": "lower_body",
+        "color": "#455A64",
+        "icon": "🦵",
+        "category": "body_regions"
+    },
+    {
+        "name": "core",
+        "color": "#F57F17",
+        "icon": "🔥",
+        "category": "body_regions"
+    },
+    {
+        "name": "full_body",
+        "color": "#00796B",
+        "icon": "🏋️",
+        "category": "body_regions"
+    },
+    {
+        "name": "shoulders",
+        "color": "#E64A19",
+        "icon": "💪",
+        "category": "body_regions"
+    },
+    {
+        "name": "back",
+        "color": "#5E35B1",
+        "icon": "🦾",
+        "category": "body_regions"
+    },
+    {
+        "name": "chest",
+        "color": "#1E88E5",
+        "icon": "💪",
+        "category": "body_regions"
+    },
+    {
+        "name": "arms",
+        "color": "#43A047",
+        "icon": "💪",
+        "category": "body_regions"
+    },
+    {
+        "name": "legs",
+        "color": "#FB8C00",
+        "icon": "🦵",
+        "category": "body_regions"
+    },
+    {
+        "name": "glutes",
+        "color": "#8E24AA",
+        "icon": "🍑",
+        "category": "body_regions"
+    },
+    {
+        "name": "hips",
+        "color": "#00ACC1",
+        "icon": "🦴",
+        "category": "body_regions"
+    },
+    {
+        "name": "rotator_cuff",
+        "color": "#EF5350",
+        "icon": "🔄",
+        "category": "body_regions"
+    },
+    {
+        "name": "barbell",
+        "color": "#37474F",
+        "icon": "🏋️",
+        "category": "equipment"
+    },
+    {
+        "name": "dumbbell",
+        "color": "#546E7A",
+        "icon": "🏋️‍♂️",
+        "category": "equipment"
+    },
+    {
+        "name": "kettlebell",
+        "color": "#607D8B",
+        "icon": "⚫",
+        "category": "equipment"
+    },
+    {
+        "name": "bodyweight",
+        "color": "#8BC34A",
+        "icon": "🧍",
+        "category": "equipment"
+    },
+    {
+        "name": "medicine_ball",
+        "color": "#FF7043",
+        "icon": "⚽",
+        "category": "equipment"
+    },
+    {
+        "name": "bands",
+        "color": "#26C6DA",
+        "icon": "🎗️",
+        "category": "equipment"
+    },
+    {
+        "name": "cable",
+        "color": "#78909C",
+        "icon": "🔗",
+        "category": "equipment"
+    },
+    {
+        "name": "trx",
+        "color": "#FFCA28",
+        "icon": "⛓️",
+        "category": "equipment"
+    },
+    {
+        "name": "foam_roller",
+        "color": "#AB47BC",
+        "icon": "📏",
+        "category": "equipment"
+    },
+    {
+        "name": "ball",
+        "color": "#EF5350",
+        "icon": "⚾",
+        "category": "equipment"
+    },
+    {
+        "name": "bat",
+        "color": "#8D6E63",
+        "icon": "🏏",
+        "category": "equipment"
+    },
+    {
+        "name": "glove",
+        "color": "#A1887F",
+        "icon": "🧤",
+        "category": "equipment"
+    },
+    {
+        "name": "plyo_box",
+        "color": "#FF6F00",
+        "icon": "📦",
+        "category": "equipment"
+    },
+    {
+        "name": "sled",
+        "color": "#424242",
+        "icon": "🛷",
+        "category": "equipment"
+    },
+    {
+        "name": "rower",
+        "color": "#0288D1",
+        "icon": "🚣",
+        "category": "equipment"
+    },
+    {
+        "name": "bike",
+        "color": "#7CB342",
+        "icon": "🚴",
+        "category": "equipment"
+    },
+    {
+        "name": "push",
+        "color": "#F44336",
+        "icon": "➡️",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "pull",
+        "color": "#3F51B5",
+        "icon": "⬅️",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "squat",
+        "color": "#4CAF50",
+        "icon": "⬇️",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "hinge",
+        "color": "#FF9800",
+        "icon": "🔽",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "lunge",
+        "color": "#9C27B0",
+        "icon": "🚶",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "rotate",
+        "color": "#00BCD4",
+        "icon": "🔄",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "carry",
+        "color": "#795548",
+        "icon": "🚶‍♂️",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "throw",
+        "color": "#E91E63",
+        "icon": "🎯",
+        "category": "movement_patterns"
+    },
+    {
+        "name": "warmup",
+        "color": "#FFEB3B",
+        "icon": "🔥",
+        "category": "training_phases"
+    },
+    {
+        "name": "activation",
+        "color": "#FFC107",
+        "icon": "⚡",
+        "category": "training_phases"
+    },
+    {
+        "name": "cooldown",
+        "color": "#00BCD4",
+        "icon": "❄️",
+        "category": "training_phases"
+    },
+    {
+        "name": "recovery",
+        "color": "#8BC34A",
+        "icon": "🧊",
+        "category": "training_phases"
+    },
+    {
+        "name": "prehab",
+        "color": "#009688",
+        "icon": "🛡️",
+        "category": "training_phases"
+    },
+    {
+        "name": "rehab",
+        "color": "#4DD0E1",
+        "icon": "💊",
+        "category": "training_phases"
+    },
+    {
+        "name": "technique",
+        "color": "#673AB7",
+        "icon": "🎯",
+        "category": "skill_focus"
+    },
+    {
+        "name": "accuracy",
+        "color": "#3F51B5",
+        "icon": "🎯",
+        "category": "skill_focus"
+    },
+    {
+        "name": "endurance",
+        "color": "#2196F3",
+        "icon": "⏱️",
+        "category": "skill_focus"
+    },
+    {
+        "name": "explosiveness",
+        "color": "#FF5722",
+        "icon": "💥",
+        "category": "skill_focus"
+    },
+    {
+        "name": "coordination",
+        "color": "#9C27B0",
+        "icon": "🤹",
+        "category": "skill_focus"
+    },
+    {
+        "name": "reaction_time",
+        "color": "#FF9800",
+        "icon": "⚡",
+        "category": "skill_focus"
+    },
+    {
+        "name": "low_intensity",
+        "color": "#8BC34A",
+        "icon": "🟢",
+        "category": "intensity_level"
+    },
+    {
+        "name": "moderate_intensity",
+        "color": "#FFC107",
+        "icon": "🟡",
+        "category": "intensity_level"
+    },
+    {
+        "name": "high_intensity",
+        "color": "#FF5722",
+        "icon": "🔴",
+        "category": "intensity_level"
+    },
+    {
+        "name": "maximal_effort",
+        "color": "#B71C1C",
+        "icon": "🔥",
+        "category": "intensity_level"
+    },
+    {
+        "name": "pitcher",
+        "color": "#D32F2F",
+        "icon": "⚾",
+        "category": "position_specific"
+    },
+    {
+        "name": "catcher",
+        "color": "#1976D2",
+        "icon": "🧤",
+        "category": "position_specific"
+    },
+    {
+        "name": "infield",
+        "color": "#388E3C",
+        "icon": "💎",
+        "category": "position_specific"
+    },
+    {
+        "name": "outfield",
+        "color": "#0288D1",
+        "icon": "🌳",
+        "category": "position_specific"
+    }
+]

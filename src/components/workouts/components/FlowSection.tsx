@@ -9,7 +9,7 @@ interface FlowSectionProps {
 }
 
 export function FlowSection({ type, items, title }: FlowSectionProps) {
-  if (items.length === 0) return null;
+  if (!items || items.length === 0) return null;
 
   const getIcon = () => {
     switch (type) {
