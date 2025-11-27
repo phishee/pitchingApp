@@ -64,7 +64,7 @@ export function useAssignmentData({
 
                 // Update cache if we have a sessionId
                 if (sessionId) {
-                    workoutSessionCache.update(sessionId, { assignment });
+                    workoutSessionApi.updateCache(sessionId, { assignment });
                 }
 
                 return assignment;

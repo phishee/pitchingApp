@@ -65,7 +65,7 @@ export function useExercisesData({
                             if (!activeExerciseId && exerciseData.length > 0) {
                                 setActiveExerciseId(exerciseData[0].id ?? null);
                             }
-                            workoutSessionCache.update(sessionId, { exercises: exerciseData });
+                            workoutSessionApi.updateCache(sessionId, { exercises: exerciseData });
                         })
                         .catch(() => { }); // Silent fail
                     return cached.exercises;
@@ -84,7 +84,7 @@ export function useExercisesData({
 
                 // Update cache if we have a sessionId
                 if (sessionId) {
-                    workoutSessionCache.update(sessionId, { exercises: exerciseData });
+                    workoutSessionApi.updateCache(sessionId, { exercises: exerciseData });
                 }
 
                 return exerciseData;

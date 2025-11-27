@@ -73,7 +73,7 @@ export function useWorkoutData({
 
                 // Update cache if we have a sessionId
                 if (sessionId) {
-                    workoutSessionCache.update(sessionId, { workout });
+                    workoutSessionApi.updateCache(sessionId, { workout });
                 }
 
                 return workout;
