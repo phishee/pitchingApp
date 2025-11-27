@@ -2,6 +2,7 @@
 
 import apiClient from "@/lib/axios-config";
 import { User } from "@/models/User";
+import { createDeduplicator } from "@/lib/api-utils";
 
 const API_BASE = "/users";
 
@@ -44,7 +45,7 @@ export const userApi = {
     status?: 'active' | 'inactive';
   }): Promise<any[]> {
     const params = new URLSearchParams({ organizationId });
-    
+
     if (filters?.role) params.append('role', filters.role);
     if (filters?.teamId) params.append('teamId', filters.teamId);
     if (filters?.search) params.append('search', filters.search);
@@ -66,8 +67,8 @@ export const userApi = {
     return res.data;
   },
 
-  // Check if user exists in database (no auth required - used during onboarding)
-  async checkUserExists(id: string): Promise<{ exists: boolean; user?: User; error?: string }> {
+  // Check if user exists in database (no auth required - used during onboarding) ---------- Deduplicator
+  checkUserExists: createDeduplicator(async (id: string): Promise<{ exists: boolean; user?: User; error?: string }> => {
     try {
       const res = await fetch(`/api/v1/users/check/${id}`, {
         method: 'GET',
@@ -75,19 +76,19 @@ export const userApi = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!res.ok) {
         if (res.status === 404) {
           return { exists: false };
         }
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
-      
+
       const data = await res.json();
       return data;
     } catch (error) {
       console.error('Error checking user existence:', error);
       return { exists: false, error: error instanceof Error ? error.message : 'Network error' };
     }
-  },
+  }, { ttl: 2000 }),
 };

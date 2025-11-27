@@ -1,6 +1,7 @@
 import apiClient from '@/lib/axios-config';
 import { Workout, WorkoutResponse, WorkoutQueryParams } from '@/models/Workout';
 import { sessionStorageService } from '@/services/storage';
+import { createDeduplicator } from "@/lib/api-utils";
 
 // Cache configuration
 const CACHE_KEYS = {
@@ -54,18 +55,26 @@ const buildQueryString = (params: Record<string, any>): string => {
 // Main workout API object
 export const workoutApi = {
   // Get all workouts with caching
-  async getWorkouts(params: WorkoutQueryParams = {}, organizationId: string): Promise<WorkoutResponse> {
+  getWorkouts: createDeduplicator(async (params: WorkoutQueryParams = {}, organizationId: string): Promise<WorkoutResponse> => {
     const cacheKey = CACHE_KEYS.WORKOUTS_LIBRARY;
 
-    // Check cache first
-    const cached = sessionStorageService.getItem<WorkoutResponse>(cacheKey, CACHE_COLLECTION);
-    if (cached) {
-      // Reset expiration when accessing cache
-      sessionStorageService.setItem(cacheKey, cached, {
-        ttl: CACHE_TTL.WORKOUTS_LIBRARY,
-        collection: CACHE_COLLECTION
-      });
-      return cached;
+    // Only use the main cache if no params (except organizationId) are provided
+    // This mimics the "load all" behavior. 
+    // If params are present, we might want to bypass cache or implement complex client-side filtering.
+    // For now, let's assume we only cache the "full list" call.
+    const isFullList = Object.keys(params).length === 0;
+
+    if (isFullList) {
+      // Check cache first
+      const cached = sessionStorageService.getItem<WorkoutResponse>(cacheKey, CACHE_COLLECTION);
+      if (cached) {
+        // Reset expiration when accessing cache
+        sessionStorageService.setItem(cacheKey, cached, {
+          ttl: CACHE_TTL.WORKOUTS_LIBRARY,
+          collection: CACHE_COLLECTION
+        });
+        return cached;
+      }
     }
 
     // Fetch from API
@@ -73,14 +82,19 @@ export const workoutApi = {
     const queryString = buildQueryString(queryParams);
     const response = await makeRequest<WorkoutResponse>(`/workouts${queryString}`);
 
-    // Cache the response
-    sessionStorageService.setItem(cacheKey, response, {
-      ttl: CACHE_TTL.WORKOUTS_LIBRARY,
-      collection: CACHE_COLLECTION
-    });
+    // Cache the response only if it's the full list
+    if (isFullList) {
+      sessionStorageService.setItem(cacheKey, response, {
+        ttl: CACHE_TTL.WORKOUTS_LIBRARY,
+        collection: CACHE_COLLECTION
+      });
+    }
 
     return response;
-  },
+  }, {
+    ttl: 2000,
+    keyGenerator: (params, organizationId) => `${organizationId}-${JSON.stringify(params)}`
+  }),
 
   // Get single workout by ID
   async getWorkoutById(id: string, organizationId: string): Promise<Workout> {

@@ -67,9 +67,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       const allOrganizations = await organizationApi.getOrganizations();
       setOrganizations(allOrganizations);
 
-      // Load teams for the current organization directly (avoid circular dependency)
-      const teams = await organizationApi.getOrganizationTeams(organization._id);
-      setOrganizationTeams(teams);
+
 
     } catch (err) {
       console.error('Error loading organization data:', err);
@@ -126,7 +124,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   // Refresh all organization data
   const refreshOrganizationData = useCallback(async () => {
     if (!user?.currentOrganizationId) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
