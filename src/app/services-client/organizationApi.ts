@@ -3,7 +3,11 @@
 import apiClient from "@/lib/axios-config";
 import { Organization } from "@/models/Organization";
 
+import { sessionStorageService } from "@/services/storage";
+
 const API_BASE = "/organizations";
+const CACHE_COLLECTION = 'cache';
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 export const organizationApi = {
   // Get all organizations
@@ -14,7 +18,25 @@ export const organizationApi = {
 
   // Get a single organization by ID
   async getOrganization(id: string): Promise<Organization> {
+    const cacheKey = `organization_${id}`;
+    const cached = sessionStorageService.getItem<Organization>(cacheKey, CACHE_COLLECTION);
+
+    if (cached) {
+      // Reset expiration when accessing cache
+      sessionStorageService.setItem(cacheKey, cached, {
+        ttl: CACHE_TTL,
+        collection: CACHE_COLLECTION
+      });
+      return cached;
+    }
+
     const res = await apiClient.get<Organization>(`${API_BASE}/${id}`);
+
+    sessionStorageService.setItem(cacheKey, res.data, {
+      ttl: CACHE_TTL,
+      collection: CACHE_COLLECTION
+    });
+
     return res.data;
   },
 
@@ -27,18 +49,49 @@ export const organizationApi = {
   // Update an organization by ID
   async updateOrganization(id: string, data: Partial<Organization>): Promise<Organization> {
     const res = await apiClient.put<Organization>(`${API_BASE}/${id}`, data);
+
+    // Update cache
+    const cacheKey = `organization_${id}`;
+    sessionStorageService.setItem(cacheKey, res.data, {
+      ttl: CACHE_TTL,
+      collection: CACHE_COLLECTION
+    });
+
     return res.data;
   },
 
   // Delete an organization by ID
   async deleteOrganization(id: string): Promise<{ message: string }> {
     const res = await apiClient.delete<{ message: string }>(`${API_BASE}/${id}`);
+
+    // Clear cache
+    const cacheKey = `organization_${id}`;
+    sessionStorageService.removeItem(cacheKey, CACHE_COLLECTION);
+
     return res.data;
   },
 
   // Get teams for an organization
   async getOrganizationTeams(organizationId: string): Promise<any[]> {
+    const cacheKey = `organization_teams_${organizationId}`;
+    const cached = sessionStorageService.getItem<any[]>(cacheKey, CACHE_COLLECTION);
+
+    if (cached) {
+      // Reset expiration when accessing cache
+      sessionStorageService.setItem(cacheKey, cached, {
+        ttl: CACHE_TTL,
+        collection: CACHE_COLLECTION
+      });
+      return cached;
+    }
+
     const res = await apiClient.get<any[]>(`${API_BASE}/${organizationId}/teams`);
+
+    sessionStorageService.setItem(cacheKey, res.data, {
+      ttl: CACHE_TTL,
+      collection: CACHE_COLLECTION
+    });
+
     return res.data;
   },
 

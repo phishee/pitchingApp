@@ -2,10 +2,14 @@
 
 import apiClient from "@/lib/axios-config";
 import { Team, TeamJoinRequest, TeamInvitation } from "@/models";
+import { createDeduplicator } from "@/lib/api-utils";
 
+
+import { sessionStorageService } from "@/services/storage";
 
 const API_BASE = "/teams";
-// const JOIN_REQUEST_BASE = "/api/v1/teams/join-request";
+const CACHE_COLLECTION = 'cache';
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 export const teamApi = {
   // Get all teams
@@ -14,11 +18,29 @@ export const teamApi = {
     return res.data;
   },
 
-  // Get a single team by ID
-  async getTeam(id: string): Promise<Team> {
+  // Get a single team by ID ---------- Deduplicator
+  getTeam: createDeduplicator(async (id: string): Promise<Team> => {
+    const cacheKey = `team_${id}`;
+    const cached = sessionStorageService.getItem<Team>(cacheKey, CACHE_COLLECTION);
+
+    if (cached) {
+      // Reset expiration when accessing cache
+      sessionStorageService.setItem(cacheKey, cached, {
+        ttl: CACHE_TTL,
+        collection: CACHE_COLLECTION
+      });
+      return cached;
+    }
+
     const res = await apiClient.get<Team>(`${API_BASE}/${id}`);
+
+    sessionStorageService.setItem(cacheKey, res.data, {
+      ttl: CACHE_TTL,
+      collection: CACHE_COLLECTION
+    });
+
     return res.data;
-  },
+  }, { ttl: 2000 }),
 
   // Create a new team
   async createTeam(data: Partial<Team>): Promise<Team> {
@@ -29,6 +51,14 @@ export const teamApi = {
   // Update a team by ID
   async updateTeam(id: string, data: Partial<Team>): Promise<Team> {
     const res = await apiClient.put<Team>(`${API_BASE}/${id}`, data);
+
+    // Update cache
+    const cacheKey = `team_${id}`;
+    sessionStorageService.setItem(cacheKey, res.data, {
+      ttl: CACHE_TTL,
+      collection: CACHE_COLLECTION
+    });
+
     return res.data;
   },
 

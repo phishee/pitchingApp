@@ -1,6 +1,7 @@
 import apiClient from '@/lib/axios-config';
 import { Exercise, ExerciseResponse, ExerciseQueryParams } from '@/models/Exercise';
 import { sessionStorageService } from '@/services/storage';
+import { createDeduplicator } from "@/lib/api-utils";
 
 // Cache configuration
 const CACHE_KEYS = {
@@ -40,7 +41,7 @@ const buildQueryString = (params: Record<string, any>): string => {
 // Main exercise API object
 export const exerciseApi = {
   // Get all exercises with caching
-  async getExercises(params: ExerciseQueryParams = {}): Promise<ExerciseResponse> {
+  getExercises: createDeduplicator(async (params: ExerciseQueryParams = {}): Promise<ExerciseResponse> => {
     const cacheKey = CACHE_KEYS.EXERCISES_LIBRARY;
 
     // Check cache first
@@ -65,10 +66,13 @@ export const exerciseApi = {
     });
 
     return response;
-  },
+  }, {
+    ttl: 2000,
+    keyGenerator: (params) => JSON.stringify(params)
+  }),
 
   // Get single exercise by ID with caching
-  async getExerciseById(id: string): Promise<Exercise> {
+  getExerciseById: createDeduplicator(async (id: string): Promise<Exercise> => {
     const cacheKey = CACHE_KEYS.EXERCISES_LIBRARY;
 
     // 1. Get cache with key EXERCISES_LIBRARY (contains all exercises)
@@ -93,7 +97,7 @@ export const exerciseApi = {
 
     // 6. Return the exercise fetched earlier by the id
     return response[0];
-  },
+  }, { ttl: 2000 }),
 
   // Search exercises with caching
   async searchExercises(searchTerm: string): Promise<Exercise[]> {
