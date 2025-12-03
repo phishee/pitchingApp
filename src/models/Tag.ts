@@ -1,5 +1,6 @@
 // System tag (from JSON file)
 export interface SystemTag {
+    id: string;
     name: string;
     color?: string;
     icon?: string;

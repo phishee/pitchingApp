@@ -1,5 +1,6 @@
 import React from 'react';
 import { Play, Pause } from 'lucide-react';
+import { Tag } from '@/components/ui/tag';
 
 interface ExerciseMediaCardProps {
   exercise: any;
@@ -64,12 +65,7 @@ export function ExerciseMediaCard({
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-4">
           {exercise?.tags?.map((tag: string, index: number) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md"
-            >
-              {tag}
-            </span>
+            <Tag key={index} value={tag} className="rounded-full" />
           ))}
         </div>
 

@@ -1,450 +1,525 @@
 [
     {
-        "name": "strength",
+        "id": "strength",
+        "name": "Strength",
         "color": "#4CAF50",
         "icon": "💪",
         "category": "training_types"
     },
     {
-        "name": "power",
+        "id": "power",
+        "name": "Power",
         "color": "#FF5722",
         "icon": "⚡",
         "category": "training_types"
     },
     {
-        "name": "cardio",
+        "id": "cardio",
+        "name": "Cardio",
         "color": "#FF9800",
         "icon": "❤️",
         "category": "training_types"
     },
     {
-        "name": "conditioning",
+        "id": "conditioning",
+        "name": "Conditioning",
         "color": "#2196F3",
         "icon": "🏃",
         "category": "training_types"
     },
     {
-        "name": "mobility",
+        "id": "mobility",
+        "name": "Mobility",
         "color": "#9C27B0",
         "icon": "🧘",
         "category": "training_types"
     },
     {
-        "name": "flexibility",
+        "id": "flexibility",
+        "name": "Flexibility",
         "color": "#E91E63",
         "icon": "🤸",
         "category": "training_types"
     },
     {
-        "name": "stability",
+        "id": "stability",
+        "name": "Stability",
         "color": "#795548",
         "icon": "⚖️",
         "category": "training_types"
     },
     {
-        "name": "plyometrics",
+        "id": "plyometrics",
+        "name": "Plyometrics",
         "color": "#FF4081",
         "icon": "🦘",
         "category": "training_types"
     },
     {
-        "name": "agility",
+        "id": "agility",
+        "name": "Agility",
         "color": "#00BCD4",
         "icon": "⚡",
         "category": "training_types"
     },
     {
-        "name": "speed",
+        "id": "speed",
+        "name": "Speed",
         "color": "#FFC107",
         "icon": "🏃‍♂️",
         "category": "training_types"
     },
     {
-        "name": "pitching",
+        "id": "pitching",
+        "name": "Pitching",
         "color": "#D32F2F",
         "icon": "⚾",
         "category": "baseball_specific"
     },
     {
-        "name": "batting",
+        "id": "batting",
+        "name": "Batting",
         "color": "#1976D2",
         "icon": "🏏",
         "category": "baseball_specific"
     },
     {
-        "name": "fielding",
+        "id": "fielding",
+        "name": "Fielding",
         "color": "#388E3C",
         "icon": "🥎",
         "category": "baseball_specific"
     },
     {
-        "name": "throwing",
+        "id": "throwing",
+        "name": "Throwing",
         "color": "#F57C00",
         "icon": "🎯",
         "category": "baseball_specific"
     },
     {
-        "name": "catching",
+        "id": "catching",
+        "name": "Catching",
         "color": "#7B1FA2",
         "icon": "🧤",
         "category": "baseball_specific"
     },
     {
-        "name": "baserunning",
+        "id": "baserunning",
+        "name": "Baserunning",
         "color": "#0097A7",
         "icon": "🏃",
         "category": "baseball_specific"
     },
     {
-        "name": "arm_care",
+        "id": "arm_care",
+        "name": "Arm Care",
         "color": "#C62828",
         "icon": "💉",
         "category": "baseball_specific"
     },
     {
-        "name": "bullpen",
+        "id": "bullpen",
+        "name": "Bullpen",
         "color": "#AD1457",
         "icon": "🎯",
         "category": "baseball_specific"
     },
     {
-        "name": "batting_practice",
+        "id": "batting_practice",
+        "name": "Batting Practice",
         "color": "#6A1B9A",
         "icon": "⚾",
         "category": "baseball_specific"
     },
     {
-        "name": "upper_body",
+        "id": "upper_body",
+        "name": "Upper Body",
         "color": "#5D4037",
         "icon": "💪",
         "category": "body_regions"
     },
     {
-        "name": "lower_body",
+        "id": "lower_body",
+        "name": "Lower Body",
         "color": "#455A64",
         "icon": "🦵",
         "category": "body_regions"
     },
     {
-        "name": "core",
+        "id": "core",
+        "name": "Core",
         "color": "#F57F17",
         "icon": "🔥",
         "category": "body_regions"
     },
     {
-        "name": "full_body",
+        "id": "full_body",
+        "name": "Full Body",
         "color": "#00796B",
         "icon": "🏋️",
         "category": "body_regions"
     },
     {
-        "name": "shoulders",
+        "id": "shoulders",
+        "name": "Shoulders",
         "color": "#E64A19",
         "icon": "💪",
         "category": "body_regions"
     },
     {
-        "name": "back",
+        "id": "back",
+        "name": "Back",
         "color": "#5E35B1",
         "icon": "🦾",
         "category": "body_regions"
     },
     {
-        "name": "chest",
+        "id": "chest",
+        "name": "Chest",
         "color": "#1E88E5",
         "icon": "💪",
         "category": "body_regions"
     },
     {
-        "name": "arms",
+        "id": "arms",
+        "name": "Arms",
         "color": "#43A047",
         "icon": "💪",
         "category": "body_regions"
     },
     {
-        "name": "legs",
+        "id": "legs",
+        "name": "Legs",
         "color": "#FB8C00",
         "icon": "🦵",
         "category": "body_regions"
     },
     {
-        "name": "glutes",
+        "id": "glutes",
+        "name": "Glutes",
         "color": "#8E24AA",
         "icon": "🍑",
         "category": "body_regions"
     },
     {
-        "name": "hips",
+        "id": "hips",
+        "name": "Hips",
         "color": "#00ACC1",
         "icon": "🦴",
         "category": "body_regions"
     },
     {
-        "name": "rotator_cuff",
+        "id": "rotator_cuff",
+        "name": "Rotator Cuff",
         "color": "#EF5350",
         "icon": "🔄",
         "category": "body_regions"
     },
     {
-        "name": "barbell",
+        "id": "barbell",
+        "name": "Barbell",
         "color": "#37474F",
         "icon": "🏋️",
         "category": "equipment"
     },
     {
-        "name": "dumbbell",
+        "id": "dumbbell",
+        "name": "Dumbbell",
         "color": "#546E7A",
         "icon": "🏋️‍♂️",
         "category": "equipment"
     },
     {
-        "name": "kettlebell",
+        "id": "kettlebell",
+        "name": "Kettlebell",
         "color": "#607D8B",
         "icon": "⚫",
         "category": "equipment"
     },
     {
-        "name": "bodyweight",
+        "id": "bodyweight",
+        "name": "Bodyweight",
         "color": "#8BC34A",
         "icon": "🧍",
         "category": "equipment"
     },
     {
-        "name": "medicine_ball",
+        "id": "medicine_ball",
+        "name": "Medicine Ball",
         "color": "#FF7043",
         "icon": "⚽",
         "category": "equipment"
     },
     {
-        "name": "bands",
+        "id": "bands",
+        "name": "Bands",
         "color": "#26C6DA",
         "icon": "🎗️",
         "category": "equipment"
     },
     {
-        "name": "cable",
+        "id": "cable",
+        "name": "Cable",
         "color": "#78909C",
         "icon": "🔗",
         "category": "equipment"
     },
     {
-        "name": "trx",
+        "id": "trx",
+        "name": "Trx",
         "color": "#FFCA28",
         "icon": "⛓️",
         "category": "equipment"
     },
     {
-        "name": "foam_roller",
+        "id": "foam_roller",
+        "name": "Foam Roller",
         "color": "#AB47BC",
         "icon": "📏",
         "category": "equipment"
     },
     {
-        "name": "ball",
+        "id": "ball",
+        "name": "Ball",
         "color": "#EF5350",
         "icon": "⚾",
         "category": "equipment"
     },
     {
-        "name": "bat",
+        "id": "bat",
+        "name": "Bat",
         "color": "#8D6E63",
         "icon": "🏏",
         "category": "equipment"
     },
     {
-        "name": "glove",
+        "id": "glove",
+        "name": "Glove",
         "color": "#A1887F",
         "icon": "🧤",
         "category": "equipment"
     },
     {
-        "name": "plyo_box",
+        "id": "plyo_box",
+        "name": "Plyo Box",
         "color": "#FF6F00",
         "icon": "📦",
         "category": "equipment"
     },
     {
-        "name": "sled",
+        "id": "sled",
+        "name": "Sled",
         "color": "#424242",
         "icon": "🛷",
         "category": "equipment"
     },
     {
-        "name": "rower",
+        "id": "rower",
+        "name": "Rower",
         "color": "#0288D1",
         "icon": "🚣",
         "category": "equipment"
     },
     {
-        "name": "bike",
+        "id": "bike",
+        "name": "Bike",
         "color": "#7CB342",
         "icon": "🚴",
         "category": "equipment"
     },
     {
-        "name": "push",
+        "id": "push",
+        "name": "Push",
         "color": "#F44336",
         "icon": "➡️",
         "category": "movement_patterns"
     },
     {
-        "name": "pull",
+        "id": "pull",
+        "name": "Pull",
         "color": "#3F51B5",
         "icon": "⬅️",
         "category": "movement_patterns"
     },
     {
-        "name": "squat",
+        "id": "squat",
+        "name": "Squat",
         "color": "#4CAF50",
         "icon": "⬇️",
         "category": "movement_patterns"
     },
     {
-        "name": "hinge",
+        "id": "hinge",
+        "name": "Hinge",
         "color": "#FF9800",
         "icon": "🔽",
         "category": "movement_patterns"
     },
     {
-        "name": "lunge",
+        "id": "lunge",
+        "name": "Lunge",
         "color": "#9C27B0",
         "icon": "🚶",
         "category": "movement_patterns"
     },
     {
-        "name": "rotate",
+        "id": "rotate",
+        "name": "Rotate",
         "color": "#00BCD4",
         "icon": "🔄",
         "category": "movement_patterns"
     },
     {
-        "name": "carry",
+        "id": "carry",
+        "name": "Carry",
         "color": "#795548",
         "icon": "🚶‍♂️",
         "category": "movement_patterns"
     },
     {
-        "name": "throw",
+        "id": "throw",
+        "name": "Throw",
         "color": "#E91E63",
         "icon": "🎯",
         "category": "movement_patterns"
     },
     {
-        "name": "warmup",
+        "id": "warmup",
+        "name": "Warmup",
         "color": "#FFEB3B",
         "icon": "🔥",
         "category": "training_phases"
     },
     {
-        "name": "activation",
+        "id": "activation",
+        "name": "Activation",
         "color": "#FFC107",
         "icon": "⚡",
         "category": "training_phases"
     },
     {
-        "name": "cooldown",
+        "id": "cooldown",
+        "name": "Cooldown",
         "color": "#00BCD4",
         "icon": "❄️",
         "category": "training_phases"
     },
     {
-        "name": "recovery",
+        "id": "recovery",
+        "name": "Recovery",
         "color": "#8BC34A",
         "icon": "🧊",
         "category": "training_phases"
     },
     {
-        "name": "prehab",
+        "id": "prehab",
+        "name": "Prehab",
         "color": "#009688",
         "icon": "🛡️",
         "category": "training_phases"
     },
     {
-        "name": "rehab",
+        "id": "rehab",
+        "name": "Rehab",
         "color": "#4DD0E1",
         "icon": "💊",
         "category": "training_phases"
     },
     {
-        "name": "technique",
+        "id": "technique",
+        "name": "Technique",
         "color": "#673AB7",
         "icon": "🎯",
         "category": "skill_focus"
     },
     {
-        "name": "accuracy",
+        "id": "accuracy",
+        "name": "Accuracy",
         "color": "#3F51B5",
         "icon": "🎯",
         "category": "skill_focus"
     },
     {
-        "name": "endurance",
+        "id": "endurance",
+        "name": "Endurance",
         "color": "#2196F3",
         "icon": "⏱️",
         "category": "skill_focus"
     },
     {
-        "name": "explosiveness",
+        "id": "explosiveness",
+        "name": "Explosiveness",
         "color": "#FF5722",
         "icon": "💥",
         "category": "skill_focus"
     },
     {
-        "name": "coordination",
+        "id": "coordination",
+        "name": "Coordination",
         "color": "#9C27B0",
         "icon": "🤹",
         "category": "skill_focus"
     },
     {
-        "name": "reaction_time",
+        "id": "reaction_time",
+        "name": "Reaction Time",
         "color": "#FF9800",
         "icon": "⚡",
         "category": "skill_focus"
     },
     {
-        "name": "low_intensity",
+        "id": "low_intensity",
+        "name": "Low Intensity",
         "color": "#8BC34A",
         "icon": "🟢",
         "category": "intensity_level"
     },
     {
-        "name": "moderate_intensity",
+        "id": "moderate_intensity",
+        "name": "Moderate Intensity",
         "color": "#FFC107",
         "icon": "🟡",
         "category": "intensity_level"
     },
     {
-        "name": "high_intensity",
+        "id": "high_intensity",
+        "name": "High Intensity",
         "color": "#FF5722",
         "icon": "🔴",
         "category": "intensity_level"
     },
     {
-        "name": "maximal_effort",
+        "id": "maximal_effort",
+        "name": "Maximal Effort",
         "color": "#B71C1C",
         "icon": "🔥",
         "category": "intensity_level"
     },
     {
-        "name": "pitcher",
+        "id": "pitcher",
+        "name": "Pitcher",
         "color": "#D32F2F",
         "icon": "⚾",
         "category": "position_specific"
     },
     {
-        "name": "catcher",
+        "id": "catcher",
+        "name": "Catcher",
         "color": "#1976D2",
         "icon": "🧤",
         "category": "position_specific"
     },
     {
-        "name": "infield",
+        "id": "infield",
+        "name": "Infield",
         "color": "#388E3C",
         "icon": "💎",
         "category": "position_specific"
     },
     {
-        "name": "outfield",
+        "id": "outfield",
+        "name": "Outfield",
         "color": "#0288D1",
         "icon": "🌳",
         "category": "position_specific"

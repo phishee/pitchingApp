@@ -21,7 +21,7 @@ export default function WorkoutLibraryPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagFilters, setShowTagFilters] = useState(false);
   const { currentOrganization } = useOrganization();
-  
+
   // TODO: Get organizationId from context or props
   const organizationId = currentOrganization?._id; // This should come from your auth context
 
@@ -34,7 +34,7 @@ export default function WorkoutLibraryPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await workoutApi.getWorkouts({}, organizationId);
       setWorkouts(response.data);
     } catch (err) {
@@ -58,19 +58,19 @@ export default function WorkoutLibraryPage() {
   const filteredWorkouts = useMemo(() => {
     return workouts.filter(workout => {
       const matchesSearch = workout.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           workout.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           workout.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesTags = selectedTags.length === 0 || 
-                         selectedTags.some(tag => workout.tags.includes(tag));
-      
+        workout.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        workout.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesTags = selectedTags.length === 0 ||
+        selectedTags.some(tag => workout.tags.includes(tag));
+
       return matchesSearch && matchesTags;
     });
   }, [workouts, searchTerm, selectedTags]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
+    setSelectedTags(prev =>
+      prev.includes(tag)
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
@@ -89,7 +89,7 @@ export default function WorkoutLibraryPage() {
   };
 
   const handleAssignWorkout = (workoutId: string) => {
-    console.log('Assign workout:', workoutId);
+    router.push(`/app/workout-library/assign?workoutId=${workoutId}`);
   };
 
   const handleCreateWorkout = () => {
@@ -114,7 +114,7 @@ export default function WorkoutLibraryPage() {
       <div className="container mx-auto p-6">
         <div className="text-center py-12">
           <div className="text-red-600 mb-4">Error: {error}</div>
-          <button 
+          <button
             onClick={loadWorkouts}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -128,7 +128,7 @@ export default function WorkoutLibraryPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <WorkoutLibraryHeader onCreateWorkout={handleCreateWorkout} />
-      
+
       <WorkoutSearchFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

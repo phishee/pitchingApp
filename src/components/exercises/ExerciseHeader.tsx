@@ -16,9 +16,10 @@ export function ExercisesHeader({ onAddExercise }: ExercisesHeaderProps) {
           Manage and organize your exercise database
         </p>
       </div>
-      <button 
+      <button
         onClick={onAddExercise}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full flex items-center gap-2 transition-colors sm:w-auto text-sm justify-center"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full flex items-center gap-2 transition-colors sm:w-auto text-sm justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={true}
       >
         <Plus className="w-4 h-4" />
         Add Exercise

@@ -61,6 +61,12 @@ export function WorkoutBasicInfoStep() {
             <TagPicker
               selectedTags={workoutMetadata.tags}
               onTagsChange={updateTags}
+              categories={[
+                'training_types',
+                'baseball_specific',
+                'movement_patterns',
+                'position_specific'
+              ]}
             />
           </div>
         </CardContent>
