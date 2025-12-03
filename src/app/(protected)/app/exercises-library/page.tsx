@@ -8,6 +8,7 @@ import { ExercisesHeader } from '@/components/exercises/ExerciseHeader';
 import { SearchAndFilters } from '@/components/exercises/SearchFilter';
 import { ExerciseCategoryCard } from '@/components/exercises/ExerciseCategoryCard';
 import { ExerciseCard } from '@/components/exercises/ExerciseCard';
+import { TagFilters } from '@/components/exercises/TagFilters';
 import { getTypeColor } from '@/lib/exerciseUtils';
 import { useRouter } from 'next/navigation';
 
@@ -17,6 +18,7 @@ export const dynamic = 'force-dynamic';
 export default function ExercisesLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,14 +61,14 @@ export default function ExercisesLibraryPage() {
 
       // Calculate exercise counts
       const counts = {
-        strength: response.filters.availableTypes.includes('strength') 
-          ? response.data.filter(ex => ex.exercise_type === 'strength').length 
+        strength: response.filters.availableTypes.includes('strength')
+          ? response.data.filter(ex => ex.exercise_type === 'strength').length
           : 0,
-        cardio: response.filters.availableTypes.includes('cardio') 
-          ? response.data.filter(ex => ex.exercise_type === 'cardio').length 
+        cardio: response.filters.availableTypes.includes('cardio')
+          ? response.data.filter(ex => ex.exercise_type === 'cardio').length
           : 0,
-        baseball: response.filters.availableTypes.includes('baseball') 
-          ? response.data.filter(ex => ex.exercise_type === 'baseball').length 
+        baseball: response.filters.availableTypes.includes('baseball')
+          ? response.data.filter(ex => ex.exercise_type === 'baseball').length
           : 0,
         total: response.filters.totalExercises
       };
@@ -80,16 +82,18 @@ export default function ExercisesLibraryPage() {
     }
   };
 
-  // Filter exercises based on search and type (client-side filtering for better UX)
+  // Filter exercises based on search, type, and tags (client-side filtering for better UX)
   const filteredExercises = exercises.filter(exercise => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exercise.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exercise.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesType = selectedType === 'all' || exercise.exercise_type === selectedType;
-    
-    return matchesSearch && matchesType;
+
+    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => exercise.tags.includes(tag));
+
+    return matchesSearch && matchesType && matchesTags;
   });
 
   // Event handlers
@@ -113,6 +117,10 @@ export default function ExercisesLibraryPage() {
     setSelectedType(newType);
   };
 
+  const handleTagsChange = (newTags: string[]) => {
+    setSelectedTags(newTags);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-4 md:p-6">
@@ -131,7 +139,7 @@ export default function ExercisesLibraryPage() {
       <div className="container mx-auto p-4 md:p-6">
         <div className="text-center py-12">
           <div className="text-red-600 mb-4">Error: {error}</div>
-          <button 
+          <button
             onClick={loadExercises}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -145,14 +153,26 @@ export default function ExercisesLibraryPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
       <ExercisesHeader onAddExercise={handleAddExercise} />
-      
+
       <SearchAndFilters
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
       />
 
+      <TagFilters
+        selectedTags={selectedTags}
+        onTagsChange={handleTagsChange}
+        categories={[
+          'body_regions',
+          'training_types',
+          'position_specific',
+          'equipment',
+          'baseball_specific'
+        ]}
+      />
+
       {/* Exercise Categories */}
-      <div className="flex justify-center">
+      {/* <div className="flex justify-center">
         <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 px-2">
           <ExerciseCategoryCard
             title="All"
@@ -191,7 +211,7 @@ export default function ExercisesLibraryPage() {
             onClick={() => handleTypeChange('baseball')}
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Exercise List */}
       <div className="space-y-4">
@@ -213,7 +233,7 @@ export default function ExercisesLibraryPage() {
             />
           ))}
         </div>
-        
+
         {filteredExercises.length === 0 && !loading && (
           <div className="text-center py-12 md:py-8 text-gray-500">
             <div className="text-sm md:text-base">No exercises found matching your criteria.</div>

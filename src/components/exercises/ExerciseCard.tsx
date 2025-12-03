@@ -15,8 +15,8 @@ export function ExerciseCard({ exercise, onClick, onEdit }: ExerciseCardProps) {
   const TypeIcon = getTypeIcon(exercise.exercise_type);
 
   return (
-    <div 
-      className="flex items-center gap-5 md:gap-8 p-5 md:p-8 bg-white rounded-2xl hover:shadow-xl transition-all duration-200 cursor-pointer"
+    <div
+      className="flex items-center gap-5 md:gap-8 p-5 md:p-8 bg-white rounded-2xl hover:shadow-xl transition-all duration-200 cursor-pointer rounded-2xl"
       style={{
         boxShadow: '0 -2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.15)'
       }}
@@ -36,7 +36,7 @@ export function ExerciseCard({ exercise, onClick, onEdit }: ExerciseCardProps) {
           </div>
         )}
       </div>
-      
+
       {/* Exercise Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
@@ -57,9 +57,9 @@ export function ExerciseCard({ exercise, onClick, onEdit }: ExerciseCardProps) {
               )}
             </div>
           </div>
-          
+
           {/* Edit Button - Only for user-owned exercises */}
-          {exercise.owner !== "system" && (
+          {/* {exercise.owner !== "system" && (
             <button 
               className="bg-gray-50 text-gray-700 px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm hover:bg-gray-100 transition-all duration-200 flex items-center gap-1 flex-shrink-0"
               onClick={(e) => {
@@ -70,7 +70,7 @@ export function ExerciseCard({ exercise, onClick, onEdit }: ExerciseCardProps) {
               <Edit3 className="w-3 h-3 md:w-4 md:h-4" />
               <span className="hidden sm:inline">Edit</span>
             </button>
-          )}
+          )} */}
         </div>
       </div>
     </div>

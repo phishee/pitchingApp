@@ -1,10 +1,10 @@
-import withPWA from 'next-pwa';
+import withPWAInit from "@ducanh2912/next-pwa";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: '**' } as const,
       // Add any other domains you encounter
     ],
   },
@@ -30,12 +30,10 @@ const nextConfig = {
   },
 };
 
-const pwaConfig = withPWA({
+const withPWA = withPWAInit({
   dest: 'public',
   register: true,
-  skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-  buildExcludes: [/middleware-manifest\.json$/]
 });
 
-export default pwaConfig(nextConfig);
+export default withPWA(nextConfig);

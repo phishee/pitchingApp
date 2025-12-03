@@ -26,7 +26,7 @@ export default function WorkoutDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [selectedTab, setSelectedTab] = useState('overview');
   const { currentOrganization } = useOrganization();
-  
+
   // TODO: Get organizationId from context or props
   const organizationId = currentOrganization?._id; // This should come from your auth context
 
@@ -40,7 +40,7 @@ export default function WorkoutDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const workoutData = await workoutApi.getWorkoutById(id, organizationId);
       setWorkout(workoutData);
     } catch (err) {
@@ -69,7 +69,7 @@ export default function WorkoutDetailPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="text-red-600 mb-4">Error: {error || 'Workout not found'}</div>
-          <button 
+          <button
             onClick={() => router.push('/app/workout-library')}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -89,7 +89,9 @@ export default function WorkoutDetailPage() {
   };
 
   const handleAssign = () => {
-    console.log('Assign workout:', workout.name);
+    if (workout) {
+      router.push(`/app/workout-library/assign?workoutId=${workout.id}`);
+    }
   };
 
   const handleBookmark = () => {
