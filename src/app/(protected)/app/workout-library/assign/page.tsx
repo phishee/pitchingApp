@@ -26,8 +26,11 @@ function WorkoutAssignmentPageContent() {
     };
 
     const handleComplete = () => {
-        // Redirect to calendar or back to workout library
-        router.push('/app/workout-library');
+        if (workoutId) {
+            router.push(`/app/workout-library/${workoutId}`);
+        } else {
+            router.push('/app/workout-library');
+        }
     };
 
     if (!currentOrganization || !currentTeam || !user) {
