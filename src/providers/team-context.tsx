@@ -63,7 +63,7 @@ const initialState: TeamState = {
 export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
   const [state, setState] = useState<TeamState>(initialState);
-  
+
   // Use refs to prevent duplicate calls and track loading state
   const loadingRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
@@ -97,8 +97,8 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const invitations = await teamInvitationApi.getInvitationsByUser(userId);
       const pendingInvitations = invitations?.filter(inv => inv.status === 'pending') || [];
-      
-      updateState({ 
+
+      updateState({
         currentUserPendingInvitations: pendingInvitations,
         userTeamStatus: pendingInvitations.length > 0 ? 'pending-invitation' : 'no-team'
       });
@@ -112,23 +112,16 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user?.userId || loadingRef.current) return;
 
     loadingRef.current = true;
-    
+
     try {
       updateState({ isLoading: true, error: '' });
 
-      const teamMembers = await teamMemberApi.getTeamMembersByUser(user.userId);
-      const activeTeamMembers = teamMembers?.filter(member => member.status === 'active') || [];
+      // Fetch all user teams in one request
+      const userTeamsData = await teamApi.getUserTeams();
 
-      if (activeTeamMembers.length > 0) {
-        const teamPromises = activeTeamMembers.map(member => 
-          teamApi.getTeam(member.teamId).catch(error => {
-            console.error(`Error loading team ${member.teamId}:`, error);
-            return null;
-          })
-        );
-
-        const teams = await Promise.all(teamPromises);
-        const validTeams = teams.filter(Boolean) as Team[];
+      if (userTeamsData.length > 0) {
+        const validTeams = userTeamsData.map(data => data.team);
+        const activeTeamMembers = userTeamsData.map(data => data.member);
 
         updateState({
           allTeams: validTeams,
@@ -244,58 +237,67 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('⚠️ sendTeamInvitations already executing, skipping duplicate call');
       return Promise.resolve([]);
     }
-    
+
     isExecutingRef.current = true;
-    
+
     try {
       console.log('🚀 sendTeamInvitations called with:', invitations.length, 'invitations');
-      
-      return new Promise((resolve, reject) => {
-        setState(currentState => {
-          if (!currentState.currentTeam?._id) {
-            reject(new Error('No current team selected'));
-            return currentState;
-          }
 
-          const teamId = currentState.currentTeam._id;
-          console.log('🏗️ TeamContext: Creating invitations for team:', teamId);
+      // Get current team ID from state - we can access state directly here since we're in the callback
+      // and we'll use the latest value from the closure or ref if needed.
+      // However, to be safe and get the absolute latest state without depending on it in dependency array
+      // (which would cause recreation of function), we can use a ref or just trust the state from closure
+      // if we add it to dependency array.
 
-          Promise.all(
-            invitations.map(invitation => {
-              console.log('📝 TeamContext: Creating invitation for:', invitation.invitedEmail || invitation.invitedUserId);
-              const invitationData = {
-                ...invitation,
-                teamId,
-                invitedAt: new Date(),
-                status: 'pending' as const,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              };
-              return teamInvitationApi.createInvitation(teamId, invitationData);
-            })
-          )
-          .then(async (createdInvitations) => {
-            console.log('✅ TeamContext: All invitations created:', createdInvitations.length);
-            // Refresh team invitations
-            const refreshedInvitations = await teamMemberApi.getTeamInvitationsByTeam(teamId);
-            setState(prevState => ({
-              ...prevState,
-              teamInvitations: refreshedInvitations,
-            }));
-            resolve(createdInvitations);
-          })
-          .catch(error => {
-            console.error('❌ Error creating invitations:', error);
-            reject(error);
-          });
+      // Better approach: Use the state directly. Since we are in a useCallback, 
+      // we need to make sure we have access to the current team ID.
+      // But we want to avoid recreating this function on every state change if possible.
+      // Actually, `state.currentTeam` is a dependency we should probably include if we use it.
+      // OR we can use the pattern of getting state, then doing work.
 
-          return currentState;
-        });
+      // Let's use the state from the closure, but we need to add it to deps.
+      // The previous implementation used setState updater to get current state, which was clever but caused the double-call issue.
+
+      if (!state.currentTeam?._id) {
+        throw new Error('No current team selected');
+      }
+
+      const teamId = state.currentTeam._id;
+      console.log('🏗️ TeamContext: Creating invitations for team:', teamId);
+
+      const createdInvitations = await Promise.all(
+        invitations.map(invitation => {
+          console.log('📝 TeamContext: Creating invitation for:', invitation.invitedEmail || invitation.invitedUserId);
+          const invitationData = {
+            ...invitation,
+            teamId,
+            invitedAt: new Date(),
+            status: 'pending' as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          return teamInvitationApi.createInvitation(teamId, invitationData);
+        })
+      );
+
+      console.log('✅ TeamContext: All invitations created:', createdInvitations.length);
+
+      // Refresh team invitations
+      const refreshedInvitations = await teamMemberApi.getTeamInvitationsByTeam(teamId);
+
+      updateState({
+        teamInvitations: refreshedInvitations,
       });
+
+      return createdInvitations;
+
+    } catch (error) {
+      console.error('❌ Error creating invitations:', error);
+      throw error;
     } finally {
       isExecutingRef.current = false;
     }
-  }, []);
+  }, [state.currentTeam, updateState]);
 
   const acceptInvitation = useCallback(async (invitationId: string, teamId: string) => {
     if (!teamId) {
@@ -312,11 +314,11 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
         const updatedPendingInvitations = currentState.currentUserPendingInvitations?.filter(
           inv => inv._id !== invitationId
         ) || [];
-        
+
         return {
           ...currentState,
-          currentUserPendingInvitations: updatedPendingInvitations.length > 0 
-            ? updatedPendingInvitations 
+          currentUserPendingInvitations: updatedPendingInvitations.length > 0
+            ? updatedPendingInvitations
             : null
         };
       });
@@ -348,11 +350,11 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
         const updatedPendingInvitations = currentState.currentUserPendingInvitations?.filter(
           inv => inv._id !== invitationId
         ) || [];
-        
+
         return {
           ...currentState,
-          currentUserPendingInvitations: updatedPendingInvitations.length > 0 
-            ? updatedPendingInvitations 
+          currentUserPendingInvitations: updatedPendingInvitations.length > 0
+            ? updatedPendingInvitations
             : null
         };
       });
