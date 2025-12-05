@@ -15,7 +15,7 @@ export class SessionDataAggregator implements ISessionDataAggregator {
   constructor(
     @inject(DB_TYPES.MongoDBProvider)
     private readonly mongoProvider: MongoDBProvider
-  ) {}
+  ) { }
 
   async aggregateSessionData(calendarEventId: string): Promise<SessionAggregatedData> {
     const event = await this.mongoProvider.findById(this.eventsCollection, calendarEventId);
@@ -39,16 +39,19 @@ export class SessionDataAggregator implements ISessionDataAggregator {
     const workoutExercises = workout.flow?.exercises ?? [];
     const exerciseIds = workoutExercises.map((exercise: any) => exercise.exercise_id);
 
-    const exercises = await Promise.all(
-      exerciseIds.map((exerciseId: string) =>
-        this.mongoProvider.findOne(this.exercisesCollection, { id: exerciseId })
-      )
-    );
+    const exercises = await this.mongoProvider.findQuery(this.exercisesCollection, {
+      id: { $in: exerciseIds }
+    });
 
-    const missingExerciseIds = exerciseIds.filter((_, index) => !exercises[index]);
+    const exerciseMap = new Map(exercises.map((ex: any) => [ex.id, ex]));
+    const missingExerciseIds = exerciseIds.filter((id: string) => !exerciseMap.has(id));
+
     if (missingExerciseIds.length > 0) {
       throw new NotFoundError(`Missing exercises: ${missingExerciseIds.join(', ')}`);
     }
+
+    // Ensure exercises are returned in the same order as the workout flow
+    const orderedExercises = exerciseIds.map((id: string) => exerciseMap.get(id));
 
     const athlete = await this.mongoProvider.findOne(this.usersCollection, {
       userId: assignment.athleteInfo?.userId,
@@ -68,7 +71,7 @@ export class SessionDataAggregator implements ISessionDataAggregator {
       event,
       assignment,
       workout,
-      exercises: exercises.filter(Boolean),
+      exercises: orderedExercises.filter(Boolean),
       athlete,
       coach: coach ?? undefined,
     };

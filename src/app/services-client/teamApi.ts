@@ -12,6 +12,12 @@ const CACHE_COLLECTION = 'cache';
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 export const teamApi = {
+  // Get all teams for the current user
+  async getUserTeams(): Promise<{ team: Team; member: any }[]> {
+    const res = await apiClient.get<{ team: Team; member: any }[]>(`/users/me/teams`);
+    return res.data;
+  },
+
   // Get all teams
   async getTeams(): Promise<Team[]> {
     const res = await apiClient.get<Team[]>(API_BASE);
