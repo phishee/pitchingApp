@@ -20,7 +20,6 @@ import {
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { WorkoutSessionBottomBar } from './workout-session-bottom-bar';
-import { useAppTheme } from '@/providers/app-theme-provider';
 
 // ==========================================
 // Types & Helpers
