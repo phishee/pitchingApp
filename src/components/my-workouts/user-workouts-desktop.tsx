@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUserEvent } from '@/providers/user-event-context';
 import { WeekDaySelector } from './week-day-selector';
 import { UserEventCard } from './user-event-card';
+import { ActiveSessionBanner } from './active-session-banner';
 
 export function UserWorkoutsDesktop() {
   const router = useRouter();
@@ -48,6 +49,9 @@ export function UserWorkoutsDesktop() {
 
   return (
     <div className="w-full h-full flex flex-col max-w-4xl mx-auto">
+      <div className="px-6 pt-6">
+        <ActiveSessionBanner />
+      </div>
       {/* Week Day Selector */}
       <div className="sticky top-0 z-10 bg-white px-6 pt-6 pb-4">
         <WeekDaySelector

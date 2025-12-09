@@ -3,15 +3,18 @@
 import React from 'react';
 import Image from 'next/image';
 import { EnrichedEvent } from '@/providers/user-event-context';
-import { Play, Check } from 'lucide-react';
+import { Play, Check, Clock, XCircle, SkipForward, AlertTriangle } from 'lucide-react';
 
 interface UserEventCardProps {
   enrichedEvent: EnrichedEvent;
   onClick?: () => void;
 }
 
+// Removed useAppTheme import
+
 export function UserEventCard({ enrichedEvent, onClick }: UserEventCardProps) {
   const { event, exerciseCount, estimatedDuration, workout } = enrichedEvent;
+  // Removed useAppTheme hook
 
   // Determine if workout is completed
   const isCompleted = event.status === 'completed';
@@ -23,8 +26,8 @@ export function UserEventCard({ enrichedEvent, onClick }: UserEventCardProps) {
   const subtitle = exerciseCount && estimatedDuration
     ? `${exerciseCount} exercises • ${estimatedDuration} min`
     : estimatedDuration
-    ? `${estimatedDuration} min`
-    : '';
+      ? `${estimatedDuration} min`
+      : '';
 
   // Get event type icon/text for assessments vs workouts
   const isAssessment = event.type === 'assessment';
@@ -33,17 +36,17 @@ export function UserEventCard({ enrichedEvent, onClick }: UserEventCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md active:scale-[0.99] cursor-pointer"
+      className="bg-white dark:bg-zinc-900 rounded-4xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden transition-all duration-200 hover:shadow-md active:scale-[0.99] cursor-pointer"
     >
       <div className="flex items-center gap-4 p-4">
         {/* Left: Image Thumbnail */}
-        <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+        <div className="relative w-15 h-15 rounded-xl overflow-hidden flex-shrink-0">
           <Image
             src={imageUrl}
             alt={event.title}
             fill
             className="object-cover"
-            sizes="80px"
+            sizes="60px"
             onError={(e) => {
               // Fallback to default image on error
               (e.target as HTMLImageElement).src = '/assets/images/default_profile.png';
@@ -55,55 +58,85 @@ export function UserEventCard({ enrichedEvent, onClick }: UserEventCardProps) {
         <div className="flex-1 min-w-0 overflow-hidden">
           {/* Event type badge for assessments */}
           {isAssessment && (
-            <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium mb-1">
+            <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium mb-1">
               {eventTypeLabel}
             </div>
           )}
-          
+
           {/* Title */}
-          <h3 className="font-semibold text-gray-900 truncate mb-1">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
             {event.title}
           </h3>
 
           {/* Subtitle with exercise count and duration */}
           {subtitle && (
-            <p className="text-sm text-gray-600 truncate">
+            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
               {subtitle}
             </p>
           )}
 
           {/* Description (optional, only if no subtitle) */}
           {!subtitle && event.description && (
-            <p className="text-sm text-gray-600 line-clamp-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
               {event.description}
             </p>
           )}
         </div>
 
         {/* Right: Action Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.();
-          }}
-          className={`
-            flex items-center justify-center
-            w-12 h-12 rounded-full
-            transition-all duration-200
-            flex-shrink-0
-            ${
-              isCompleted
-                ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-            }
-          `}
-        >
-          {isCompleted ? (
-            <Check className="w-6 h-6" strokeWidth={3} />
-          ) : (
-            <Play className="w-6 h-6 ml-1" fill="currentColor" />
-          )}
-        </button>
+        {(() => {
+          switch (event.status) {
+            case 'completed':
+              return (
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-completed text-status-completed-foreground flex-shrink-0">
+                  <Check className="w-6 h-6" strokeWidth={3} />
+                </div>
+              );
+            case 'in_progress':
+              return (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick?.();
+                  }}
+                  className="flex items-center justify-center w-12 h-12 rounded-full bg-status-inprogress text-status-inprogress-foreground flex-shrink-0 animate-pulse"
+                >
+                  <Clock className="w-6 h-6" strokeWidth={2.5} />
+                </button>
+              );
+            case 'abandoned':
+              return (
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-abandoned text-status-abandoned-foreground flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6" strokeWidth={2.5} />
+                </div>
+              );
+            case 'cancelled':
+              return (
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-cancelled text-status-cancelled-foreground flex-shrink-0">
+                  <XCircle className="w-6 h-6" strokeWidth={2.5} />
+                </div>
+              );
+            case 'skipped':
+              return (
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-skipped text-status-skipped-foreground flex-shrink-0">
+                  <SkipForward className="w-6 h-6" strokeWidth={2.5} />
+                </div>
+              );
+            default:
+              // Scheduled or unknown
+              return (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick?.();
+                  }}
+                  className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 flex-shrink-0 bg-primary/10 text-primary hover:bg-primary/20"
+                >
+                  <Play className="w-6 h-6 ml-1" fill="currentColor" />
+                </button>
+              );
+          }
+        })()}
       </div>
     </div>
   );
