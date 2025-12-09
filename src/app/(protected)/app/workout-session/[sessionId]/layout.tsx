@@ -115,11 +115,13 @@ function SessionProgressTracker() {
     const stepName = parts[sessionIndex + 2]; // e.g., 'exercises', 'rpe', 'summary'
     const positionId = parts[sessionIndex + 3]; // e.g., exerciseId
 
-    // Map URL step to WorkoutSessionStep enum if possible, or just use string
+    // Map URL step to WorkoutSessionStep enum
     let currentStep: any = stepName;
 
-    // Basic mapping
-    if (stepName === 'exercises' && !positionId) currentStep = 'exercises';
+    if (stepName === 'pre-workout-questionnaire') currentStep = 'pre_workout_questionnaire';
+    if (stepName === 'post-workout-questionnaire') currentStep = 'post_workout_questionnaire';
+    if (stepName === 'questionnaire') currentStep = 'questionnaire';
+    if (stepName === 'exercises') currentStep = 'exercises';
     if (stepName === 'rpe') currentStep = 'rpe';
     if (stepName === 'summary') currentStep = 'summary';
 
@@ -127,15 +129,14 @@ function SessionProgressTracker() {
     const lastProgress = session.data.progress;
 
     if (
-      lastProgress?.currentUrl !== pathname ||
-      lastProgress?.stepName !== stepName ||
+      lastProgress?.stepName !== currentStep || // Compare with mapped step
       lastProgress?.positionId !== positionId
     ) {
       session.updateProgress({
-        currentStep: currentStep, // This might need to be more robust if strict enum is required
-        stepName,
+        currentStep: currentStep,
+        stepName: currentStep, // Save the enum value as stepName too for consistency
         positionId,
-        currentUrl: pathname,
+        currentUrl: pathname, // Keep for debug/fallback, but resume logic uses stepName/positionId
         updatedAt: new Date()
       }).catch(err => console.error('Failed to update progress:', err));
     }

@@ -144,6 +144,7 @@ export type WorkoutSessionStep =
   | 'exercises'
   | 'rpe'
   | 'post_workout_questionnaire'
+  | 'questionnaire'
   | 'summary';
 
 // ==========================================

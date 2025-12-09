@@ -223,7 +223,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
 
     if (isActive) {
         return (
-            <div className="bg-white rounded-xl p-4 shadow-md mb-4 ring-2 ring-orange-200 border-orange-100 border relative">
+            <div className="bg-white rounded-xl p-4 shadow-md mb-4 ring-2 ring-primary/20 border-primary/10 border relative">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg text-gray-800">Set {set.setNumber}</h3>
                     <div className="flex items-center gap-2">
@@ -252,7 +252,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
                 </div>
 
                 <Button
-                    className="w-full mt-6 bg-[#FF7F50] hover:bg-[#FF6347] text-white font-bold text-lg h-12 rounded-xl shadow-orange-200 shadow-lg"
+                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-white font-bold text-lg h-12 rounded-xl shadow-primary/20 shadow-lg"
                     onClick={() => onCompleteSet(set.setNumber, localValues)}
                 >
                     <Check className="w-5 h-5 mr-2" />
@@ -264,7 +264,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
 
     // Upcoming Set
     return (
-        <div className="bg-[#FFF5EE] rounded-xl p-4 mb-4 border border-orange-100">
+        <div className="bg-primary/5 rounded-xl p-4 mb-4 border border-primary/10">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-lg text-gray-600">Set {set.setNumber}</h3>
                 <span className="text-sm text-gray-400 font-medium">Upcoming</span>
@@ -303,6 +303,8 @@ export function ExerciseSessionMobile() {
         session,
         exercises,
     } = useWorkoutSessionContext();
+
+    const router = useRouter();
 
     const activeExerciseId = exercises.activeExerciseId;
 
@@ -464,7 +466,7 @@ export function ExerciseSessionMobile() {
     const isLastSet = activeSetIndex === activeSessionExercise.sets.length - 1 || activeSetIndex === -1; // If all completed, activeSetIndex is -1, still allow adding
     const canAddSet = isLastSet;
 
-    const router = useRouter();
+
 
     const handleFinishExercise = async () => {
         if (!session.data || !activeSessionExercise) return;
@@ -492,7 +494,7 @@ export function ExerciseSessionMobile() {
     const buttonLabel = isLastExercise ? "Finish Workout" : "Next Exercise";
 
     return (
-        <div className="min-h-screen bg-[#FFE4C4]/30 pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
+        <div className="min-h-screen bg-background pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
             <div className="space-y-6">
                 {/* Title */}
                 <h1 className="text-3xl font-extrabold text-[#1A2333]">
@@ -542,7 +544,7 @@ export function ExerciseSessionMobile() {
                             <span>00:45</span>
                         </div>
                     </div>
-                    <Progress value={progressPercent} className="h-3 bg-gray-200" indicatorClassName="bg-[#FF7F50]" />
+                    <Progress value={progressPercent} className="h-3 bg-gray-200" indicatorClassName="bg-primary" />
                 </div>
 
                 {/* Sets List */}
@@ -566,7 +568,7 @@ export function ExerciseSessionMobile() {
                 {/* Add Set Button */}
                 <Button
                     variant="outline"
-                    className="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#FF7F50] hover:text-[#FF7F50] h-12 rounded-xl font-bold"
+                    className="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:border-primary hover:text-primary h-12 rounded-xl font-bold"
                     onClick={handleAddSet}
                     disabled={!canAddSet}
                 >
