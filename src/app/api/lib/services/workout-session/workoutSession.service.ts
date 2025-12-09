@@ -152,13 +152,25 @@ export class WorkoutSessionService implements IWorkoutSessionService {
     });
 
     // If the session is marked as completed, also complete the calendar event
-    if (updates.status === 'completed' && updated?.value) {
-      const session = updated.value;
-      if (session.calendarEventId) {
+    if (updates.status === 'completed') {
+      const session = updated?.value ?? updated;
+
+      if (session && session.calendarEventId) {
+        console.log(`[Service] Completing event ${session.calendarEventId} for session ${sessionId}`);
         await this.mongoProvider.update(this.eventsCollection, session.calendarEventId, {
           status: 'completed',
           updatedAt: new Date(),
         });
+      } else {
+        // Fallback: If we don't have the session from the update result, fetch it
+        console.warn(`[Service] Session not returned from update, fetching to complete event`);
+        const fetchedSession = await this.mongoProvider.findById(this.sessionsCollection, sessionId);
+        if (fetchedSession && fetchedSession.calendarEventId) {
+          await this.mongoProvider.update(this.eventsCollection, fetchedSession.calendarEventId, {
+            status: 'completed',
+            updatedAt: new Date(),
+          });
+        }
       }
     }
 

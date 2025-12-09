@@ -160,7 +160,13 @@ interface SetCardProps {
     onDeleteSet: (setNumber: number) => void;
 }
 
+// ... imports
+// Removed useAppTheme import
+
+// ... (MetricInput component remains same)
+
 function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteSet }: SetCardProps) {
+    // Removed useAppTheme hook
     const isCompleted = set.status === 'completed';
 
     // Sort metrics: required first
@@ -204,17 +210,17 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
             .join(' • ');
 
         return (
-            <div className="bg-white/60 rounded-xl p-4 shadow-sm mb-2 border border-green-100 flex items-center justify-between">
+            <div className="bg-white/60 dark:bg-zinc-900/60 rounded-xl p-4 shadow-sm mb-2 border border-status-completed flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                    <div className="h-8 w-8 rounded-full bg-status-completed flex items-center justify-center text-status-completed-foreground">
                         <Check className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="font-bold text-gray-800 text-sm">Set {set.setNumber}</h3>
-                        <p className="text-sm text-gray-500 font-medium">{summary}</p>
+                        <h3 className="font-bold text-gray-800 dark:text-gray-200 text-sm">Set {set.setNumber}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{summary}</p>
                     </div>
                 </div>
-                <div className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                <div className="text-xs font-bold text-status-completed-foreground bg-status-completed px-2 py-1 rounded-md">
                     Done
                 </div>
             </div>
@@ -223,14 +229,14 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
 
     if (isActive) {
         return (
-            <div className="bg-white rounded-xl p-4 shadow-md mb-4 ring-2 ring-primary/20 border-primary/10 border relative">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 shadow-md mb-4 ring-2 ring-primary/30 border-primary/20 border relative">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-lg text-gray-800">Set {set.setNumber}</h3>
+                    <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">Set {set.setNumber}</h3>
                     <div className="flex items-center gap-2">
                         {set.isAdded && (
                             <button
                                 onClick={() => onDeleteSet(set.setNumber)}
-                                className="text-red-400 hover:text-red-600 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                                className="text-red-400 hover:text-red-600 dark:hover:text-red-300 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             >
                                 Delete
                             </button>
@@ -252,7 +258,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
                 </div>
 
                 <Button
-                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-white font-bold text-lg h-12 rounded-xl shadow-primary/20 shadow-lg"
+                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg h-12 rounded-xl shadow-lg"
                     onClick={() => onCompleteSet(set.setNumber, localValues)}
                 >
                     <Check className="w-5 h-5 mr-2" />
@@ -266,7 +272,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
     return (
         <div className="bg-primary/5 rounded-xl p-4 mb-4 border border-primary/10">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg text-gray-600">Set {set.setNumber}</h3>
+                <h3 className="font-bold text-gray-600 dark:text-gray-400">Set {set.setNumber}</h3>
                 <span className="text-sm text-gray-400 font-medium">Upcoming</span>
             </div>
 
@@ -284,7 +290,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
 
             <Button
                 variant="ghost"
-                className="w-full mt-4 bg-gray-200/50 text-gray-500 font-semibold rounded-lg h-12"
+                className="w-full mt-4 bg-gray-200/50 dark:bg-zinc-800/50 text-gray-500 dark:text-gray-400 font-semibold rounded-lg h-12"
                 disabled
             >
                 <Check className="w-4 h-4 mr-2" />
@@ -293,10 +299,6 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
         </div>
     );
 }
-
-// ==========================================
-// Main Component
-// ==========================================
 
 export function ExerciseSessionMobile() {
     const {
@@ -447,10 +449,6 @@ export function ExerciseSessionMobile() {
         await session.saveSession({ exercises: newSession.exercises });
     };
 
-    // ==========================================
-    // Render
-    // ==========================================
-
     if (!activeSessionExercise || !activeExerciseDef) {
         return <div className="p-4">Loading exercise...</div>;
     }
@@ -465,8 +463,6 @@ export function ExerciseSessionMobile() {
     const activeSetIndex = activeSessionExercise.sets.findIndex(s => s.status === 'pending');
     const isLastSet = activeSetIndex === activeSessionExercise.sets.length - 1 || activeSetIndex === -1; // If all completed, activeSetIndex is -1, still allow adding
     const canAddSet = isLastSet;
-
-
 
     const handleFinishExercise = async () => {
         if (!session.data || !activeSessionExercise) return;
@@ -494,10 +490,10 @@ export function ExerciseSessionMobile() {
     const buttonLabel = isLastExercise ? "Finish Workout" : "Next Exercise";
 
     return (
-        <div className="min-h-screen bg-background pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
+        <div className="min-h-screen bg-primary/5 pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
             <div className="space-y-6">
                 {/* Title */}
-                <h1 className="text-3xl font-extrabold text-[#1A2333]">
+                <h1 className="text-3xl font-extrabold text-[#1A2333] dark:text-white">
                     {activeSessionExercise.exerciseName}
                 </h1>
 
@@ -529,7 +525,7 @@ export function ExerciseSessionMobile() {
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2">
                     {activeExerciseDef.tags.map(tag => (
-                        <span key={tag} className="px-3 py-1 rounded-full bg-white/60 text-xs font-bold text-gray-600 uppercase tracking-wider">
+                        <span key={tag} className="px-3 py-1 rounded-full bg-white/60 dark:bg-zinc-800/60 text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                             {tag}
                         </span>
                     ))}
@@ -537,14 +533,14 @@ export function ExerciseSessionMobile() {
 
                 {/* Progress Bar */}
                 <div className="space-y-2">
-                    <div className="flex justify-between text-sm font-bold text-gray-600">
+                    <div className="flex justify-between text-sm font-bold text-gray-600 dark:text-gray-400">
                         <span>{completedOriginalSets}/{originalSets.length} sets</span>
                         <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
                             <span>00:45</span>
                         </div>
                     </div>
-                    <Progress value={progressPercent} className="h-3 bg-gray-200" indicatorClassName="bg-primary" />
+                    <Progress value={progressPercent} className="h-3 bg-gray-200 dark:bg-zinc-800" indicatorClassName="bg-primary" />
                 </div>
 
                 {/* Sets List */}
@@ -568,7 +564,7 @@ export function ExerciseSessionMobile() {
                 {/* Add Set Button */}
                 <Button
                     variant="outline"
-                    className="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:border-primary hover:text-primary h-12 rounded-xl font-bold"
+                    className="w-full border-2 border-dashed border-gray-300 dark:border-zinc-700 text-gray-500 dark:text-gray-400 hover:border-primary hover:text-primary h-12 rounded-xl font-bold"
                     onClick={handleAddSet}
                     disabled={!canAddSet}
                 >

@@ -63,6 +63,32 @@ export class WorkoutSessionController {
     }
   }
 
+  async getActiveSession(req: AuthenticatedRequest): Promise<NextResponse> {
+    try {
+      const athleteUserId = req.user?.uid;
+
+      if (!athleteUserId) {
+        return NextResponse.json(
+          { error: 'Authenticated user context is required' },
+          { status: 401 }
+        );
+      }
+
+      const session = await this.workoutSessionService.getActiveSession(athleteUserId);
+
+      if (!session) {
+        return NextResponse.json({ message: 'No active session found' }, { status: 404 });
+      }
+
+      return NextResponse.json(session);
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error?.message ?? 'Failed to fetch active session' },
+        { status: 500 }
+      );
+    }
+  }
+
   async getSessionById(
     _req: AuthenticatedRequest,
     { params }: { params: Promise<{ sessionId: string }> }

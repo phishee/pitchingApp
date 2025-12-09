@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUserEvent } from '@/providers/user-event-context';
 import { WeekDaySelector } from './week-day-selector';
 import { UserEventCard } from './user-event-card';
+import { ActiveSessionBanner } from './active-session-banner';
 
 export function UserWorkoutsMobile() {
   const router = useRouter();
@@ -96,14 +97,14 @@ export function UserWorkoutsMobile() {
   useEffect(() => {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth() + 1;
-    
+
     // Only load if we haven't loaded this month yet
-    if (!lastLoadedMonth.current || 
-        lastLoadedMonth.current.year !== year || 
-        lastLoadedMonth.current.month !== month) {
+    if (!lastLoadedMonth.current ||
+      lastLoadedMonth.current.year !== year ||
+      lastLoadedMonth.current.month !== month) {
       // Load current month and adjacent months for smooth navigation
       loadEventsForMonth(year, month);
-      
+
       // Pre-load previous month if we're near the beginning
       const dayOfMonth = selectedDate.getDate();
       if (dayOfMonth <= 7) {
@@ -111,7 +112,7 @@ export function UserWorkoutsMobile() {
         const prevYear = month === 1 ? year - 1 : year;
         loadEventsForMonth(prevYear, prevMonth);
       }
-      
+
       // Pre-load next month if we're near the end
       const daysInMonth = new Date(year, month, 0).getDate();
       if (dayOfMonth >= daysInMonth - 7) {
@@ -119,7 +120,7 @@ export function UserWorkoutsMobile() {
         const nextYear = month === 12 ? year + 1 : year;
         loadEventsForMonth(nextYear, nextMonth);
       }
-      
+
       lastLoadedMonth.current = { year, month };
     }
   }, [selectedDate, loadEventsForMonth]);
@@ -136,12 +137,13 @@ export function UserWorkoutsMobile() {
   }
 
   return (
-    <div 
+    <div
       className="w-full h-full flex flex-col overflow-hidden max-w-full"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      <ActiveSessionBanner />
       {/* Month Header */}
       <div className="sticky top-0 z-10 bg-white px-4 pt-4 pb-2">
         <h2 className="text-lg font-bold text-gray-900">
@@ -150,9 +152,9 @@ export function UserWorkoutsMobile() {
       </div>
 
       {/* Week Day Selector */}
-      <div 
+      <div
         className="sticky z-10 bg-white px-4 pb-2 max-w-full"
-        style={{ 
+        style={{
           transform: offsetX !== 0 ? `translateX(${offsetX}px)` : 'translateX(0)',
           transition: offsetX === 0 ? 'transform 0.3s ease-out' : 'none'
         }}

@@ -8,13 +8,13 @@ interface WorkoutSessionBottomBarProps {
     isVisible?: boolean;
     label?: string;
     onAction?: () => void;
-    variant?: 'primary' | 'mono' | 'destructive' | 'secondary' | 'outline' | 'dashed' | 'ghost' | 'dim' | 'foreground' | 'inverse';
+    variant?: 'primary' | 'secondary';
     className?: string;
 }
 
 export function WorkoutSessionBottomBar({
     isVisible = true,
-    label = "Finish Exercise",
+    label = "Next Exercise",
     onAction,
     variant = 'primary',
     className
@@ -23,7 +23,7 @@ export function WorkoutSessionBottomBar({
 
     return (
         <div className={cn(
-            "fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#FFE4C4] to-transparent pt-8 z-50",
+            "fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-t border-gray-200 dark:border-zinc-800 z-50 safe-area-bottom",
             className
         )}>
             <Button
@@ -31,7 +31,7 @@ export function WorkoutSessionBottomBar({
                 variant={variant}
                 className={cn(
                     "w-full font-bold text-lg h-14 rounded-xl shadow-lg transition-all",
-                    variant === 'primary' && "bg-[#FF7F50] hover:bg-[#FF6347] text-white"
+                    variant === 'primary' && "bg-primary hover:bg-primary/90 text-primary-foreground"
                 )}
             >
                 {label}
