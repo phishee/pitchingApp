@@ -45,6 +45,12 @@ export default function WorkoutSessionPage() {
             }
         };
 
+        // 0. Completed Session Logic
+        if (status === 'completed') {
+            router.replace(`/app/workout-session/${_id}/summary`);
+            return;
+        }
+
         // 1. Resume Logic
         if (status === 'in_progress') {
             const resumeRoute = getRouteFromProgress();

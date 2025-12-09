@@ -6,6 +6,7 @@ import { useUserEvent } from '@/providers/user-event-context';
 import { WeekDaySelector } from './week-day-selector';
 import { UserEventCard } from './user-event-card';
 import { ActiveSessionBanner } from './active-session-banner';
+import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
 
 export function UserWorkoutsDesktop() {
   const router = useRouter();
@@ -31,7 +32,20 @@ export function UserWorkoutsDesktop() {
     setSelectedDate(date);
   };
 
-  const handleEventClick = (event: typeof enrichedEvents[0]) => {
+  // ...
+
+  const handleEventClick = async (event: typeof enrichedEvents[0]) => {
+    if (event.event.status === 'completed') {
+      try {
+        const session = await workoutSessionApi.getSessionByEventId(event.event._id);
+        if (session) {
+          router.push(`/app/workout-session/${session._id}/summary`);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch session for completed event:', error);
+      }
+    }
     // Navigate to workout detail page
     router.push(`/app/my-workouts/${event.event._id}`);
   };

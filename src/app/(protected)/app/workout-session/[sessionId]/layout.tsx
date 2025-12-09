@@ -90,7 +90,7 @@ export default function WorkoutSessionLayout({
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background px-4 py-6 pt-20">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background">
           {children}
         </main>
       </div>

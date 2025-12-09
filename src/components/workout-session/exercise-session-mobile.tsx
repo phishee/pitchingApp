@@ -490,7 +490,7 @@ export function ExerciseSessionMobile() {
     const buttonLabel = isLastExercise ? "Finish Workout" : "Next Exercise";
 
     return (
-        <div className="min-h-screen bg-primary/5 pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
+        <div className="min-h-screen bg-primary/5 pb-24 font-sans pt-16 px-4">
             <div className="space-y-6">
                 {/* Title */}
                 <h1 className="text-3xl font-extrabold text-[#1A2333] dark:text-white">
