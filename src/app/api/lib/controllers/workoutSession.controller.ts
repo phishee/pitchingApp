@@ -229,6 +229,7 @@ export class WorkoutSessionController {
       'exercises',
       'rpe',
       'post_workout_questionnaire',
+      'questionnaire',
       'summary',
     ].includes(step);
   }

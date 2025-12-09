@@ -8,26 +8,8 @@ const nextConfig = {
       // Add any other domains you encounter
     ],
   },
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
-  // Prevent auto-restart loop
-  // onDemandEntries: {
-  //   maxInactiveAge: 25 * 1000,
-  //   pagesBufferLength: 2,
-  // },
-  // Disable webpack watch mode warnings
-  webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-      };
-    }
-    return config;
-  },
+  // eslint configuration is handled separately in Next.js 16+
+  // webpack config for polling is removed as Turbopack handles watching efficiently
   turbopack: {},
 };
 

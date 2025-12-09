@@ -270,7 +270,7 @@ function SetCard({ set, metrics, isActive, onUpdateSet, onCompleteSet, onDeleteS
 
     // Upcoming Set
     return (
-        <div className="rounded-xl p-4 mb-4 border border-status-upcoming bg-status-upcoming">
+        <div className="bg-primary/5 rounded-xl p-4 mb-4 border border-primary/10">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-gray-600 dark:text-gray-400">Set {set.setNumber}</h3>
                 <span className="text-sm text-gray-400 font-medium">Upcoming</span>
@@ -305,6 +305,8 @@ export function ExerciseSessionMobile() {
         session,
         exercises,
     } = useWorkoutSessionContext();
+
+    const router = useRouter();
 
     const activeExerciseId = exercises.activeExerciseId;
 
@@ -447,8 +449,6 @@ export function ExerciseSessionMobile() {
         await session.saveSession({ exercises: newSession.exercises });
     };
 
-    const router = useRouter();
-
     if (!activeSessionExercise || !activeExerciseDef) {
         return <div className="p-4">Loading exercise...</div>;
     }
@@ -490,7 +490,7 @@ export function ExerciseSessionMobile() {
     const buttonLabel = isLastExercise ? "Finish Workout" : "Next Exercise";
 
     return (
-        <div className="min-h-screen bg-primary/5 pb-24 font-sans -mt-20 -mx-4 pt-20 px-4">
+        <div className="min-h-screen bg-primary/5 pb-24 font-sans pt-16 px-4">
             <div className="space-y-6">
                 {/* Title */}
                 <h1 className="text-3xl font-extrabold text-[#1A2333] dark:text-white">

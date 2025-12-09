@@ -7,6 +7,8 @@ import { WeekDaySelector } from './week-day-selector';
 import { UserEventCard } from './user-event-card';
 import { ActiveSessionBanner } from './active-session-banner';
 
+import { workoutSessionApi } from '@/app/services-client/workoutSessionApi';
+
 export function UserWorkoutsMobile() {
   const router = useRouter();
   const { isLoading, error, enrichedEvents, loadEventsForMonth } = useUserEvent();
@@ -88,7 +90,18 @@ export function UserWorkoutsMobile() {
     setSelectedDate(date);
   };
 
-  const handleEventClick = (event: typeof enrichedEvents[0]) => {
+  const handleEventClick = async (event: typeof enrichedEvents[0]) => {
+    if (event.event.status === 'completed') {
+      try {
+        const session = await workoutSessionApi.getSessionByEventId(event.event._id);
+        if (session) {
+          router.push(`/app/workout-session/${session._id}/summary`);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch session for completed event:', error);
+      }
+    }
     // Navigate to workout detail page
     router.push(`/app/my-workouts/${event.event._id}`);
   };
@@ -138,7 +151,7 @@ export function UserWorkoutsMobile() {
 
   return (
     <div
-      className="w-full h-full flex flex-col overflow-hidden max-w-full"
+      className="w-full h-full flex flex-col overflow-x-hidden max-w-[100vw]"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -151,19 +164,50 @@ export function UserWorkoutsMobile() {
         </h2>
       </div>
 
-      {/* Week Day Selector */}
-      <div
-        className="sticky z-10 bg-white px-4 pb-2 max-w-full"
-        style={{
-          transform: offsetX !== 0 ? `translateX(${offsetX}px)` : 'translateX(0)',
-          transition: offsetX === 0 ? 'transform 0.3s ease-out' : 'none'
-        }}
-      >
-        <WeekDaySelector
-          currentDate={selectedDate}
-          events={enrichedEvents}
-          onDateSelect={handleDateSelect}
-        />
+      {/* Week Day Selector Carousel */}
+      <div className="sticky z-10 bg-white overflow-hidden w-full max-w-[100vw]">
+        <div
+          className="flex w-[300%]"
+          style={{
+            transform: `translateX(calc(-33.333% + ${offsetX}px))`,
+            transition: isDragging.current ? 'none' : 'transform 0.3s ease-out'
+          }}
+        >
+          {/* Previous Week */}
+          <div className="w-1/3 px-4">
+            <WeekDaySelector
+              currentDate={(() => {
+                const d = new Date(selectedDate);
+                d.setDate(selectedDate.getDate() - 7);
+                return d;
+              })()}
+              events={enrichedEvents}
+              onDateSelect={handleDateSelect}
+            />
+          </div>
+
+          {/* Current Week */}
+          <div className="w-1/3 px-4">
+            <WeekDaySelector
+              currentDate={selectedDate}
+              events={enrichedEvents}
+              onDateSelect={handleDateSelect}
+            />
+          </div>
+
+          {/* Next Week */}
+          <div className="w-1/3 px-4">
+            <WeekDaySelector
+              currentDate={(() => {
+                const d = new Date(selectedDate);
+                d.setDate(selectedDate.getDate() + 7);
+                return d;
+              })()}
+              events={enrichedEvents}
+              onDateSelect={handleDateSelect}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Events List */}

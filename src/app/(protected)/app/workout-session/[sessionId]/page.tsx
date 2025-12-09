@@ -12,32 +12,66 @@ export default function WorkoutSessionPage() {
         if (ui.isInitializing) return;
 
         if (!session.data) {
-            // Handle error or missing session
             return;
         }
 
-        const { status, progress, _id } = session.data;
+        const { status, progress, _id, exercises } = session.data;
+
+        // Helper to construct route from semantic progress
+        const getRouteFromProgress = () => {
+            if (!progress?.stepName) return null;
+
+            switch (progress.stepName) {
+                case 'pre_workout_questionnaire':
+                    return `/app/workout-session/${_id}/pre-workout-questionnaire`;
+                case 'questionnaire':
+                    return `/app/workout-session/${_id}/questionnaire/${progress.positionId}`;
+                case 'exercises':
+                    // If we have a specific exercise ID, go there
+                    if (progress.positionId) {
+                        return `/app/workout-session/${_id}/exercises/${progress.positionId}`;
+                    }
+                    // Fallback to first exercise if no position recorded
+                    const firstEx = exercises?.[0]?.exerciseId;
+                    return firstEx ? `/app/workout-session/${_id}/exercises/${firstEx}` : `/app/workout-session/${_id}/summary`;
+                case 'rpe':
+                    return `/app/workout-session/${_id}/rpe`;
+                case 'post_workout_questionnaire':
+                    return `/app/workout-session/${_id}/post-workout-questionnaire`;
+                case 'summary':
+                    return `/app/workout-session/${_id}/summary`;
+                default:
+                    return null;
+            }
+        };
+
+        // 0. Completed Session Logic
+        if (status === 'completed') {
+            router.replace(`/app/workout-session/${_id}/summary`);
+            return;
+        }
 
         // 1. Resume Logic
-        if (status === 'in_progress' && progress?.currentUrl) {
-            console.log('Resuming session at:', progress.currentUrl);
-            router.replace(progress.currentUrl);
-            return;
+        if (status === 'in_progress') {
+            const resumeRoute = getRouteFromProgress();
+            if (resumeRoute) {
+                console.log('Resuming session at:', resumeRoute, 'based on progress:', progress);
+                router.replace(resumeRoute);
+                return;
+            }
         }
 
         // 2. Default Start Logic (if no progress or new session)
-        // Check for pre-workout questionnaire
-        const hasPreWorkout = session.data.workout.flow?.questionnaires?.length > 0; // Simplified check, ideally check specific type
+        const hasPreWorkout = session.data.workout.flow?.questionnaires?.length > 0; // Simplified check
 
         if (hasPreWorkout) {
             router.replace(`/app/workout-session/${_id}/pre-workout-questionnaire`);
         } else {
             // Go to first exercise
-            const firstExerciseId = session.data.exercises[0]?.exerciseId;
+            const firstExerciseId = exercises?.[0]?.exerciseId;
             if (firstExerciseId) {
                 router.replace(`/app/workout-session/${_id}/exercises/${firstExerciseId}`);
             } else {
-                // Fallback to summary if no exercises (weird case)
                 router.replace(`/app/workout-session/${_id}/summary`);
             }
         }

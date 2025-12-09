@@ -151,13 +151,13 @@ export function RpeCollection({
                                 : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
                             // Specific styling for selected state based on category to match design roughly
                             isSelected && option.category === 'easy' && "!border-blue-300 !bg-blue-50",
-                            isSelected && option.category === 'medium' && "!border-[#00C896] !bg-[#E6F9F4]", // Match design green
-                            isSelected && option.category === 'hard' && "!border-[#00C896] !bg-[#E6F9F4]", // Match design green for hard too? Or maybe orange? Image shows green for Medium and Hard. Let's use green for selected.
-                            isSelected && option.category === 'extreme' && "!border-[#00C896] !bg-[#E6F9F4]"
+                            isSelected && option.category === 'medium' && "!border-primary !bg-primary/10", // Match design green
+                            isSelected && option.category === 'hard' && "!border-primary !bg-primary/10", // Match design green for hard too? Or maybe orange? Image shows green for Medium and Hard. Let's use green for selected.
+                            isSelected && option.category === 'extreme' && "!border-primary !bg-primary/10"
                         )}
                     >
                         <span className={cn("mb-1", compact ? "text-3xl" : "text-4xl")}>{option.emoji}</span>
-                        <span className={cn("font-medium text-gray-400", compact ? "text-xs" : "", isSelected && "!text-[#00C896]")}>{option.label}</span>
+                        <span className={cn("font-medium text-gray-400", compact ? "text-xs" : "", isSelected && "!text-primary")}>{option.label}</span>
                         {!compact && (
                             <span className="text-xs text-center text-gray-500 mt-1">
                                 {option.description}
@@ -177,7 +177,7 @@ export function RpeCollection({
         return (
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
                 <div className="text-center">
-                    <span className="text-4xl font-black text-[#FF7F50]">{val}</span>
+                    <span className="text-4xl font-black text-primary">{val}</span>
                     <span className="text-gray-400 text-lg font-medium">/10</span>
                 </div>
                 <Slider
@@ -213,12 +213,12 @@ export function RpeCollection({
 
                 <div className="flex-1 p-4 space-y-6 pb-32">
                     {/* Workout Info Card */}
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                         <h2 className="text-lg font-bold text-gray-900">{workoutName || 'Workout'}</h2>
                         <p className="text-sm text-gray-400">
                             {date ? date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Today'}
                         </p>
-                    </div>
+                    </div> */}
 
                     {exercises.map((exercise) => {
                         const currentValue = exerciseValues[exercise.id];
@@ -271,7 +271,7 @@ export function RpeCollection({
                                     }
 
                                     {motivationalText && (
-                                        <p className="text-center text-[#00C896] font-medium text-sm animate-in fade-in slide-in-from-bottom-2">
+                                        <p className="text-center text-primary font-medium text-sm animate-in fade-in slide-in-from-bottom-2">
                                             {motivationalText}
                                         </p>
                                     )}
@@ -285,7 +285,7 @@ export function RpeCollection({
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !canSubmit}
-                        className="w-full h-14 text-lg font-bold rounded-xl bg-[#00C896] hover:bg-[#00B084] text-white shadow-lg shadow-green-100"
+                        className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
                     >
                         {isSubmitting ? 'Saving...' : 'Save & Finish'}
                     </Button>
@@ -312,7 +312,7 @@ export function RpeCollection({
                                 className={cn(
                                     "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-200",
                                     selectedEmojiCategory === option.category
-                                        ? "border-[#FF7F50] bg-[#FFF5EE] shadow-md scale-105"
+                                        ? "border-primary bg-primary/10 shadow-md scale-105"
                                         : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50"
                                 )}
                             >
@@ -327,7 +327,7 @@ export function RpeCollection({
                 ) : (
                     <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-8">
                         <div className="text-center">
-                            <span className="text-6xl font-black text-[#FF7F50]">
+                            <span className="text-6xl font-black text-primary">
                                 {numericValue}
                             </span>
                             <span className="text-gray-400 text-xl font-medium">/10</span>
@@ -372,7 +372,7 @@ export function RpeCollection({
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || (mode === 'emoji' && !selectedEmojiCategory)}
-                    className="w-full h-14 text-lg font-bold rounded-xl bg-[#FF7F50] hover:bg-[#FF6347] shadow-lg shadow-orange-200"
+                    className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
                 >
                     {isSubmitting ? 'Saving...' : 'Finish Workout'}
                     {!isSubmitting && <ChevronRight className="w-5 h-5 ml-2" />}
