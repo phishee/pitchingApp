@@ -19,6 +19,10 @@ export interface WorkoutAssignment {
 
   prescriptions: Record<string, {
     prescribedMetrics: Record<string, MetricValue>;
+    prescribedMetrics_sets?: Array<{
+      setNumber: number;
+      metrics: Record<string, MetricValue>;
+    }>;
     notes: string;
     isModified: boolean;
   }>;

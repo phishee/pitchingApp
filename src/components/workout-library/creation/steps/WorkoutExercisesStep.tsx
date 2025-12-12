@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Search, Plus, Target, Clock, X, Check } from 'lucide-react';
 import { getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
 import { WorkoutExercise, Exercise } from '@/models';
 import { useWorkoutFlow, useWorkoutExercises } from '@/providers/workout-context';
 import { ExerciseLibrarySelection } from '../ExerciseLibrarySelection';
+import { WorkoutExerciseRow } from './WorkoutExerciseRow';
 
 export function WorkoutExercisesStep() {
   const { workoutFlow, addExercise, removeExercise, updateExercise } = useWorkoutFlow();
@@ -106,102 +109,17 @@ export function WorkoutExercisesStep() {
           ) : (
             <div className="space-y-4">
               {selectedExercises.map((exercise: Exercise, index: number) => {
-                const defaultMetrics = getDefaultMetricsForExerciseId(exercise.id);
+                const workoutExercise = exercises.find(ex => ex.exercise_id === exercise.id);
 
                 return (
-                  <div key={exercise.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
-                      {index + 1}
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-medium text-gray-900">{exercise.name}</h4>
-                        <Badge variant="secondary" className={getWorkoutColor([exercise.exercise_type])}>
-                          {formatTagName(exercise.exercise_type)}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-4 text-sm">
-                        {exercise.settings.sets_counting && (
-                          <div>
-                            <label className="text-gray-600">Sets</label>
-                            <Input
-                              type="number"
-                              value={Number(defaultMetrics.sets) || 0}
-                              onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'sets', parseInt(e.target.value) || 0)}
-                              className="mt-1"
-                            />
-                          </div>
-                        )}
-                        {exercise.settings.reps_counting && (
-                          <div>
-                            <label className="text-gray-600">Reps</label>
-                            <Input
-                              type="number"
-                              value={Number(defaultMetrics.reps) || 0}
-                              onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'reps', parseInt(e.target.value) || 0)}
-                              className="mt-1"
-                            />
-                          </div>
-                        )}
-                        {exercise.exercise_type === 'cardio' || exercise.structure !== 'sets' ? (
-                          <div>
-                            <label className="text-gray-600">Duration (min)</label>
-                            <Input
-                              type="number"
-                              value={Number(defaultMetrics.duration) || 0}
-                              onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'duration', parseInt(e.target.value) || 0)}
-                              className="mt-1"
-                            />
-                          </div>
-                        ) : null}
-
-                        {/* Dynamic Metrics Inputs */}
-                        {exercise.metrics?.map(metric => {
-                          // Skip metrics that are already handled explicitly above (sets, reps, duration, rest)
-                          if (['sets', 'reps', 'duration', 'rest'].includes(metric.id)) return null;
-
-                          return (
-                            <div key={metric.id}>
-                              <label className="text-gray-600 capitalize">{metric.label || metric.id} {metric.unit ? `(${metric.unit})` : ''}</label>
-                              <Input
-                                type={metric.inputType === 'text' ? 'text' : 'number'}
-                                value={String(defaultMetrics[metric.id] ?? '')}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  const finalVal = metric.inputType === 'text' ? val : (val === '' ? null : Number(val));
-                                  handleUpdateExerciseConfig(exercise.id, metric.id, finalVal);
-                                }}
-                                className="mt-1"
-                                placeholder={metric.input === 'formula' ? 'Calculated automatically' : String(metric.defaultValue || '')}
-                                disabled={metric.input === 'formula'}
-                              />
-                            </div>
-                          );
-                        })}
-
-                        <div>
-                          <label className="text-gray-600">Rest (sec)</label>
-                          <Input
-                            type="number"
-                            value={Number(defaultMetrics.rest) || 0}
-                            onChange={(e) => handleUpdateExerciseConfig(exercise.id, 'rest', parseInt(e.target.value) || 0)}
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveExercise(exercise.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <WorkoutExerciseRow
+                    key={exercise.id}
+                    exercise={exercise}
+                    index={index}
+                    workoutExercise={workoutExercise}
+                    onUpdateConfig={handleUpdateExerciseConfig}
+                    onRemove={handleRemoveExercise}
+                  />
                 );
               })}
             </div>
@@ -209,7 +127,7 @@ export function WorkoutExercisesStep() {
         </CardContent>
       </Card>
     );
-  }, [selectedExercises, getDefaultMetricsForExerciseId, handleUpdateExerciseConfig, handleRemoveExercise]);
+  }, [selectedExercises, exercises, handleUpdateExerciseConfig, handleRemoveExercise]);
 
   return (
     <div className="space-y-6">

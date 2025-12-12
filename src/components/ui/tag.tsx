@@ -28,7 +28,7 @@ export function Tag({
     const systemTag = systemTags.find((t) => t.id === value);
 
     // Determine display values (props override system defaults)
-    const displayLabel = label || systemTag?.name || value.replace(/_/g, ' ');
+    const displayLabel = label || systemTag?.name || (value ? value.replace(/_/g, ' ') : '');
     const displayIcon = icon || (showIcon && systemTag?.icon ? systemTag.icon : null);
     const displayColor = color || systemTag?.color;
 

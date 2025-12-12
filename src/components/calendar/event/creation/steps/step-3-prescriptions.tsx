@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { AlertCircle, Check, Settings, Edit3, RotateCcw, Loader2, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWorkoutSelection } from '@/providers/workout-assignment/workout-selection.context';
@@ -15,7 +17,7 @@ import { Exercise } from '@/models/Exercise';
 
 export function Step3ExercisePrescriptions() {
   const { state: workoutState } = useWorkoutSelection();
-  const { state: prescriptionState, updatePrescription, resetExercise } = useExercisePrescription();
+  const { state: prescriptionState, updatePrescription, resetExercise, initializePrescriptions } = useExercisePrescription();
 
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -23,6 +25,8 @@ export function Step3ExercisePrescriptions() {
   const [exerciseError, setExerciseError] = useState<string | null>(null);
 
   const selectedWorkout = workoutState.selectedWorkout;
+
+  console.log("selectedWorkout: ", selectedWorkout);
 
   // Fetch exercise details when workout is selected
   useEffect(() => {
@@ -50,6 +54,14 @@ export function Step3ExercisePrescriptions() {
     fetchExerciseDetails();
   }, [selectedWorkout]);
 
+  // Ensure prescriptions are initialized if missing (safety check)
+  useEffect(() => {
+    if (selectedWorkout && Object.keys(prescriptionState.prescriptions).length === 0) {
+      console.log('Initializing prescriptions from Step 3 (safety check)');
+      initializePrescriptions(selectedWorkout.flow.exercises);
+    }
+  }, [selectedWorkout, prescriptionState.prescriptions, initializePrescriptions]);
+
   const handleMetricChange = (exerciseId: string, metricKey: string, value: any) => {
     const currentPrescription = prescriptionState.prescriptions[exerciseId];
     if (currentPrescription) {
@@ -70,7 +82,7 @@ export function Step3ExercisePrescriptions() {
     if (selectedWorkout) {
       const exercise = selectedWorkout.flow.exercises.find(e => e.exercise_id === exerciseId);
       if (exercise) {
-        resetExercise(exerciseId, exercise.default_Metrics);
+        resetExercise(exerciseId, exercise.default_Metrics, exercise.default_Metrics_sets);
       }
     }
   };
@@ -102,7 +114,7 @@ export function Step3ExercisePrescriptions() {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold mb-4">Exercise Prescriptions</h3>
-      
+
       {/* Header */}
       <Card>
         <CardHeader>
@@ -118,7 +130,7 @@ export function Step3ExercisePrescriptions() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Customize exercise metrics and add notes for each exercise in the workout. 
+            Customize exercise metrics and add notes for each exercise in the workout.
             Leave unchanged to use workout defaults.
           </p>
         </CardContent>
@@ -144,6 +156,37 @@ export function Step3ExercisePrescriptions() {
             const isModified = prescription?.isModified || false;
             const defaultMetrics = exercise.default_Metrics || {};
             const prescribedMetrics = prescription?.prescribedMetrics || defaultMetrics;
+            const isPerSet = !!prescription?.prescribedMetrics_sets;
+
+            const handleTogglePerSet = (checked: boolean) => {
+              if (checked) {
+                const setsCount = Number(prescribedMetrics.sets) || 1;
+                // Initialize with current global metrics for each set
+                const { sets: _sets, ...metricsWithoutSets } = prescribedMetrics;
+                const newSets = Array.from({ length: setsCount }, (_, i) => ({
+                  setNumber: i + 1,
+                  metrics: { ...metricsWithoutSets }
+                }));
+                updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: newSets });
+              } else {
+                updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: undefined });
+              }
+            };
+
+            const handleSetMetricChange = (setIndex: number, metricKey: string, value: any) => {
+              const currentSets = prescription?.prescribedMetrics_sets || [];
+              const newSets = [...currentSets];
+              if (!newSets[setIndex]) return;
+
+              newSets[setIndex] = {
+                ...newSets[setIndex],
+                metrics: {
+                  ...newSets[setIndex].metrics,
+                  [metricKey]: value
+                }
+              };
+              updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: newSets });
+            };
 
             return (
               <Card key={exercise.exercise_id} className={cn(
@@ -156,7 +199,7 @@ export function Step3ExercisePrescriptions() {
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium flex-shrink-0">
                         {index + 1}
                       </div>
-                      
+
                       {/* Exercise Image */}
                       <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {exerciseDetails?.image || exerciseDetails?.photoCover ? (
@@ -172,7 +215,7 @@ export function Step3ExercisePrescriptions() {
                         ) : null}
                         <ImageIcon className={cn("h-6 w-6 text-muted-foreground", exerciseDetails?.image || exerciseDetails?.photoCover ? "hidden" : "")} />
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium truncate">
                           {exerciseDetails?.name || `Exercise ${index + 1}`}
@@ -182,7 +225,7 @@ export function Step3ExercisePrescriptions() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {isModified && (
                         <Badge variant="secondary" className="text-xs">
@@ -210,12 +253,73 @@ export function Step3ExercisePrescriptions() {
                           <p className="text-sm text-muted-foreground">{exerciseDetails.description}</p>
                         </div>
                       )}
-                      
-                      {/* Metrics */}
-                      <div>
-                        <h5 className="font-medium mb-3">Metrics</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {defaultMetrics && Object.entries(defaultMetrics).map(([key, defaultValue]) => (
+
+                      {/* Metrics Header with Toggle */}
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-medium">Metrics</h5>
+                        {exerciseDetails?.settings?.sets_counting && (
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id={`per-set-${exercise.exercise_id}`}
+                              checked={isPerSet}
+                              onCheckedChange={handleTogglePerSet}
+                            />
+                            <Label htmlFor={`per-set-${exercise.exercise_id}`}>Configure per set</Label>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Global Metrics */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* Always show Sets count */}
+                        {exerciseDetails?.settings?.sets_counting && (
+                          <div className="space-y-1">
+                            <label className="text-sm font-medium capitalize">Sets</label>
+                            <Input
+                              type="number"
+                              value={prescribedMetrics.sets || ''}
+                              onChange={(e) => {
+                                const newSetsCount = parseFloat(e.target.value) || 0;
+                                handleMetricChange(exercise.exercise_id, 'sets', newSetsCount);
+
+                                // Resize per-set array if active
+                                if (isPerSet) {
+                                  const currentSets = prescription?.prescribedMetrics_sets || [];
+                                  let newSetsArray = [...currentSets];
+
+                                  if (newSetsCount > currentSets.length) {
+                                    const setsToAdd = newSetsCount - currentSets.length;
+                                    const templateMetrics = currentSets.length > 0
+                                      ? currentSets[currentSets.length - 1].metrics
+                                      : prescribedMetrics;
+
+                                    const { sets: _sets, ...metricsWithoutSets } = templateMetrics;
+
+                                    for (let i = 0; i < setsToAdd; i++) {
+                                      newSetsArray.push({
+                                        setNumber: currentSets.length + i + 1,
+                                        metrics: { ...metricsWithoutSets }
+                                      });
+                                    }
+                                  } else if (newSetsCount < currentSets.length) {
+                                    newSetsArray = newSetsArray.slice(0, newSetsCount);
+                                  }
+
+                                  if (newSetsArray.length !== currentSets.length) {
+                                    updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: newSetsArray });
+                                  }
+                                }
+                              }}
+                              placeholder={String(defaultMetrics.sets || '')}
+                              className={cn(prescribedMetrics.sets !== defaultMetrics.sets && "border-primary/50")}
+                            />
+                          </div>
+                        )}
+
+                        {/* Show other global metrics ONLY if NOT per-set */}
+                        {!isPerSet && defaultMetrics && Object.entries(defaultMetrics).map(([key, defaultValue]) => {
+                          if (key === 'sets') return null; // Already handled
+                          return (
                             <div key={key} className="space-y-1">
                               <label className="text-sm font-medium capitalize">
                                 {key.replace(/_/g, ' ')}
@@ -224,7 +328,7 @@ export function Step3ExercisePrescriptions() {
                                 type={typeof defaultValue === 'number' ? 'number' : 'text'}
                                 value={prescribedMetrics[key] || ''}
                                 onChange={(e) => {
-                                  const value = typeof defaultValue === 'number' 
+                                  const value = typeof defaultValue === 'number'
                                     ? parseFloat(e.target.value) || 0
                                     : e.target.value;
                                   handleMetricChange(exercise.exercise_id, key, value);
@@ -240,13 +344,43 @@ export function Step3ExercisePrescriptions() {
                                 </p>
                               )}
                             </div>
-                          )) || (
-                            <div className="col-span-full text-center py-4 text-muted-foreground">
-                              <p className="text-sm">No metrics available for this exercise</p>
-                            </div>
-                          )}
-                        </div>
+                          );
+                        })}
                       </div>
+
+                      {/* Per Set Metrics Inputs */}
+                      {isPerSet && prescription?.prescribedMetrics_sets && (
+                        <div className="space-y-3 pl-4 border-l-2 border-gray-100">
+                          {prescription.prescribedMetrics_sets.map((set, setIndex) => (
+                            <div key={set.setNumber} className="flex flex-col gap-2 bg-muted/30 p-3 rounded-md">
+                              <span className="text-sm font-medium text-muted-foreground">Set {set.setNumber}</span>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {Object.entries(set.metrics).map(([key, value]) => {
+                                  if (key === 'sets') return null;
+                                  return (
+                                    <div key={key}>
+                                      <label className="text-xs text-muted-foreground capitalize mb-1 block">
+                                        {key.replace(/_/g, ' ')}
+                                      </label>
+                                      <Input
+                                        type={typeof value === 'number' ? 'number' : 'text'}
+                                        value={value || ''}
+                                        onChange={(e) => {
+                                          const newVal = typeof value === 'number'
+                                            ? parseFloat(e.target.value) || 0
+                                            : e.target.value;
+                                          handleSetMetricChange(setIndex, key, newVal);
+                                        }}
+                                        className="h-8 text-sm"
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Notes */}
                       <div>
