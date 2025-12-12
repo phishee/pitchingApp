@@ -263,17 +263,33 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
         ...prev,
         flow: {
           ...prev.flow,
-          exercises: prev.flow.exercises.map((ex: any) =>
-            ex.exercise_id === exerciseId
-              ? {
+          exercises: prev.flow.exercises.map((ex: any) => {
+            if (ex.exercise_id !== exerciseId) return ex;
+
+            if (field === 'default_Metrics_sets') {
+              // Sync default_Metrics with the first set's metrics (fallback)
+              // Exclude 'sets' to avoid overwriting the global set count with potentially stale data from the set object
+              const firstSetMetrics = Array.isArray(value) && value.length > 0 ? value[0].metrics : {};
+              const { sets: _sets, ...metricsToSync } = firstSetMetrics;
+
+              return {
                 ...ex,
+                default_Metrics_sets: value,
                 default_Metrics: {
                   ...ex.default_Metrics,
-                  [field]: value
+                  ...metricsToSync
                 }
+              };
+            }
+
+            return {
+              ...ex,
+              default_Metrics: {
+                ...ex.default_Metrics,
+                [field]: value
               }
-              : ex
-          )
+            };
+          })
         }
       };
     });

@@ -23,20 +23,50 @@ export class PrescriptionResolver implements IPrescriptionResolver {
       const exerciseId = exercise.id;
       const assignmentPrescription = assignment.prescriptions?.[exerciseId];
 
-      const prescribedMetrics =
+      // 1. Determine Global/Base Metrics (Legacy/Fallback)
+      const globalMetrics =
         assignmentPrescription?.prescribedMetrics ??
         workoutExercise.default_Metrics ??
         {};
 
+      // Remove 'sets' from the global metrics to avoid polluting the individual set prescription
+      const { sets: _sets, ...baseMetrics } = globalMetrics;
+
       const setCount = this.getSetCount(exercise, assignmentPrescription);
 
-      // Remove 'sets' from the metrics that go into each individual set
-      const { sets: _sets, ...metricsPerSet } = prescribedMetrics;
+      const sets = Array.from({ length: setCount }, (_, index) => {
+        const setNumber = index + 1;
 
-      const sets = Array.from({ length: setCount }, (_, index) => ({
-        setNumber: index + 1,
-        prescribed: metricsPerSet,
-      }));
+        // 2. Check for Assignment-level Per-Set Override
+        const assignmentSetOverride = assignmentPrescription?.prescribedMetrics_sets?.find(
+          (s: any) => s.setNumber === setNumber
+        );
+
+        if (assignmentSetOverride) {
+          return {
+            setNumber,
+            prescribed: assignmentSetOverride.metrics,
+          };
+        }
+
+        // 3. Check for Workout-level Per-Set Default
+        const workoutSetDefault = workoutExercise.default_Metrics_sets?.find(
+          (s: any) => s.setNumber === setNumber
+        );
+
+        if (workoutSetDefault) {
+          return {
+            setNumber,
+            prescribed: workoutSetDefault.metrics,
+          };
+        }
+
+        // 4. Fallback to Global Base Metrics
+        return {
+          setNumber,
+          prescribed: baseMetrics,
+        };
+      });
 
       return {
         exerciseId,

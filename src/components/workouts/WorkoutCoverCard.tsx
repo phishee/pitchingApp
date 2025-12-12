@@ -24,7 +24,7 @@ export function WorkoutCoverCard({ workout }: WorkoutCoverCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         <div className="absolute top-4 left-4">
-          <WorkoutTagBadge tag={tags[0]} variant="primary" />
+          {tags[0] && <WorkoutTagBadge tag={tags[0]} variant="primary" />}
         </div>
         <div className="absolute bottom-4 right-4">
           <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 text-xs font-medium text-gray-700">
