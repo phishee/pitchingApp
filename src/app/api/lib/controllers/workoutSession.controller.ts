@@ -192,7 +192,6 @@ export class WorkoutSessionController {
   ): Promise<NextResponse> {
     try {
       const { sessionId } = await params;
-      console.log(`[Controller] updateSession called for sessionId: ${sessionId}`);
 
       if (!sessionId) {
         return NextResponse.json(
@@ -202,13 +201,11 @@ export class WorkoutSessionController {
       }
 
       const body = await req.json();
-      console.log(`[Controller] updateSession body:`, JSON.stringify(body, null, 2));
 
       // Basic validation - ensure we aren't trying to update restricted fields if necessary
       // For now, we pass the body through
 
       const session = await this.workoutSessionService.updateSession(sessionId, body);
-      console.log(`[Controller] updateSession result:`, session ? 'Success' : 'Not Found');
 
       if (!session) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 });

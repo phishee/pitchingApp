@@ -5,7 +5,7 @@ import { MetricValue } from '@/models/Metric';
 
 interface WorkoutExerciseCardProps {
   exercise: Exercise | undefined;
-  metrics: Record<string, MetricValue> | undefined;
+  metrics: Record<string, MetricValue> | Array<{ setNumber: number; metrics: Record<string, MetricValue> }> | undefined;
 }
 
 export function WorkoutExerciseCard({ exercise, metrics }: WorkoutExerciseCardProps) {
@@ -23,37 +23,45 @@ export function WorkoutExerciseCard({ exercise, metrics }: WorkoutExerciseCardPr
   let displayText = '';
 
   if (metrics) {
+    const isPerSet = Array.isArray(metrics);
+    // Use first set metrics for display if per-set, otherwise use metrics object directly
+    const displayMetrics = isPerSet
+      ? (metrics.length > 0 ? metrics[0].metrics : {})
+      : (metrics as Record<string, MetricValue>);
+
     const parts: string[] = [];
 
-    // 1. Sets (only if > 1)
-    const sets = Number(metrics.sets);
+    // 1. Sets
+    // If per-set, use array length. If global, use 'sets' property.
+    const sets = isPerSet ? metrics.length : Number(displayMetrics.sets);
+
     if (!isNaN(sets) && sets > 1) {
       parts.push(`${sets} Sets`);
     }
 
     // 2. Primary Metric (Reps, Duration, Distance, etc.)
     // Check for reps
-    if (metrics.reps !== undefined) {
-      parts.push(formatMetric(metrics.reps, 'Reps'));
-    } else if (metrics.reps_min !== undefined && metrics.reps_max !== undefined) {
-      parts.push(`${metrics.reps_min}-${metrics.reps_max} Reps`);
+    if (displayMetrics.reps !== undefined) {
+      parts.push(formatMetric(displayMetrics.reps, 'Reps'));
+    } else if (displayMetrics.reps_min !== undefined && displayMetrics.reps_max !== undefined) {
+      parts.push(`${displayMetrics.reps_min}-${displayMetrics.reps_max} Reps`);
     }
     // Check for duration
-    else if (metrics.duration !== undefined) {
+    else if (displayMetrics.duration !== undefined) {
       // Simple heuristic for unit if not provided (could be improved with metadata)
-      parts.push(formatMetric(metrics.duration, 's'));
+      parts.push(formatMetric(displayMetrics.duration, 's'));
     }
     // Check for distance
-    else if (metrics.distance !== undefined) {
-      parts.push(formatMetric(metrics.distance, 'ft'));
+    else if (displayMetrics.distance !== undefined) {
+      parts.push(formatMetric(displayMetrics.distance, 'ft'));
     }
     // Check for pitch count
-    else if (metrics.pitch_count !== undefined) {
-      parts.push(formatMetric(metrics.pitch_count, 'Pitches'));
+    else if (displayMetrics.pitch_count !== undefined) {
+      parts.push(formatMetric(displayMetrics.pitch_count, 'Pitches'));
     }
     // Check for weight
-    else if (metrics.weight !== undefined) {
-      parts.push(formatMetric(metrics.weight, 'lbs'));
+    else if (displayMetrics.weight !== undefined) {
+      parts.push(formatMetric(displayMetrics.weight, 'lbs'));
     }
 
     if (parts.length > 0) {

@@ -251,20 +251,27 @@ export const exerciseApi = {
   },
 
   // Get multiple exercises by their IDs
+  // Get multiple exercises by their IDs
   async getExercisesByIds(exerciseIds: string[]): Promise<Exercise[]> {
     const cacheKey = CACHE_KEYS.EXERCISES_LIBRARY;
 
     // 1. Check if we have exercises in cache
     const cachedData = sessionStorageService.getItem<ExerciseResponse>(cacheKey, CACHE_COLLECTION);
+    let foundExercises: Exercise[] = [];
+    let missingIds: string[] = [...exerciseIds];
 
     if (cachedData && cachedData.data) {
       // 2. Filter exercises from cache
-      const foundExercises = cachedData.data.filter(exercise =>
+      foundExercises = cachedData.data.filter(exercise =>
         exerciseIds.includes(exercise.id)
       );
 
+      // Calculate missing IDs
+      const foundIds = foundExercises.map(e => e.id);
+      missingIds = exerciseIds.filter(id => !foundIds.includes(id));
+
       // 3. If we found all exercises, return them
-      if (foundExercises.length === exerciseIds.length) {
+      if (missingIds.length === 0) {
         // Reset cache expiration on access
         sessionStorageService.setItem(cacheKey, cachedData, {
           ttl: CACHE_TTL.EXERCISES_LIBRARY,
@@ -274,21 +281,32 @@ export const exerciseApi = {
       }
     }
 
-    // 4. If not all found in cache, refresh cache by calling getExercises
-    console.log('Some exercises not in cache, refreshing...');
-    await this.getExercises({});
+    // 4. If there are missing IDs, fetch them specifically
+    if (missingIds.length > 0) {
+      try {
+        // Use the buildQueryString to properly format the array parameter
+        const queryString = buildQueryString({ ids: missingIds });
+        // Assuming the backend supports filtering by multiple IDs via /exercises?ids=id1,id2
+        // If not, we might need to make parallel requests or update the backend.
+        // Based on typical patterns, let's try the query param approach first.
+        const response = await makeRequest<ExerciseResponse>(`/exercises${queryString}`);
 
-    // 5. Get the refreshed cache and filter
-    const refreshedCache = sessionStorageService.getItem<ExerciseResponse>(cacheKey, CACHE_COLLECTION);
-    if (refreshedCache && refreshedCache.data) {
-      return refreshedCache.data.filter(exercise =>
-        exerciseIds.includes(exercise.id)
-      );
+        if (response && response.data) {
+          const newExercises = response.data;
+          foundExercises = [...foundExercises, ...newExercises];
+
+          // Update cache with new exercises if possible, or just return them
+          // Merging into the paginated cache is tricky, so we might just return the combined list
+          // and rely on individual lookups for future cache hits if we implemented a map-based cache.
+          // For now, let's just return the combined list.
+        }
+      } catch (error) {
+        console.error('Failed to fetch missing exercises:', error);
+      }
     }
 
-    // 6. If still not found, return empty array
-    console.warn('Some exercises not found:', exerciseIds);
-    return [];
+    // Sort the result to match the order of input IDs (optional but good for consistency)
+    return exerciseIds.map(id => foundExercises.find(e => e.id === id)).filter(Boolean) as Exercise[];
   }
 };
 

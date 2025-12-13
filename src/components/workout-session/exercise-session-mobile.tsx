@@ -308,7 +308,7 @@ export function ExerciseSessionMobile() {
 
     const router = useRouter();
 
-    const activeExerciseId = exercises.activeExerciseId;
+    const activeExerciseId = exercises.activeExerciseId || session.data?.exercises[0]?.exerciseId;
 
     // Find the full exercise data from the session (which contains sets)
     const activeSessionExercise = useMemo(() => {
@@ -325,6 +325,17 @@ export function ExerciseSessionMobile() {
         return activeExerciseDef?.metrics || [];
     }, [activeExerciseDef]);
 
+    // DEBUG LOGGING
+    // useEffect(() => {
+    //     console.log('[Mobile] Active Exercise ID:', activeExerciseId);
+    //     console.log('[Mobile] Active Session Exercise:', activeSessionExercise);
+    //     console.log('[Mobile] Active Exercise Def:', activeExerciseDef);
+    //     console.log('[Mobile] Exercise Metrics:', exerciseMetrics);
+    //     if (activeSessionExercise) {
+    //         console.log('[Mobile] Sets:', activeSessionExercise.sets);
+    //     }
+    // }, [activeExerciseId, activeSessionExercise, activeExerciseDef, exerciseMetrics]);
+
     // Derived state
     const sets = activeSessionExercise?.sets || [];
     const completedSetsCount = sets.filter(s => s.status === 'completed').length;
@@ -336,21 +347,18 @@ export function ExerciseSessionMobile() {
     // ==========================================
 
     const handleUpdateSet = (setNumber: number, data: Record<string, MetricValue>) => {
-        console.log('[Mobile] handleUpdateSet called:', setNumber, data);
         if (!session.data || !activeSessionExercise) return;
 
         // Create a deep copy to ensure we trigger updates and don't mutate state directly
         const newSession = JSON.parse(JSON.stringify(session.data));
 
-        const exerciseIndex = newSession.exercises.findIndex((e: any) => e.exerciseId === exercises.activeExerciseId);
+        const exerciseIndex = newSession.exercises.findIndex((e: any) => e.exerciseId === activeExerciseId);
         if (exerciseIndex === -1) {
-            console.error('[Mobile] Exercise not found in session');
             return;
         }
 
         const setIndex = newSession.exercises[exerciseIndex].sets.findIndex((s: any) => s.setNumber === setNumber);
         if (setIndex === -1) {
-            console.error('[Mobile] Set not found in exercise');
             return;
         }
 
@@ -359,8 +367,6 @@ export function ExerciseSessionMobile() {
             ...newSession.exercises[exerciseIndex].sets[setIndex].performed,
             ...data
         };
-
-        console.log('[Mobile] Updated set performed data:', newSession.exercises[exerciseIndex].sets[setIndex].performed);
 
         // For typing updates, we just set the session state locally/optimistically
         // We don't save to server on every keystroke
@@ -372,7 +378,7 @@ export function ExerciseSessionMobile() {
 
         // Create deep copy
         const newSession = JSON.parse(JSON.stringify(session.data));
-        const exerciseIndex = newSession.exercises.findIndex((e: any) => e.exerciseId === exercises.activeExerciseId);
+        const exerciseIndex = newSession.exercises.findIndex((e: any) => e.exerciseId === activeExerciseId);
         if (exerciseIndex === -1) return;
 
         const setIndex = newSession.exercises[exerciseIndex].sets.findIndex((s: any) => s.setNumber === setNumber);
@@ -393,12 +399,7 @@ export function ExerciseSessionMobile() {
         newSession.exercises[exerciseIndex].summary.compliancePercent =
             Math.round((newSession.exercises[exerciseIndex].summary.completedSets / newSession.exercises[exerciseIndex].summary.totalSets) * 100);
 
-        const setBeingSaved = newSession.exercises[exerciseIndex].sets[setIndex];
-        console.log('[Mobile] Completing set:', setNumber);
-        console.log('[Mobile] Performed data:', JSON.stringify(setBeingSaved.performed));
-
         // Save to server
-        console.log('[Mobile] Saving session after completion...');
         await session.saveSession({ exercises: newSession.exercises });
     };
 
@@ -406,7 +407,7 @@ export function ExerciseSessionMobile() {
         if (!session.data || !activeSessionExercise) return;
 
         const newSession = { ...session.data };
-        const exerciseIndex = newSession.exercises.findIndex(e => e.exerciseId === exercises.activeExerciseId);
+        const exerciseIndex = newSession.exercises.findIndex(e => e.exerciseId === activeExerciseId);
         if (exerciseIndex === -1) return;
 
         const currentSets = newSession.exercises[exerciseIndex].sets;
@@ -426,7 +427,6 @@ export function ExerciseSessionMobile() {
         newSession.exercises[exerciseIndex].sets.push(newSet);
 
         // Save to server
-        console.log('[Mobile] Saving session after adding set...');
         await session.saveSession({ exercises: newSession.exercises });
     };
 
@@ -434,7 +434,7 @@ export function ExerciseSessionMobile() {
         if (!session.data || !activeSessionExercise) return;
 
         const newSession = { ...session.data };
-        const exerciseIndex = newSession.exercises.findIndex(e => e.exerciseId === exercises.activeExerciseId);
+        const exerciseIndex = newSession.exercises.findIndex(e => e.exerciseId === activeExerciseId);
         if (exerciseIndex === -1) return;
 
         // Filter out the set

@@ -36,8 +36,17 @@ export class SessionInitializer implements ISessionInitializer {
         }
 
         const prescription = resolvedPrescriptions.find(
-          (resolved) => resolved.exerciseId === exerciseId
+          (resolved) => {
+            const resolvedId = resolved.exerciseId?.toString?.() ?? resolved.exerciseId;
+            const targetId = exerciseId?.toString?.() ?? exerciseId;
+
+            return resolvedId === targetId;
+          }
         );
+
+        if (!prescription) {
+          console.warn(`[SessionInitializer] No prescription found for exercise: ${exerciseId}`);
+        }
 
         const sets: WorkoutSessionSet[] =
           prescription?.sets.map((set) => ({

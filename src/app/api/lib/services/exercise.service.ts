@@ -17,6 +17,7 @@ export interface ExerciseQueryParams {
   hasVideo?: boolean;
   hasAnimation?: boolean;
   minMetrics?: number;
+  ids?: string[];
 }
 
 // Response interface
@@ -52,25 +53,25 @@ export class ExerciseService {
     try {
       // Build MongoDB query
       const mongoQuery = this.buildMongoFilter(params);
-      
+
       // Fetch from MongoDB
       const allExercises = await this.exerciseRepo.findQuery(this.exerciseCollection, mongoQuery);
-      
+
       // Apply client-side filters for complex logic
       const filteredExercises = this.applyFilters(allExercises, params);
-      
+
       // Sort exercises
       const sortedExercises = this.sortExercises(filteredExercises, params.sort || 'name', params.order || 'asc');
-      
+
       // Calculate pagination
       const pagination = this.calculatePagination(sortedExercises, params);
-      
+
       // Get paginated data
       const paginatedExercises = this.paginateResults(sortedExercises, pagination);
-      
+
       // Get available filters
       const filters = this.getAvailableFilters(allExercises);
-      
+
       return {
         data: paginatedExercises,
         pagination,
@@ -86,49 +87,54 @@ export class ExerciseService {
   // Add MongoDB query builder
   private buildMongoFilter(params: ExerciseQueryParams): any {
     const filter: any = {};
-    
+
     // Type filter
     if (params.type) {
       filter.exercise_type = params.type;
     }
-    
+
+    // IDs filter
+    if (params.ids && params.ids.length > 0) {
+      filter.id = { $in: params.ids };
+    }
+
     // Owner filter
     if (params.owner) {
       filter.owner = params.owner;
     }
-    
+
     // Media filters
     if (params.hasVideo !== undefined) {
       filter['instructions.video'] = { $exists: params.hasVideo };
     }
-    
+
     if (params.hasAnimation !== undefined) {
       filter['instructions.animationPicture'] = { $exists: params.hasAnimation };
     }
-    
+
     // Metrics filter
     if (params.minMetrics !== undefined) {
       filter.metrics = { $size: { $gte: params.minMetrics } };
     }
-    
+
     // Text search (name, description, tags)
     if (params.search || params.name) {
       const searchTerm = params.search || params.name;
       const searchRegex = new RegExp(this.escapeRegex(searchTerm), 'i');
-      
+
       filter.$or = [
         { name: searchRegex },
         { description: searchRegex },
         { tags: { $in: [searchRegex] } }
       ];
     }
-    
+
     // Tags filter
     if (params.tags) {
       const requestedTags = params.tags.split(',').map(tag => tag.trim());
       filter.tags = { $all: requestedTags };
     }
-    
+
     return filter;
   }
 
@@ -200,7 +206,7 @@ export class ExerciseService {
   private sortExercises(exercises: Exercise[], sortBy: string, order: 'asc' | 'desc'): Exercise[] {
     return exercises.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
         case 'name':
           comparison = a.name.localeCompare(b.name);
@@ -214,7 +220,7 @@ export class ExerciseService {
         default:
           comparison = a.name.localeCompare(b.name);
       }
-      
+
       return order === 'desc' ? -comparison : comparison;
     });
   }
@@ -224,7 +230,7 @@ export class ExerciseService {
     const limit = Math.min(Math.max(params.limit || 20, 1), 100);
     const page = Math.max(params.page || 1, 1);
     const totalPages = Math.ceil(total / limit);
-    
+
     return {
       page,
       limit,
@@ -249,7 +255,7 @@ export class ExerciseService {
   private getAvailableFilters(exercises: Exercise[]) {
     const types = [...new Set(exercises.map(ex => ex.exercise_type))];
     const tags = [...new Set(exercises.flatMap(ex => ex.tags))];
-    
+
     return {
       availableTypes: types.sort(),
       availableTags: tags.sort(),
@@ -271,7 +277,7 @@ export class ExerciseService {
   async getExercisesByType(type: string): Promise<Exercise[]> {
     try {
       return await this.exerciseRepo.findQuery(
-        this.exerciseCollection, 
+        this.exerciseCollection,
         { exercise_type: type }
       ) as Exercise[];
     } catch (error) {
@@ -284,7 +290,7 @@ export class ExerciseService {
   async getExercisesByTags(tags: string[]): Promise<Exercise[]> {
     try {
       return await this.exerciseRepo.findQuery(
-        this.exerciseCollection, 
+        this.exerciseCollection,
         { tags: { $all: tags } }
       ) as Exercise[];
     } catch (error) {
@@ -297,7 +303,7 @@ export class ExerciseService {
   async searchExercises(searchTerm: string): Promise<Exercise[]> {
     try {
       const searchRegex = new RegExp(this.escapeRegex(searchTerm), 'i');
-      
+
       // Use MongoDB aggregation for scoring
       const pipeline = [
         {
@@ -322,7 +328,7 @@ export class ExerciseService {
         },
         { $sort: { score: -1 } }
       ];
-      
+
       return await this.exerciseRepo.aggregate(this.exerciseCollection, pipeline) as Exercise[];
     } catch (error) {
       console.error('Error searching exercises:', error);
@@ -331,32 +337,32 @@ export class ExerciseService {
   }
 
   // Get available filters - optimized with aggregation
-//   async getAvailableFilters() {
-//     try {
-//       const pipeline = [
-//         {
-//           $group: {
-//             _id: null,
-//             types: { $addToSet: '$exercise_type' },
-//             tags: { $addToSet: '$tags' },
-//             total: { $sum: 1 }
-//           }
-//         },
-//         {
-//           $project: {
-//             _id: 0,
-//             availableTypes: { $sortArray: { input: '$types', sortBy: 1 } },
-//             availableTags: { $sortArray: { input: { $reduce: { input: '$tags', initialValue: [], in: { $concatArrays: ['$$value', '$$this'] } } }, sortBy: 1 } },
-//             totalExercises: '$total'
-//           }
-//         }
-//       ];
-      
-//       const result = await this.exerciseRepo.aggregate(this.exerciseCollection, pipeline);
-//       return result[0] || { availableTypes: [], availableTags: [], totalExercises: 0 };
-//     } catch (error) {
-//       console.error('Error getting available filters:', error);
-//       return { availableTypes: [], availableTags: [], totalExercises: 0 };
-//     }
-//   }
+  //   async getAvailableFilters() {
+  //     try {
+  //       const pipeline = [
+  //         {
+  //           $group: {
+  //             _id: null,
+  //             types: { $addToSet: '$exercise_type' },
+  //             tags: { $addToSet: '$tags' },
+  //             total: { $sum: 1 }
+  //           }
+  //         },
+  //         {
+  //           $project: {
+  //             _id: 0,
+  //             availableTypes: { $sortArray: { input: '$types', sortBy: 1 } },
+  //             availableTags: { $sortArray: { input: { $reduce: { input: '$tags', initialValue: [], in: { $concatArrays: ['$$value', '$$this'] } } }, sortBy: 1 } },
+  //             totalExercises: '$total'
+  //           }
+  //         }
+  //       ];
+
+  //       const result = await this.exerciseRepo.aggregate(this.exerciseCollection, pipeline);
+  //       return result[0] || { availableTypes: [], availableTags: [], totalExercises: 0 };
+  //     } catch (error) {
+  //       console.error('Error getting available filters:', error);
+  //       return { availableTypes: [], availableTags: [], totalExercises: 0 };
+  //     }
+  //   }
 }
