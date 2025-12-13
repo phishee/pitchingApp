@@ -55,15 +55,15 @@ export function useExercisesData({
                     setExercises(cached.exercises);
                     setExercisesStatus('loaded');
                     setExercisesError(null);
-                    if (!activeExerciseId && cached.exercises.length > 0) {
-                        setActiveExerciseId(cached.exercises[0].id ?? null);
+                    if (!activeExerciseId && workoutExercises.length > 0) {
+                        setActiveExerciseId(workoutExercises[0].exercise_id);
                     }
                     // Background refresh (only if IDs might have changed)
                     exerciseApi.getExercisesByIds(ids)
                         .then((exerciseData) => {
                             setExercises(exerciseData);
-                            if (!activeExerciseId && exerciseData.length > 0) {
-                                setActiveExerciseId(exerciseData[0].id ?? null);
+                            if (!activeExerciseId && workoutExercises.length > 0) {
+                                setActiveExerciseId(workoutExercises[0].exercise_id);
                             }
                             workoutSessionApi.updateCache(sessionId, { exercises: exerciseData });
                         })
@@ -78,8 +78,8 @@ export function useExercisesData({
                 const exerciseData = await exerciseApi.getExercisesByIds(ids);
                 setExercises(exerciseData);
                 setExercisesStatus('loaded');
-                if (!activeExerciseId && exerciseData.length > 0) {
-                    setActiveExerciseId(exerciseData[0].id ?? null);
+                if (!activeExerciseId && workoutExercises.length > 0) {
+                    setActiveExerciseId(workoutExercises[0].exercise_id);
                 }
 
                 // Update cache if we have a sessionId

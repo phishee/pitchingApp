@@ -64,7 +64,7 @@ export function Step3ExercisePrescriptions() {
 
   const handleMetricChange = (exerciseId: string, metricKey: string, value: any) => {
     const currentPrescription = prescriptionState.prescriptions[exerciseId];
-    if (currentPrescription) {
+    if (currentPrescription && !Array.isArray(currentPrescription.prescribedMetrics)) {
       updatePrescription(exerciseId, {
         prescribedMetrics: {
           ...currentPrescription.prescribedMetrics,
@@ -156,26 +156,43 @@ export function Step3ExercisePrescriptions() {
             const isModified = prescription?.isModified || false;
             const defaultMetrics = exercise.default_Metrics || {};
             const prescribedMetrics = prescription?.prescribedMetrics || defaultMetrics;
-            const isPerSet = !!prescription?.prescribedMetrics_sets;
+            const isPerSet = Array.isArray(prescribedMetrics);
+
+            // Helper to get global metrics for display/init even when in per-set mode
+            const currentGlobalMetrics = isPerSet
+              ? (prescribedMetrics.length > 0 ? prescribedMetrics[0].metrics : defaultMetrics)
+              : prescribedMetrics;
 
             const handleTogglePerSet = (checked: boolean) => {
               if (checked) {
-                const setsCount = Number(prescribedMetrics.sets) || 1;
-                // Initialize with current global metrics for each set
-                const { sets: _sets, ...metricsWithoutSets } = prescribedMetrics;
+                // Switch TO per-set
+                const setsCount = Number(isPerSet ? prescribedMetrics.length : currentGlobalMetrics.sets) || 1;
+                const { sets: _sets, ...metricsWithoutSets } = isPerSet ? currentGlobalMetrics : (prescribedMetrics as Record<string, any>);
+
                 const newSets = Array.from({ length: setsCount }, (_, i) => ({
                   setNumber: i + 1,
                   metrics: { ...metricsWithoutSets }
                 }));
-                updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: newSets });
+                updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
               } else {
-                updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: undefined });
+                // Switch FROM per-set (to global)
+                // Use first set's metrics + sets count
+                if (isPerSet && prescribedMetrics.length > 0) {
+                  const firstSetMetrics = prescribedMetrics[0].metrics;
+                  const setsCount = prescribedMetrics.length;
+                  updatePrescription(exercise.exercise_id, {
+                    prescribedMetrics: { ...firstSetMetrics, sets: setsCount }
+                  });
+                } else {
+                  updatePrescription(exercise.exercise_id, { prescribedMetrics: defaultMetrics });
+                }
               }
             };
 
             const handleSetMetricChange = (setIndex: number, metricKey: string, value: any) => {
-              const currentSets = prescription?.prescribedMetrics_sets || [];
-              const newSets = [...currentSets];
+              if (!Array.isArray(prescribedMetrics)) return;
+
+              const newSets = [...prescribedMetrics];
               if (!newSets[setIndex]) return;
 
               newSets[setIndex] = {
@@ -185,7 +202,7 @@ export function Step3ExercisePrescriptions() {
                   [metricKey]: value
                 }
               };
-              updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: newSets });
+              updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
             };
 
             return (
@@ -277,28 +294,25 @@ export function Step3ExercisePrescriptions() {
                             <label className="text-sm font-medium capitalize">Sets</label>
                             <Input
                               type="number"
-                              value={prescribedMetrics.sets || ''}
+                              value={isPerSet ? prescribedMetrics.length : (prescribedMetrics as any).sets || ''}
                               onChange={(e) => {
                                 const newSetsCount = parseFloat(e.target.value) || 0;
-                                handleMetricChange(exercise.exercise_id, 'sets', newSetsCount);
 
-                                // Resize per-set array if active
                                 if (isPerSet) {
-                                  const currentSets = prescription?.prescribedMetrics_sets || [];
+                                  // Resize per-set array
+                                  const currentSets = prescribedMetrics as Array<any>;
                                   let newSetsArray = [...currentSets];
 
                                   if (newSetsCount > currentSets.length) {
                                     const setsToAdd = newSetsCount - currentSets.length;
                                     const templateMetrics = currentSets.length > 0
                                       ? currentSets[currentSets.length - 1].metrics
-                                      : prescribedMetrics;
-
-                                    const { sets: _sets, ...metricsWithoutSets } = templateMetrics;
+                                      : {}; // Should have metrics
 
                                     for (let i = 0; i < setsToAdd; i++) {
                                       newSetsArray.push({
                                         setNumber: currentSets.length + i + 1,
-                                        metrics: { ...metricsWithoutSets }
+                                        metrics: { ...templateMetrics }
                                       });
                                     }
                                   } else if (newSetsCount < currentSets.length) {
@@ -306,12 +320,16 @@ export function Step3ExercisePrescriptions() {
                                   }
 
                                   if (newSetsArray.length !== currentSets.length) {
-                                    updatePrescription(exercise.exercise_id, { prescribedMetrics_sets: newSetsArray });
+                                    updatePrescription(exercise.exercise_id, { prescribedMetrics: newSetsArray });
                                   }
+                                } else {
+                                  handleMetricChange(exercise.exercise_id, 'sets', newSetsCount);
                                 }
                               }}
                               placeholder={String(defaultMetrics.sets || '')}
-                              className={cn(prescribedMetrics.sets !== defaultMetrics.sets && "border-primary/50")}
+                              className={cn(
+                                (isPerSet ? prescribedMetrics.length : (prescribedMetrics as any).sets) !== defaultMetrics.sets && "border-primary/50"
+                              )}
                             />
                           </div>
                         )}
@@ -326,7 +344,7 @@ export function Step3ExercisePrescriptions() {
                               </label>
                               <Input
                                 type={typeof defaultValue === 'number' ? 'number' : 'text'}
-                                value={prescribedMetrics[key] || ''}
+                                value={(prescribedMetrics as any)[key] || ''}
                                 onChange={(e) => {
                                   const value = typeof defaultValue === 'number'
                                     ? parseFloat(e.target.value) || 0
@@ -335,10 +353,10 @@ export function Step3ExercisePrescriptions() {
                                 }}
                                 placeholder={String(defaultValue)}
                                 className={cn(
-                                  prescribedMetrics[key] !== defaultValue && "border-primary/50"
+                                  (prescribedMetrics as any)[key] !== defaultValue && "border-primary/50"
                                 )}
                               />
-                              {prescribedMetrics[key] !== defaultValue && (
+                              {(prescribedMetrics as any)[key] !== defaultValue && (
                                 <p className="text-xs text-muted-foreground">
                                   Default: {String(defaultValue)}
                                 </p>
@@ -349,9 +367,9 @@ export function Step3ExercisePrescriptions() {
                       </div>
 
                       {/* Per Set Metrics Inputs */}
-                      {isPerSet && prescription?.prescribedMetrics_sets && (
+                      {isPerSet && (
                         <div className="space-y-3 pl-4 border-l-2 border-gray-100">
-                          {prescription.prescribedMetrics_sets.map((set, setIndex) => (
+                          {(prescribedMetrics as any[]).map((set, setIndex) => (
                             <div key={set.setNumber} className="flex flex-col gap-2 bg-muted/30 p-3 rounded-md">
                               <span className="text-sm font-medium text-muted-foreground">Set {set.setNumber}</span>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -364,7 +382,7 @@ export function Step3ExercisePrescriptions() {
                                       </label>
                                       <Input
                                         type={typeof value === 'number' ? 'number' : 'text'}
-                                        value={value || ''}
+                                        value={value as string | number | readonly string[] || ''}
                                         onChange={(e) => {
                                           const newVal = typeof value === 'number'
                                             ? parseFloat(e.target.value) || 0

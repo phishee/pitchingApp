@@ -69,7 +69,6 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
         }
 
         // No cache or cache miss - fetch from API
-        console.log('[useSessionData] Fetching session from API', { sessionId, calendarEventId });
         setSessionState((prev) => ({ ...prev, status: 'loading', error: null }));
 
         try {
@@ -77,12 +76,8 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
 
             // Try sessionId first if available
             if (sessionId) {
-                console.log('[useSessionData] Fetching session by ID:', sessionId);
                 try {
                     session = await workoutSessionApi.getSession(sessionId);
-                    if (session) {
-                        console.log('[useSessionData] Session loaded by ID:', session);
-                    }
                 } catch (error) {
                     console.warn('[useSessionData] Failed to fetch by sessionId, will try calendarEventId if available:', error);
                     // Don't throw - try calendarEventId as fallback
@@ -91,12 +86,8 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
 
             // If sessionId fetch failed or no sessionId, try calendarEventId as fallback
             if (!session && calendarEventId) {
-                console.log('[useSessionData] Fetching session by event ID (fallback):', calendarEventId);
                 try {
                     session = await workoutSessionApi.getSessionByEventId(calendarEventId);
-                    if (session) {
-                        console.log('[useSessionData] Session loaded by event ID:', session);
-                    }
                 } catch (error) {
                     console.warn('[useSessionData] Failed to fetch by calendarEventId:', error);
                 }
@@ -114,7 +105,6 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
                 return null;
             }
 
-            console.log('[useSessionData] Session loaded successfully:', session);
             setSessionState({ data: session, status: 'loaded', error: null });
             setCurrentStep(session.progress?.currentStep ?? null);
 
@@ -183,12 +173,10 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
             workoutSessionApi.updateCache(sessionState.data._id, { session: optimisticSession });
 
             try {
-                console.log('[useSessionData] Calling API updateSession...', sessionState.data._id);
                 const updatedSession = await workoutSessionApi.updateSession(
                     sessionState.data._id,
                     updates
                 );
-                console.log('[useSessionData] API update successful');
 
                 // Confirm with server data
                 setSessionState({ data: updatedSession, status: 'loaded', error: null });
@@ -207,12 +195,9 @@ export function useSessionData({ sessionId, calendarEventId }: UseSessionDataPro
 
     // Fetch session when sessionId or calendarEventId becomes available
     useEffect(() => {
-        console.log('[useSessionData] Session fetch effect', { sessionId, calendarEventId });
         if (!sessionId && !calendarEventId) {
-            console.log('[useSessionData] No sessionId or calendarEventId, skipping fetch');
             return;
         }
-        console.log('[useSessionData] Calling refreshSession');
         refreshSession();
     }, [sessionId, calendarEventId, refreshSession]);
 

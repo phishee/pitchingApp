@@ -4,8 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 import { WorkoutExercise } from '@/models';
 
 interface PrescriptionData {
-  prescribedMetrics: Record<string, any>;
-  prescribedMetrics_sets?: Array<{
+  prescribedMetrics: Record<string, any> | Array<{
     setNumber: number;
     metrics: Record<string, any>;
   }>;
@@ -34,11 +33,14 @@ export function ExercisePrescriptionProvider({ children }: { children: ReactNode
     const initialPrescriptions: Record<string, PrescriptionData> = {};
 
     exercises.forEach(exercise => {
+      let prescribedMetrics: PrescriptionData['prescribedMetrics'] = { ...exercise.default_Metrics };
+
+      if (exercise.default_Metrics_sets && exercise.default_Metrics_sets.length > 0) {
+        prescribedMetrics = exercise.default_Metrics_sets.map(s => ({ ...s, metrics: { ...s.metrics } }));
+      }
+
       initialPrescriptions[exercise.exercise_id] = {
-        prescribedMetrics: { ...exercise.default_Metrics },
-        prescribedMetrics_sets: exercise.default_Metrics_sets
-          ? exercise.default_Metrics_sets.map(s => ({ ...s, metrics: { ...s.metrics } }))
-          : undefined,
+        prescribedMetrics,
         notes: '',
         isModified: false
       };
@@ -59,17 +61,22 @@ export function ExercisePrescriptionProvider({ children }: { children: ReactNode
   }, []);
 
   const resetExercise = useCallback((exerciseId: string, defaultMetrics: Record<string, any>, defaultMetricsSets?: Array<{ setNumber: number; metrics: Record<string, any> }>) => {
-    setPrescriptions(prev => ({
-      ...prev,
-      [exerciseId]: {
-        prescribedMetrics: { ...defaultMetrics },
-        prescribedMetrics_sets: defaultMetricsSets
-          ? defaultMetricsSets.map(s => ({ ...s, metrics: { ...s.metrics } }))
-          : undefined,
-        notes: '',
-        isModified: false
+    setPrescriptions(prev => {
+      let newPrescribedMetrics: PrescriptionData['prescribedMetrics'] = { ...defaultMetrics };
+
+      if (defaultMetricsSets && defaultMetricsSets.length > 0) {
+        newPrescribedMetrics = defaultMetricsSets.map(s => ({ ...s, metrics: { ...s.metrics } }));
       }
-    }));
+
+      return {
+        ...prev,
+        [exerciseId]: {
+          prescribedMetrics: newPrescribedMetrics,
+          notes: '',
+          isModified: false
+        }
+      };
+    });
   }, []);
 
   const resetPrescriptions = useCallback(() => {

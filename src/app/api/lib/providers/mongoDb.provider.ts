@@ -296,7 +296,6 @@ export class MongoDBProvider implements IDatabase {
      */
     async update(collection: string, id: string | ObjectId, data: any): Promise<any> {
         await this.ensureConnected();
-        console.log(`[MongoDBProvider] Update called with collection: ${collection}, id: ${id}, idType: ${typeof id}, idLength: ${id?.toString().length}`);
 
         try {
             const { _id, ...updateData } = data;
@@ -310,7 +309,6 @@ export class MongoDBProvider implements IDatabase {
                 // If it's a valid hex string, convert it to ObjectId
                 objectId = ObjectId.createFromHexString(id);
             } else {
-                console.log(`[MongoDBProvider] Invalid ObjectId: ${id}`);
                 return null;
             }
 
@@ -322,7 +320,6 @@ export class MongoDBProvider implements IDatabase {
 
             // Fallback: If not found with ObjectId, try with String ID (for legacy documents)
             if ((!result || (result && !result.value && !result._id)) && typeof id === 'string') {
-                console.log(`[MongoDBProvider] ObjectId update failed, retrying with String ID: ${id}`);
                 result = await this.db.collection(collection).findOneAndUpdate(
                     { _id: id } as any,
                     { $set: { ...convertedData, updatedAt: new Date() } },
@@ -351,7 +348,6 @@ export class MongoDBProvider implements IDatabase {
                 // If it's a valid hex string, convert it to ObjectId
                 objectId = ObjectId.createFromHexString(id);
             } else {
-                console.log(`[MongoDB] Invalid ObjectId for delete: ${id}`);
                 return false;
             }
 
@@ -372,7 +368,6 @@ export class MongoDBProvider implements IDatabase {
         try {
             await this.initPromise;
             await this.client.close();
-            console.log('MongoDB connection closed');
         } catch (error) {
             console.error('Error disconnecting from MongoDB:', error);
             throw error;
@@ -498,7 +493,6 @@ export class MongoDBProvider implements IDatabase {
             // If it's a valid hex string, convert it to ObjectId
             objectId = ObjectId.createFromHexString(id);
         } else {
-            console.log(`[MongoDB] Invalid ObjectId: ${id}`);
             return null;
         }
 

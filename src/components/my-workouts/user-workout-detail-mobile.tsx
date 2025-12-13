@@ -161,12 +161,9 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
     const workoutExercise = workout.flow.exercises.find(ex => ex.exercise_id === exerciseId);
     const prescription = workoutAssignment?.prescriptions?.[exerciseId];
 
-    let metrics = workoutExercise?.default_Metrics || {};
-
-    if (prescription?.prescribedMetrics) {
-      // Merge/Override with prescribed metrics
-      metrics = { ...metrics, ...prescription.prescribedMetrics };
-    }
+    // If we have a specific prescription (either global object or per-set array), use it.
+    // Otherwise fall back to the workout's default metrics.
+    const metrics = prescription?.prescribedMetrics ?? workoutExercise?.default_Metrics ?? {};
 
     return { metrics, exercise };
   };

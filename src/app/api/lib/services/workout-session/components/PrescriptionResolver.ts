@@ -20,27 +20,38 @@ export class PrescriptionResolver implements IPrescriptionResolver {
         throw new Error(`Exercise not found: ${workoutExercise.exercise_id}`);
       }
 
-      const exerciseId = exercise.id;
+      const exerciseId = exercise.id?.toString?.() ?? exercise.id;
+
       const assignmentPrescription = assignment.prescriptions?.[exerciseId];
+      const prescribedMetrics = assignmentPrescription?.prescribedMetrics;
+      const isPerSet = Array.isArray(prescribedMetrics);
+
 
       // 1. Determine Global/Base Metrics (Legacy/Fallback)
+      // If isPerSet, we don't have a global override from assignment (it's all per-set), so use workout default.
       const globalMetrics =
-        assignmentPrescription?.prescribedMetrics ??
+        (!isPerSet ? prescribedMetrics : undefined) ??
         workoutExercise.default_Metrics ??
         {};
 
       // Remove 'sets' from the global metrics to avoid polluting the individual set prescription
       const { sets: _sets, ...baseMetrics } = globalMetrics;
 
-      const setCount = this.getSetCount(exercise, assignmentPrescription);
+      const setCount = this.getSetCount(exercise, assignmentPrescription, isPerSet, prescribedMetrics);
 
       const sets = Array.from({ length: setCount }, (_, index) => {
         const setNumber = index + 1;
 
         // 2. Check for Assignment-level Per-Set Override
-        const assignmentSetOverride = assignmentPrescription?.prescribedMetrics_sets?.find(
-          (s: any) => s.setNumber === setNumber
-        );
+        let assignmentSetOverride;
+        if (isPerSet) {
+          assignmentSetOverride = prescribedMetrics.find((s: any) => s.setNumber === setNumber);
+        } else {
+          // Legacy check
+          assignmentSetOverride = assignmentPrescription?.prescribedMetrics_sets?.find(
+            (s: any) => s.setNumber === setNumber
+          );
+        }
 
         if (assignmentSetOverride) {
           return {
@@ -75,9 +86,14 @@ export class PrescriptionResolver implements IPrescriptionResolver {
     });
   }
 
-  private getSetCount(exercise: any, assignmentPrescription: any): number {
-    // 1. Check if assignment has a specific set count override in prescribedMetrics
-    const prescribedSets = assignmentPrescription?.prescribedMetrics?.sets;
+  private getSetCount(exercise: any, assignmentPrescription: any, isPerSet: boolean, prescribedMetrics: any): number {
+    // 1. If per-set array provided, use its length
+    if (isPerSet && Array.isArray(prescribedMetrics)) {
+      return prescribedMetrics.length;
+    }
+
+    // 2. Check if assignment has a specific set count override in prescribedMetrics (Global object)
+    const prescribedSets = prescribedMetrics?.sets;
     if (prescribedSets !== undefined && prescribedSets !== null) {
       const parsedSets = Number(prescribedSets);
       if (!isNaN(parsedSets) && parsedSets > 0) {
@@ -85,7 +101,7 @@ export class PrescriptionResolver implements IPrescriptionResolver {
       }
     }
 
-    // 2. Fallback to exercise default settings
+    // 3. Fallback to exercise default settings
     const prefersSets = exercise.settings?.sets_counting;
     return prefersSets ? 3 : 1;
   }
