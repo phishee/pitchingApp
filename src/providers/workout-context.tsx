@@ -280,7 +280,10 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
               };
             }
 
-            return ex;
+            return {
+              ...ex,
+              [field]: value
+            };
           })
         }
       };

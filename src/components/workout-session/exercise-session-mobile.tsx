@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { WorkoutSessionBottomBar } from './workout-session-bottom-bar';
+import { SupersetSequencer } from '@/lib/workout/SupersetSequencer';
 
 // ==========================================
 // Types & Helpers
@@ -406,6 +407,12 @@ export function ExerciseSessionMobile() {
 
         // Save to server
         await session.saveSession({ exercises: newSession.exercises });
+
+        // Check for superset navigation
+        const nextStep = SupersetSequencer.getNextStep(newSession, activeExerciseId);
+        if (nextStep && nextStep.exerciseId !== activeExerciseId) {
+            router.push(`/app/workout-session/${session.data._id}/exercises/${nextStep.exerciseId}`);
+        }
     };
 
     const handleAddSet = async () => {

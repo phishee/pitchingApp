@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Search, Plus, Target, Clock, X, Check } from 'lucide-react';
 import { getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
+import { getNextAvailableColor } from '@/lib/colorPalette';
 import { WorkoutExercise, Exercise } from '@/models';
 import { useWorkoutFlow, useWorkoutExercises } from '@/providers/workout-context';
 import { ExerciseLibrarySelection } from '../ExerciseLibrarySelection';
@@ -85,6 +86,42 @@ export function WorkoutExercisesStep() {
     setIsLibraryOpen(false);
   }, []);
 
+  const handleLinkExercise = useCallback((index: number) => {
+    const currentExercise = exercises[index];
+    const nextExercise = exercises[index + 1];
+
+    if (!currentExercise || !nextExercise) return;
+
+    // Use existing supersetId or generate new one
+    const supersetId = currentExercise.supersetId || nextExercise.supersetId || crypto.randomUUID();
+
+    // Determine color
+    let supersetColorId = currentExercise.supersetColorId || nextExercise.supersetColorId;
+
+    if (!supersetColorId) {
+      // Find used colors
+      const usedColors = exercises
+        .map(e => e.supersetColorId)
+        .filter((c): c is string => !!c);
+
+      supersetColorId = getNextAvailableColor(usedColors).id;
+    }
+
+    // Update both exercises
+    updateExercise(currentExercise.exercise_id, 'supersetId', supersetId);
+    updateExercise(currentExercise.exercise_id, 'supersetColorId', supersetColorId);
+
+    updateExercise(nextExercise.exercise_id, 'supersetId', supersetId);
+    updateExercise(nextExercise.exercise_id, 'supersetColorId', supersetColorId);
+  }, [exercises, updateExercise]);
+
+  const handleUnlinkExercise = useCallback((index: number) => {
+    const currentExercise = exercises[index];
+    if (!currentExercise) return;
+    updateExercise(currentExercise.exercise_id, 'supersetId', undefined);
+    updateExercise(currentExercise.exercise_id, 'supersetColorId', undefined);
+  }, [exercises, updateExercise]);
+
   // Memoize the selected exercises component to prevent unnecessary re-renders
   const ShowSelectedExercises = useMemo(() => {
     return (
@@ -121,6 +158,9 @@ export function WorkoutExercisesStep() {
                     workoutExercise={workoutExercise}
                     onUpdateConfig={handleUpdateExerciseConfig}
                     onRemove={handleRemoveExercise}
+                    onLink={handleLinkExercise}
+                    onUnlink={handleUnlinkExercise}
+                    isLast={index === selectedExercises.length - 1}
                   />
                 );
               })}

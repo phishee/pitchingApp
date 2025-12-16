@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Link, Unlink } from 'lucide-react';
 import { getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
+import { getColorTheme } from '@/lib/colorPalette';
 import { Exercise, WorkoutExercise } from '@/models';
 
 interface WorkoutExerciseRowProps {
@@ -14,6 +15,9 @@ interface WorkoutExerciseRowProps {
     workoutExercise: WorkoutExercise | undefined;
     onUpdateConfig: (exerciseId: string, field: string, value: any) => void;
     onRemove: (exerciseId: string) => void;
+    onLink: (index: number) => void;
+    onUnlink: (index: number) => void;
+    isLast: boolean;
 }
 
 export function WorkoutExerciseRow({
@@ -21,7 +25,10 @@ export function WorkoutExerciseRow({
     index,
     workoutExercise,
     onUpdateConfig,
-    onRemove
+    onRemove,
+    onLink,
+    onUnlink,
+    isLast
 }: WorkoutExerciseRowProps) {
     const [showFormulas, setShowFormulas] = useState(false);
     // Local state to toggle between simple (bulk edit) and per-set (detailed) view
@@ -116,8 +123,22 @@ export function WorkoutExerciseRow({
     const formulaMetrics = exercise.metrics?.filter(m => m.input === 'formula') || [];
     const regularMetrics = exercise.metrics?.filter(m => m.input !== 'formula' && !['sets', 'reps', 'duration', 'rest'].includes(m.id)) || [];
 
+    const isSuperset = !!workoutExercise?.supersetId;
+    const colorTheme = getColorTheme(workoutExercise?.supersetColorId);
+
+    // Dynamic styles based on theme
+    const containerStyles = isSuperset
+        ? `border-l-4 ${colorTheme.light} border-[color:var(--theme-primary)]`
+        : '';
+
+    // We need to use inline styles or a more robust class mapping because Tailwind doesn't support dynamic class construction like `border-${color}-500` well with JIT unless safelisted.
+    // However, since we defined full class strings in our palette, we can just use them!
+
+    const borderClass = isSuperset ? colorTheme.primary.split(' ').find(c => c.startsWith('border-')) : '';
+    const bgClass = isSuperset ? colorTheme.light : 'bg-gray-50';
+
     return (
-        <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className={`flex flex-col gap-4 p-4 rounded-lg transition-all ${isSuperset ? `border-l-4 ${borderClass} ${bgClass}` : 'bg-gray-50'}`}>
             <div className="flex items-center gap-4">
                 <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
                     {index + 1}
@@ -229,6 +250,31 @@ export function WorkoutExerciseRow({
                 >
                     <X className="w-4 h-4" />
                 </Button>
+            </div>
+
+            {/* Superset Controls */}
+            <div className="flex justify-end" style={{ display: 'none' }}>
+                {workoutExercise?.supersetId ? (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUnlink(index)}
+                        className={`text-xs flex items-center gap-1 ${colorTheme.secondary}`}
+                    >
+                        <Unlink className="w-3 h-3" /> Unlink
+                    </Button>
+                ) : (
+                    !isLast && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onLink(index)}
+                            className="text-gray-400 hover:text-purple-600 text-xs flex items-center gap-1"
+                        >
+                            <Link className="w-3 h-3" /> Link with next
+                        </Button>
+                    )
+                )}
             </div>
 
             {isPerSet && sets.length > 0 && (
