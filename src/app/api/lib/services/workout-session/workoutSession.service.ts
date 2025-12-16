@@ -174,6 +174,27 @@ export class WorkoutSessionService implements IWorkoutSessionService {
       } as any;
     }
 
+    // Calculate duration if session is completing
+    if (updates.status === 'completed') {
+      const existingSession = await this.mongoProvider.findById(this.sessionsCollection, sessionId);
+      const startTime = existingSession?.actualStartTime ? new Date(existingSession.actualStartTime) : null;
+      const endTime = updates.actualEndTime ? new Date(updates.actualEndTime) : new Date();
+
+      if (startTime && endTime) {
+        const durationSeconds = Math.round((endTime.getTime() - startTime.getTime()) / 1000);
+
+        updates.summary = {
+          ...(updates.summary || existingSession?.summary || {}),
+          durationSeconds
+        } as any;
+
+        // Ensure actualEndTime is set if not provided
+        if (!updates.actualEndTime) {
+          updates.actualEndTime = endTime;
+        }
+      }
+    }
+
     const updated = await this.mongoProvider.update(this.sessionsCollection, sessionId, {
       ...updates,
       updatedAt: new Date(),

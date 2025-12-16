@@ -83,6 +83,7 @@ export interface WorkoutSession {
     sessionRPE: number;           // 1-10, REQUIRED on completion (Kept as number for backward compatibility, use rpeResult for full data)
     sessionRpe?: RPEValue;        // New structured RPE value
     averageExerciseRPE: number;   // Mean of all exercise RPEs
+    durationSeconds?: number;     // Total duration in seconds
 
     // Per-Exercise Breakdown (for AI)
     exercises: Record<string, ExerciseSummary>;
