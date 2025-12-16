@@ -1,0 +1,1046 @@
+[
+    {
+        "_id": "68b0846b29445b3c7418e9e2",
+        "id": "ex_warmup_arm_circles",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Arm Circles",
+        "description": "Shoulder mobility warm-up with forward and backward arm rotations.",
+        "exercise_type": "warmup",
+        "tags": [
+            "mobility",
+            "shoulder_health",
+            "activation"
+        ],
+        "instructions": {
+            "text": [
+                "Extend arms straight out to the side.",
+                "Make small forward circles for 30 seconds.",
+                "Make backward circles for another 30 seconds.",
+                "Gradually increase circle size."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "seconds",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of warmup"
+        },
+        "image": "https://i.ytimg.com/vi/kgEMWgRWMqI/maxresdefault.jpg"
+    },
+    {
+        "_id": "68b072d029445b3c7418e99a",
+        "id": "ex_strength_squat",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Back Squat",
+        "description": "Squat with a barbell positioned on your back.",
+        "exercise_type": "strength",
+        "tags": [
+            "lower_body",
+            "quads",
+            "compound"
+        ],
+        "instructions": {
+            "text": [
+                "Unrack barbell onto traps.",
+                "Stand with feet shoulder-width.",
+                "Lower hips until thighs are parallel to floor.",
+                "Drive upward to standing."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "weight",
+                "unit": "lbs",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Weight",
+                "description": "Load used"
+            },
+            {
+                "id": "reps",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Reps",
+                "description": "Number of repetitions"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for overall exercise difficulty"
+        },
+        "image": "https://learn.athleanx.com/wp-content/uploads/2010/09/BLOG-IMAGES_0063_DEEP-SQUAT.jpg"
+    },
+    {
+        "_id": "68bb896029445b3c74192b32",
+        "id": "ex_strength_bench_press",
+        "type": "exercise_template",
+        "version": "1.0",
+        "owner": "system",
+        "image": "https://plus.unsplash.com/premium_vector-1720626475274-3eb709dad6d3?q=80&w=1760&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "photoCover": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+        "name": "Bench Press",
+        "description": "Classic compound movement for chest development and upper body strength",
+        "exercise_type": "strength",
+        "tags": [
+            "strength",
+            "chest",
+            "upper_body",
+            "barbell",
+            "push"
+        ],
+        "instructions": {
+            "text": [
+                "Lie on bench with feet flat on ground",
+                "Grip barbell slightly wider than shoulder width",
+                "Lower bar to chest with control",
+                "Press bar back up to starting position",
+                "Keep core tight throughout movement"
+            ],
+            "video": "https://example.com/bench-press-demo.mp4",
+            "animationPicture": "https://images.squarespace-cdn.com/content/v1/54f9e84de4b0d13f30bba4cb/1528488712624-CH2H2PZAK8FS8GZR8ABG/BenchPress.mov+%281%29.gif"
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "weight",
+                "unit": "lbs",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Weight",
+                "description": "Load used for the exercise"
+            },
+            {
+                "id": "reps",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Reps",
+                "description": "Number of repetitions"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for overall exercise difficulty"
+        }
+    },
+    {
+        "_id": "68b072d029445b3c7418e999",
+        "id": "ex_strength_deadlift",
+        "type": "exercise_template",
+        "version": "1.0",
+        "owner": "system",
+        "name": "Conventional Deadlift",
+        "description": "Lift a loaded barbell from the floor to hip height with proper form.",
+        "exercise_type": "strength",
+        "tags": [
+            "strength",
+            "lower_body",
+            "back",
+            "glutes",
+            "legs",
+            "barbell",
+            "hinge",
+            "pull"
+        ],
+        "instructions": {
+            "text": [
+                "Stand with feet hip-width apart, barbell over midfoot",
+                "Grip bar just outside knees with overhand or mixed grip",
+                "Engage lats, chest up, and keep spine neutral",
+                "Drive through heels, extend hips and knees simultaneously",
+                "Stand tall with chest out, shoulders back",
+                "Lower bar with control by pushing hips back first"
+            ],
+            "video": "",
+            "animationPicture": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "weight",
+                "unit": "lbs",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Weight",
+                "description": "Load used"
+            },
+            {
+                "id": "reps",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Reps",
+                "description": "Number of repetitions"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for overall exercise difficulty"
+        },
+        "image": "https://blogscdn.thehut.net/wp-content/uploads/sites/478/2018/11/02100016/Blog-Deadlifting-Male_1800x1200_1200x672_acf_cropped.jpg",
+        "photoCover": "https://blogscdn.thehut.net/wp-content/uploads/sites/478/2018/11/02100016/Blog-Deadlifting-Male_1800x1200_1200x672_acf_cropped.jpg"
+    },
+    {
+        "_id": "68b084b429445b3c7418e9e7",
+        "id": "ex_cardio_cycling",
+        "type": "exercise_template",
+        "version": "1.0",
+        "owner": "system",
+        "name": "Cycling",
+        "description": "Low-impact cardiovascular exercise performed on a stationary or outdoor bike.",
+        "exercise_type": "cardio",
+        "tags": [
+            "cardio",
+            "conditioning",
+            "endurance",
+            "lower_body",
+            "legs",
+            "bike",
+            "low_intensity"
+        ],
+        "instructions": {
+            "text": [
+                "Adjust seat height so knee is slightly bent at bottom of pedal stroke",
+                "Position handlebars at comfortable reach",
+                "Maintain steady cadence (80-100 RPM for moderate intensity)",
+                "Keep shoulders relaxed and core engaged",
+                "Focus on smooth, circular pedaling motion",
+                "Increase resistance gradually to build intensity",
+                "Monitor heart rate to stay in target zone"
+            ],
+            "video": "",
+            "animationPicture": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": false,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "minutes",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            },
+            {
+                "id": "distance",
+                "unit": "miles",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Distance",
+                "description": "Distance covered"
+            },
+            {
+                "id": "avg_heart_rate",
+                "unit": "bpm",
+                "input": "manual",
+                "required": false,
+                "prescribable": false,
+                "label": "Avg HR",
+                "description": "Average Heart Rate"
+            },
+            {
+                "id": "calories_burned",
+                "unit": "kcal",
+                "input": "manual",
+                "required": false,
+                "prescribable": false,
+                "label": "Calories",
+                "description": "Calories burned"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for cycling effort"
+        },
+        "image": "https://cyclemasters.com/wp-content/uploads/2025/01/cm_thuis_2020-10_220-1024x768.jpg",
+        "photoCover": "https://cyclemasters.com/wp-content/uploads/2025/01/cm_thuis_2020-10_220-1024x768.jpg"
+    },
+    {
+        "_id": "68b0846b29445b3c7418e9df",
+        "id": "ex_warmup_dynamic_stretching",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Dynamic Stretching",
+        "description": "Full-body dynamic stretches to prepare muscles and joints for activity.",
+        "exercise_type": "warmup",
+        "tags": [
+            "mobility",
+            "flexibility",
+            "activation"
+        ],
+        "instructions": {
+            "text": [
+                "Perform leg swings forward and sideways.",
+                "Do arm circles and cross-body swings.",
+                "Perform torso twists and walking lunges with a twist.",
+                "Gradually increase intensity over 5–10 minutes."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": false,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "minutes",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of warmup"
+        },
+        "image": "https://www.energy.fit/cdn/shop/articles/AdobeStock_271980063_1.jpg?v=1631655292&width=1500"
+    },
+    {
+        "_id": "68b0743c29445b3c7418e9a4",
+        "id": "ex_pitching_flat_ground",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Flat-Ground Pitching",
+        "description": "Throw pitches on flat ground to reduce stress while refining mechanics.",
+        "exercise_type": "pitching",
+        "tags": [
+            "mechanics",
+            "low_intensity",
+            "arm_care"
+        ],
+        "instructions": {
+            "text": [
+                "Position at shorter distance than mound.",
+                "Use full pitching motion with reduced intensity.",
+                "Emphasize repeatable delivery and command."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "throws",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Throws",
+                "description": "Number of throws"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of flat-ground throws"
+        },
+        "image": "https://i.ytimg.com/vi/oPXHdjnz578/mqdefault.jpg"
+    },
+    {
+        "_id": "68b0846b29445b3c7418e9e1",
+        "id": "ex_warmup_high_knees",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "High Knees",
+        "description": "Cardio warm-up to increase heart rate and loosen hip flexors.",
+        "exercise_type": "warmup",
+        "tags": [
+            "cardio",
+            "mobility",
+            "activation"
+        ],
+        "instructions": {
+            "text": [
+                "Run in place while lifting knees to hip height.",
+                "Keep core engaged and posture upright.",
+                "Pump arms in coordination with legs.",
+                "Perform for set duration."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "seconds",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of warmup"
+        },
+        "image": "https://i0.wp.com/www.muscleandfitness.com/wp-content/uploads/2017/03/lateral-knee-high-400.jpg?quality=86&strip=all"
+    },
+    {
+        "_id": "68b084b429445b3c7418e9e9",
+        "id": "ex_cardio_interval_sprints",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Interval Sprints",
+        "description": "Short bursts of high-intensity running alternated with recovery periods.",
+        "exercise_type": "cardio",
+        "tags": [
+            "speed",
+            "conditioning",
+            "interval_training"
+        ],
+        "instructions": {
+            "text": [
+                "Sprint at maximum effort for the prescribed distance or time.",
+                "Walk or jog lightly to recover.",
+                "Repeat for the specified number of rounds.",
+                "Maintain proper sprinting mechanics."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "sprint_duration",
+                "unit": "seconds",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Sprint Duration",
+                "description": "Time for sprint"
+            },
+            {
+                "id": "recovery_duration",
+                "unit": "seconds",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Recovery",
+                "description": "Rest time"
+            },
+            {
+                "id": "rounds",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Rounds",
+                "description": "Number of rounds"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of sprint intervals"
+        },
+        "image": "https://apuedge.com/wp-content/uploads/sprint-internal-training-2-Cook-Graetzer.jpg"
+    },
+    {
+        "_id": "68b0846b29445b3c7418e9e0",
+        "id": "ex_warmup_jump_rope",
+        "type": "exercise_template",
+        "version": "1.0",
+        "owner": "system",
+        "name": "Jump Rope",
+        "description": "Light jump rope work to raise heart rate and activate lower body.",
+        "exercise_type": "warmup",
+        "tags": [
+            "cardio",
+            "conditioning",
+            "agility",
+            "coordination",
+            "lower_body",
+            "legs",
+            "full_body",
+            "bodyweight",
+            "warmup",
+            "activation",
+            "low_intensity"
+        ],
+        "instructions": {
+            "text": [
+                "Select appropriate rope length (handles reach armpits when standing on rope center)",
+                "Hold rope handles firmly with elbows close to body, hands at hip height",
+                "Keep shoulders relaxed and core engaged",
+                "Jump lightly on balls of feet, landing softly with slight knee bend",
+                "Rotate rope using wrists, not arms",
+                "Maintain steady rhythm and breathing pattern",
+                "Start with basic two-foot bounce before progressing to variations"
+            ],
+            "video": "",
+            "animationPicture": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": false,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "minutes",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            },
+            {
+                "id": "total_jumps",
+                "unit": "count",
+                "input": "manual",
+                "required": false,
+                "prescribable": false,
+                "label": "Total Jumps",
+                "description": "Total number of jumps"
+            },
+            {
+                "id": "misses",
+                "unit": "count",
+                "input": "manual",
+                "required": false,
+                "prescribable": false,
+                "label": "Misses",
+                "description": "Number of misses"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for warmup effort"
+        },
+        "image": "https://cdn.shopify.com/s/files/1/0618/9462/3460/files/MicrosoftTeams-image-73_2023-10.jpg",
+        "photoCover": "https://cdn.shopify.com/s/files/1/0618/9462/3460/files/MicrosoftTeams-image-73_2023-10.jpg"
+    },
+    {
+        "_id": "68b0846b29445b3c7418e9e3",
+        "id": "ex_warmup_lateral_shuffles",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Lateral Shuffles",
+        "description": "Agility warm-up focusing on hip, leg, and lateral movement preparation.",
+        "exercise_type": "warmup",
+        "tags": [
+            "agility",
+            "mobility",
+            "conditioning"
+        ],
+        "instructions": {
+            "text": [
+                "Start in athletic stance with knees bent.",
+                "Shuffle laterally to one side for 10–15 feet.",
+                "Maintain low, controlled posture.",
+                "Repeat in opposite direction."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "distance",
+                "unit": "feet",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Distance",
+                "description": "Distance covered"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of warmup"
+        },
+        "image": "https://www.thehumantrainer.com/wp-content/uploads/2017/02/lateral-shuffle-wband.jpg"
+    },
+    {
+        "_id": "68b0743c29445b3c7418e9a2",
+        "id": "ex_pitching_long_toss",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Long Toss",
+        "description": "Progressively increase throwing distance to build arm strength and endurance.",
+        "exercise_type": "pitching",
+        "tags": [
+            "arm_strength",
+            "endurance",
+            "warmup"
+        ],
+        "instructions": {
+            "text": [
+                "Start at short throwing distance with partner.",
+                "Gradually increase distance by 10–20 feet.",
+                "Focus on smooth mechanics and arc.",
+                "Work back down to shorter distance throws."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": false,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "throws",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Throws",
+                "description": "Number of throws"
+            },
+            {
+                "id": "max_distance",
+                "unit": "ft",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Max Distance",
+                "description": "Maximum distance thrown"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of long toss"
+        },
+        "image": "https://maximumvelocitysports.com/cdn/shop/articles/long-toss-throwing-program-374585.jpg?v=1659664216"
+    },
+    {
+        "_id": "68b072d029445b3c7418e99b",
+        "id": "ex_strength_overhead_press",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Overhead Press",
+        "description": "Press a barbell overhead from shoulder height to lockout.",
+        "exercise_type": "strength",
+        "tags": [
+            "shoulders",
+            "upper_body",
+            "compound"
+        ],
+        "instructions": {
+            "text": [
+                "Stand with barbell at shoulder height.",
+                "Press bar overhead in a straight line.",
+                "Lock elbows at the top."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "weight",
+                "unit": "lbs",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Weight",
+                "description": "Load used"
+            },
+            {
+                "id": "reps",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Reps",
+                "description": "Number of repetitions"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for overall exercise difficulty"
+        },
+        "image": "https://i.ytimg.com/vi/Z5g48LuHB9s/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBrH5lQd4WnFDJ0fL-4cVHvFFwC3A"
+    },
+    {
+        "_id": "68b0743c29445b3c7418e9a1",
+        "id": "ex_pitching_accuracy_drill",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Pitching Accuracy Drill",
+        "description": "Throw pitches at a designated target zone to improve control and command.",
+        "exercise_type": "pitching",
+        "tags": [
+            "accuracy",
+            "control",
+            "skill"
+        ],
+        "instructions": {
+            "text": [
+                "Stand on the mound with regulation distance.",
+                "Select a target zone on the strike zone net.",
+                "Deliver a pitch aiming for the selected zone.",
+                "Record accuracy for each pitch."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "pitches",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Pitches",
+                "description": "Number of pitches"
+            },
+            {
+                "id": "hits_target",
+                "unit": "count",
+                "input": "manual",
+                "required": false,
+                "prescribable": false,
+                "label": "Hits",
+                "description": "Target hits"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of pitching"
+        },
+        "image": "https://fieldsportstraining.com/cdn/shop/articles/baseball-pitcher_aa583b45-b6ec-4abb-873f-06b452c9a8a7_2048x.jpg?v=1739109027"
+    },
+    {
+        "_id": "68b0743c29445b3c7418e9a5",
+        "id": "ex_pitching_plyo_drills",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Plyo Ball Drills",
+        "description": "Use weighted plyo balls for arm activation and mechanical training.",
+        "exercise_type": "pitching",
+        "tags": [
+            "arm_care",
+            "mechanics",
+            "warmup"
+        ],
+        "instructions": {
+            "text": [
+                "Select appropriate plyo ball weight.",
+                "Perform wall drills focusing on arm path.",
+                "Use pivot pickoff and reverse throws.",
+                "Keep intensity moderate to high based on drill."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "throws",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Throws",
+                "description": "Number of throws"
+            },
+            {
+                "id": "ball_weight",
+                "unit": "oz",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Ball Weight",
+                "description": "Weight of ball"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of plyo ball drills"
+        },
+        "image": "https://images.squarespace-cdn.com/content/v1/5b2e953fec4eb70da95e794d/1617210142024-4WO96QSCWBCYHJWLEKUW/Joey+Mound+2.JPG"
+    },
+    {
+        "_id": "68b072d029445b3c7418e99c",
+        "id": "ex_strength_pullup",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Pull-Up",
+        "description": "Pull body upward until chin clears the bar.",
+        "exercise_type": "strength",
+        "tags": [
+            "upper_body",
+            "back",
+            "bodyweight"
+        ],
+        "instructions": {
+            "text": [
+                "Hang from bar with overhand grip.",
+                "Pull body upward until chin clears bar.",
+                "Lower with control."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": true
+        },
+        "metrics": [
+            {
+                "id": "reps",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Reps",
+                "description": "Number of repetitions"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Rate of Perceived Exertion for overall exercise difficulty"
+        },
+        "image": "https://i0.wp.com/post.healthline.com/wp-content/uploads/2019/12/pull-up-pullup-gym-1296x728-header-1296x728.jpg?w=1155&h=1528"
+    },
+    {
+        "_id": "68b084b429445b3c7418e9e8",
+        "id": "ex_cardio_rowing",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Rowing",
+        "description": "Full-body low-impact cardio workout performed on a rowing machine.",
+        "exercise_type": "cardio",
+        "tags": [
+            "endurance",
+            "conditioning",
+            "low_impact"
+        ],
+        "instructions": {
+            "text": [
+                "Strap feet securely into the footplates.",
+                "Drive through legs while pulling handle to chest.",
+                "Maintain upright posture with engaged core.",
+                "Return smoothly and repeat for set duration."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": false,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "minutes",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            },
+            {
+                "id": "distance",
+                "unit": "meters",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Distance",
+                "description": "Distance covered"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of rowing"
+        },
+        "image": "https://hips.hearstapps.com/hmg-prod/images/man-rowing-67c99b1d82b3a.jpg?crop=0.629xw:0.836xh;0.300xw,0.0795xh&resize=1200:*"
+    },
+    {
+        "_id": "68b084b429445b3c7418e9e6",
+        "id": "ex_cardio_running",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Running",
+        "description": "Steady-state running for cardiovascular endurance.",
+        "exercise_type": "cardio",
+        "tags": [
+            "endurance",
+            "conditioning"
+        ],
+        "instructions": {
+            "text": [
+                "Run at a comfortable pace.",
+                "Maintain upright posture and steady breathing.",
+                "Keep arms relaxed and swing naturally.",
+                "Continue for the prescribed distance or duration."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": false,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "duration",
+                "unit": "minutes",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            },
+            {
+                "id": "distance",
+                "unit": "miles",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Distance",
+                "description": "Distance covered"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of run"
+        },
+        "image": "https://hips.hearstapps.com/hmg-prod/images/running-is-one-of-the-best-ways-to-stay-fit-royalty-free-image-1036780592-1553033495.jpg?resize=640:*"
+    },
+    {
+        "_id": "68b084b429445b3c7418e9ea",
+        "id": "ex_cardio_stair_runs",
+        "type": "exercise_template",
+        "version": "1.0",
+        "name": "Stair Runs",
+        "description": "Cardio and leg-strengthening exercise by running stairs repeatedly.",
+        "exercise_type": "cardio",
+        "tags": [
+            "conditioning",
+            "power",
+            "agility"
+        ],
+        "instructions": {
+            "text": [
+                "Find a safe stairway with clear steps.",
+                "Run up quickly while maintaining balance.",
+                "Walk or jog down slowly to recover.",
+                "Repeat for the prescribed number of rounds or duration."
+            ],
+            "video": ""
+        },
+        "structure": "sets",
+        "settings": {
+            "sets_counting": true,
+            "reps_counting": false
+        },
+        "metrics": [
+            {
+                "id": "rounds",
+                "unit": "count",
+                "input": "manual",
+                "required": true,
+                "prescribable": true,
+                "label": "Rounds",
+                "description": "Number of rounds"
+            },
+            {
+                "id": "duration",
+                "unit": "minutes",
+                "input": "manual",
+                "required": false,
+                "prescribable": true,
+                "label": "Duration",
+                "description": "Time duration"
+            }
+        ],
+        "rpe": {
+            "type": "number",
+            "range": "1-10",
+            "description": "Effort level of stair runs"
+        },
+        "image": "https://hips.hearstapps.com/hmg-prod/images/young-man-at-the-gym-exercising-on-a-the-stair-royalty-free-image-1738017074.pjpeg?crop=0.66698xw:1xh;center,top&resize=640:*"
+    }
+]

@@ -110,16 +110,16 @@ export function useExercisesData({
         fetchExercises(exerciseIds);
     }, [exerciseIds, fetchExercises]);
 
-    // Maps workout exercises to their prescribed default metrics for quick lookup
-    const metricsByExercise = useMemo(() => {
+    // Maps workout exercises to their prescribed sets for quick lookup
+    const setsByExercise = useMemo(() => {
         if (workoutExercises.length === 0) {
             return {};
         }
 
         return workoutExercises.reduce<
-            Record<string, WorkoutExercise['default_Metrics']>
+            Record<string, WorkoutExercise['sets']>
         >((acc, workoutExercise) => {
-            acc[workoutExercise.exercise_id] = workoutExercise.default_Metrics;
+            acc[workoutExercise.exercise_id] = workoutExercise.sets;
             return acc;
         }, {});
     }, [workoutExercises]);
@@ -131,6 +131,6 @@ export function useExercisesData({
         activeExerciseId,
         setActiveExerciseId,
         fetchExercises,
-        metricsByExercise,
+        setsByExercise,
     };
 }

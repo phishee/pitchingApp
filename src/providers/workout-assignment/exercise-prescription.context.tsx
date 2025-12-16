@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 import { WorkoutExercise } from '@/models';
 
 interface PrescriptionData {
-  prescribedMetrics: Record<string, any> | Array<{
+  prescribedMetrics: Array<{
     setNumber: number;
     metrics: Record<string, any>;
   }>;
@@ -21,7 +21,7 @@ interface ExercisePrescriptionContextType {
   initializePrescriptions: (exercises: WorkoutExercise[]) => void;
   updatePrescription: (exerciseId: string, updates: Partial<PrescriptionData>) => void;
   resetPrescriptions: () => void;
-  resetExercise: (exerciseId: string, defaultMetrics: Record<string, any>, defaultMetricsSets?: Array<{ setNumber: number; metrics: Record<string, any> }>) => void;
+  resetExercise: (exerciseId: string, sets: Array<{ setNumber: number; metrics: Record<string, any> }>) => void;
 }
 
 const ExercisePrescriptionContext = createContext<ExercisePrescriptionContextType | undefined>(undefined);
@@ -33,11 +33,8 @@ export function ExercisePrescriptionProvider({ children }: { children: ReactNode
     const initialPrescriptions: Record<string, PrescriptionData> = {};
 
     exercises.forEach(exercise => {
-      let prescribedMetrics: PrescriptionData['prescribedMetrics'] = { ...exercise.default_Metrics };
-
-      if (exercise.default_Metrics_sets && exercise.default_Metrics_sets.length > 0) {
-        prescribedMetrics = exercise.default_Metrics_sets.map(s => ({ ...s, metrics: { ...s.metrics } }));
-      }
+      // Always use the sets array (normalized)
+      const prescribedMetrics = exercise.sets.map(s => ({ ...s, metrics: { ...s.metrics } }));
 
       initialPrescriptions[exercise.exercise_id] = {
         prescribedMetrics,
@@ -60,13 +57,9 @@ export function ExercisePrescriptionProvider({ children }: { children: ReactNode
     }));
   }, []);
 
-  const resetExercise = useCallback((exerciseId: string, defaultMetrics: Record<string, any>, defaultMetricsSets?: Array<{ setNumber: number; metrics: Record<string, any> }>) => {
+  const resetExercise = useCallback((exerciseId: string, sets: Array<{ setNumber: number; metrics: Record<string, any> }>) => {
     setPrescriptions(prev => {
-      let newPrescribedMetrics: PrescriptionData['prescribedMetrics'] = { ...defaultMetrics };
-
-      if (defaultMetricsSets && defaultMetricsSets.length > 0) {
-        newPrescribedMetrics = defaultMetricsSets.map(s => ({ ...s, metrics: { ...s.metrics } }));
-      }
+      const newPrescribedMetrics = sets.map(s => ({ ...s, metrics: { ...s.metrics } }));
 
       return {
         ...prev,

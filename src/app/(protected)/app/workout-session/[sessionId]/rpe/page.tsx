@@ -67,7 +67,7 @@ export default function WorkoutRpePage() {
     id: ex.exerciseId,
     name: ex.exerciseName,
     image: ex.exerciseImage,
-    sets: ex.summary.completedSets,
+    sets: session.data.summary.exercises?.[ex.exerciseId]?.completedSets ?? 0,
     reps: `${ex.sets.length} sets` // Simplified display
   }));
 

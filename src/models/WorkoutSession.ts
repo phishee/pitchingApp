@@ -72,6 +72,7 @@ export interface WorkoutSession {
     completedExercises: number;
     totalSets: number;
     completedSets: number;
+    extraSets: number;            // Sets added beyond prescription
     compliancePercent: number;    // (completedSets / totalSets) * 100
 
     // Volume (if strength workout)
@@ -82,6 +83,9 @@ export interface WorkoutSession {
     sessionRPE: number;           // 1-10, REQUIRED on completion (Kept as number for backward compatibility, use rpeResult for full data)
     sessionRpe?: RPEValue;        // New structured RPE value
     averageExerciseRPE: number;   // Mean of all exercise RPEs
+
+    // Per-Exercise Breakdown (for AI)
+    exercises: Record<string, ExerciseSummary>;
   };
 
 
@@ -166,13 +170,29 @@ export interface WorkoutSessionExercise {
   // Sets data
   sets: WorkoutSessionSet[];
 
-  // Exercise summary (computed on save)
-  summary: {
-    totalSets: number;
-    completedSets: number;
-    compliancePercent: number;
-    totalVolumeLifted?: number;   // If applicable
-  };
+}
+
+export interface ExerciseMetricSummary {
+  metricId: string;
+  label: string;
+  unit?: string;
+  prescribedTotal: number;
+  performedTotal: number;
+  compliancePercent: number; // (performed / prescribed) * 100
+  avgPrescribed: number;
+  avgPerformed: number;
+  delta: number; // performedTotal - prescribedTotal
+}
+
+export interface ExerciseSummary {
+  totalSets: number;
+  completedSets: number;
+  extraSets: number; // Sets added beyond prescription
+  compliancePercent: number;
+  totalVolumeLifted?: number;   // If applicable
+  rpe?: RPEValue;
+  performanceScore: number; // Sum of all metric deltas
+  metrics: Record<string, ExerciseMetricSummary>;
 }
 
 // ==========================================

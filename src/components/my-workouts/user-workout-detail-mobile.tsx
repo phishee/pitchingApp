@@ -163,9 +163,10 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
 
     // If we have a specific prescription (either global object or per-set array), use it.
     // Otherwise fall back to the workout's default metrics.
-    const metrics = prescription?.prescribedMetrics ?? workoutExercise?.default_Metrics ?? {};
+    // Normalized to always be an array of sets
+    const sets = prescription?.prescribedMetrics ?? workoutExercise?.sets ?? [];
 
-    return { metrics, exercise };
+    return { sets, exercise };
   };
 
   // Get workout cover image
@@ -232,12 +233,12 @@ export function UserWorkoutDetailMobile({ enrichedEvent }: UserWorkoutDetailMobi
           </div>
         ) : (
           workout.flow.exercises.map((workoutExercise) => {
-            const { metrics, exercise } = getExerciseData(workoutExercise.exercise_id);
+            const { sets, exercise } = getExerciseData(workoutExercise.exercise_id);
             return (
               <WorkoutExerciseCard
                 key={workoutExercise.exercise_id}
                 exercise={exercise}
-                metrics={metrics}
+                sets={sets}
               />
             );
           })

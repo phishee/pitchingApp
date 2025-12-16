@@ -251,7 +251,6 @@ export const exerciseApi = {
   },
 
   // Get multiple exercises by their IDs
-  // Get multiple exercises by their IDs
   async getExercisesByIds(exerciseIds: string[]): Promise<Exercise[]> {
     const cacheKey = CACHE_KEYS.EXERCISES_LIBRARY;
 

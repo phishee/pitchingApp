@@ -123,7 +123,14 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
       setError(null);
 
       // create the flow exercises with the selected exercises ids
-      const flowExercises = selectedExercises.map(ex => ({ exercise_id: ex.id, default_Metrics: { sets: 3, reps: 10, duration: 60, rest: 30 } }));
+      const flowExercises = selectedExercises.map(ex => ({
+        exercise_id: ex.id,
+        sets: [
+          { setNumber: 1, metrics: { reps: 10, weight: 135 } },
+          { setNumber: 2, metrics: { reps: 10, weight: 135 } },
+          { setNumber: 3, metrics: { reps: 10, weight: 135 } }
+        ]
+      }));
 
       // Ensure required fields are present
       const workoutToCreate: Omit<Workout, 'id'> = {
@@ -266,29 +273,14 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
           exercises: prev.flow.exercises.map((ex: any) => {
             if (ex.exercise_id !== exerciseId) return ex;
 
-            if (field === 'default_Metrics_sets') {
-              // Sync default_Metrics with the first set's metrics (fallback)
-              // Exclude 'sets' to avoid overwriting the global set count with potentially stale data from the set object
-              const firstSetMetrics = Array.isArray(value) && value.length > 0 ? value[0].metrics : {};
-              const { sets: _sets, ...metricsToSync } = firstSetMetrics;
-
+            if (field === 'sets') {
               return {
                 ...ex,
-                default_Metrics_sets: value,
-                default_Metrics: {
-                  ...ex.default_Metrics,
-                  ...metricsToSync
-                }
+                sets: value
               };
             }
 
-            return {
-              ...ex,
-              default_Metrics: {
-                ...ex.default_Metrics,
-                [field]: value
-              }
-            };
+            return ex;
           })
         }
       };

@@ -10,8 +10,8 @@ export interface WorkoutFlow {
 
 export interface WorkoutExercise {
   exercise_id: string;
-  default_Metrics: { [metricId: string]: MetricValue };
-  default_Metrics_sets?: Array<{
+  // The Single Source of Truth for prescription
+  sets: Array<{
     setNumber: number;
     metrics: { [metricId: string]: MetricValue };
   }>;
