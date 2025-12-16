@@ -36,7 +36,7 @@ export interface WorkoutExercisesSection {
     activeExerciseId: string | null;
     setActiveExerciseId: (exerciseId: string | null) => void;
     refresh: () => Promise<Exercise[]>;
-    metricsByExercise: Record<string, WorkoutExercise['default_Metrics']>;
+    setsByExercise: Record<string, WorkoutExercise['sets']>;
 }
 
 export interface WorkoutSessionUiSection {

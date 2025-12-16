@@ -24,27 +24,28 @@ export function WorkoutExerciseRow({
     onRemove
 }: WorkoutExerciseRowProps) {
     const [showFormulas, setShowFormulas] = useState(false);
+    // Local state to toggle between simple (bulk edit) and per-set (detailed) view
+    // We default to simple if all sets are identical, otherwise per-set
+    const [isPerSet, setIsPerSet] = useState(() => {
+        const sets = workoutExercise?.sets || [];
+        if (sets.length <= 1) return false;
 
-    const defaultMetrics = workoutExercise?.default_Metrics || {};
-    const isPerSet = !!workoutExercise?.default_Metrics_sets;
+        // Check if all sets are identical
+        const firstSetMetrics = JSON.stringify(sets[0].metrics);
+        return sets.some(s => JSON.stringify(s.metrics) !== firstSetMetrics);
+    });
+
+    const sets = workoutExercise?.sets || [];
+    // For simple view, we use the first set as the "template"
+    const defaultMetrics = sets.length > 0 ? sets[0].metrics : {};
+    const setsCount = sets.length;
 
     const handleTogglePerSet = (checked: boolean) => {
-        if (checked) {
-            const setsCount = Number(defaultMetrics.sets) || 1;
-            const { sets: _sets, ...metricsWithoutSets } = defaultMetrics;
-            const newSets = Array.from({ length: setsCount }, (_, i) => ({
-                setNumber: i + 1,
-                metrics: { ...metricsWithoutSets }
-            }));
-            onUpdateConfig(exercise.id, 'default_Metrics_sets', newSets);
-        } else {
-            onUpdateConfig(exercise.id, 'default_Metrics_sets', undefined);
-        }
+        setIsPerSet(checked);
     };
 
     const handleUpdateSetMetric = (setIndex: number, metricId: string, value: any) => {
-        const currentSets = workoutExercise?.default_Metrics_sets || [];
-        const newSets = [...currentSets];
+        const newSets = [...sets];
         if (!newSets[setIndex]) return;
 
         newSets[setIndex] = {
@@ -54,7 +55,40 @@ export function WorkoutExerciseRow({
                 [metricId]: value
             }
         };
-        onUpdateConfig(exercise.id, 'default_Metrics_sets', newSets);
+        onUpdateConfig(exercise.id, 'sets', newSets);
+    };
+
+    const handleUpdateAllSetsMetric = (metricId: string, value: any) => {
+        const newSets = sets.map(s => ({
+            ...s,
+            metrics: {
+                ...s.metrics,
+                [metricId]: value
+            }
+        }));
+        onUpdateConfig(exercise.id, 'sets', newSets);
+    };
+
+    const handleUpdateSetsCount = (newCount: number) => {
+        let newSets = [...sets];
+
+        if (newCount > sets.length) {
+            // Add sets
+            const setsToAdd = newCount - sets.length;
+            const templateMetrics = sets.length > 0 ? sets[sets.length - 1].metrics : {};
+
+            for (let i = 0; i < setsToAdd; i++) {
+                newSets.push({
+                    setNumber: sets.length + i + 1,
+                    metrics: { ...templateMetrics }
+                });
+            }
+        } else if (newCount < sets.length) {
+            // Remove sets
+            newSets = newSets.slice(0, newCount);
+        }
+
+        onUpdateConfig(exercise.id, 'sets', newSets);
     };
 
     const renderMetricInput = (metric: any, value: any, onChange: (val: any) => void, isSmall = false) => {
@@ -116,41 +150,8 @@ export function WorkoutExerciseRow({
                                 <label className="text-gray-600">Sets</label>
                                 <Input
                                     type="number"
-                                    value={Number(defaultMetrics.sets) || 0}
-                                    onChange={(e) => {
-                                        const newSetsCount = parseInt(e.target.value) || 0;
-                                        onUpdateConfig(exercise.id, 'sets', newSetsCount);
-
-                                        if (isPerSet) {
-                                            const currentSets = workoutExercise?.default_Metrics_sets || [];
-                                            let newSetsArray = [...currentSets];
-
-                                            if (newSetsCount > currentSets.length) {
-                                                // Add new sets
-                                                const setsToAdd = newSetsCount - currentSets.length;
-                                                // Use metrics from the last set or global defaults as a template
-                                                const templateMetrics = currentSets.length > 0
-                                                    ? currentSets[currentSets.length - 1].metrics
-                                                    : defaultMetrics;
-
-                                                const { sets: _sets, ...metricsWithoutSets } = templateMetrics;
-
-                                                for (let i = 0; i < setsToAdd; i++) {
-                                                    newSetsArray.push({
-                                                        setNumber: currentSets.length + i + 1,
-                                                        metrics: { ...metricsWithoutSets }
-                                                    });
-                                                }
-                                            } else if (newSetsCount < currentSets.length) {
-                                                // Remove sets
-                                                newSetsArray = newSetsArray.slice(0, newSetsCount);
-                                            }
-
-                                            if (newSetsArray.length !== currentSets.length) {
-                                                onUpdateConfig(exercise.id, 'default_Metrics_sets', newSetsArray);
-                                            }
-                                        }
-                                    }}
+                                    value={setsCount}
+                                    onChange={(e) => handleUpdateSetsCount(parseInt(e.target.value) || 0)}
                                     className="mt-1"
                                 />
                             </div>
@@ -164,7 +165,7 @@ export function WorkoutExerciseRow({
                                         <Input
                                             type="number"
                                             value={Number(defaultMetrics.reps) || 0}
-                                            onChange={(e) => onUpdateConfig(exercise.id, 'reps', parseInt(e.target.value) || 0)}
+                                            onChange={(e) => handleUpdateAllSetsMetric('reps', parseInt(e.target.value) || 0)}
                                             className="mt-1"
                                         />
                                     </div>
@@ -175,18 +176,18 @@ export function WorkoutExerciseRow({
                                         <Input
                                             type="number"
                                             value={Number(defaultMetrics.duration) || 0}
-                                            onChange={(e) => onUpdateConfig(exercise.id, 'duration', parseInt(e.target.value) || 0)}
+                                            onChange={(e) => handleUpdateAllSetsMetric('duration', parseInt(e.target.value) || 0)}
                                             className="mt-1"
                                         />
                                     </div>
                                 )}
 
                                 {regularMetrics.map(metric =>
-                                    renderMetricInput(metric, defaultMetrics[metric.id], (val) => onUpdateConfig(exercise.id, metric.id, val))
+                                    renderMetricInput(metric, defaultMetrics[metric.id], (val) => handleUpdateAllSetsMetric(metric.id, val))
                                 )}
 
                                 {showFormulas && formulaMetrics.map(metric =>
-                                    renderMetricInput(metric, defaultMetrics[metric.id], (val) => onUpdateConfig(exercise.id, metric.id, val))
+                                    renderMetricInput(metric, defaultMetrics[metric.id], (val) => handleUpdateAllSetsMetric(metric.id, val))
                                 )}
 
                                 <div>
@@ -194,7 +195,7 @@ export function WorkoutExerciseRow({
                                     <Input
                                         type="number"
                                         value={Number(defaultMetrics.rest) || 0}
-                                        onChange={(e) => onUpdateConfig(exercise.id, 'rest', parseInt(e.target.value) || 0)}
+                                        onChange={(e) => handleUpdateAllSetsMetric('rest', parseInt(e.target.value) || 0)}
                                         className="mt-1"
                                     />
                                 </div>
@@ -230,9 +231,9 @@ export function WorkoutExerciseRow({
                 </Button>
             </div>
 
-            {isPerSet && workoutExercise?.default_Metrics_sets && (
+            {isPerSet && sets.length > 0 && (
                 <div className="pl-12 space-y-3">
-                    {workoutExercise.default_Metrics_sets.map((set, setIndex) => (
+                    {sets.map((set, setIndex) => (
                         <div key={set.setNumber} className="flex flex-col gap-2 bg-white p-3 rounded border border-gray-100">
                             <div className="flex items-center gap-4">
                                 <span className="text-sm font-medium text-gray-500 w-12">Set {set.setNumber}</span>

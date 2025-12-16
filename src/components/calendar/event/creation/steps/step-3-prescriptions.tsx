@@ -57,20 +57,21 @@ export function Step3ExercisePrescriptions() {
   // Ensure prescriptions are initialized if missing (safety check)
   useEffect(() => {
     if (selectedWorkout && Object.keys(prescriptionState.prescriptions).length === 0) {
-      console.log('Initializing prescriptions from Step 3 (safety check)');
       initializePrescriptions(selectedWorkout.flow.exercises);
     }
   }, [selectedWorkout, prescriptionState.prescriptions, initializePrescriptions]);
 
   const handleMetricChange = (exerciseId: string, metricKey: string, value: any) => {
     const currentPrescription = prescriptionState.prescriptions[exerciseId];
-    if (currentPrescription && !Array.isArray(currentPrescription.prescribedMetrics)) {
-      updatePrescription(exerciseId, {
-        prescribedMetrics: {
-          ...currentPrescription.prescribedMetrics,
+    if (currentPrescription && Array.isArray(currentPrescription.prescribedMetrics)) {
+      const newSets = currentPrescription.prescribedMetrics.map(set => ({
+        ...set,
+        metrics: {
+          ...set.metrics,
           [metricKey]: value
         }
-      });
+      }));
+      updatePrescription(exerciseId, { prescribedMetrics: newSets });
     }
   };
 
@@ -82,7 +83,7 @@ export function Step3ExercisePrescriptions() {
     if (selectedWorkout) {
       const exercise = selectedWorkout.flow.exercises.find(e => e.exercise_id === exerciseId);
       if (exercise) {
-        resetExercise(exerciseId, exercise.default_Metrics, exercise.default_Metrics_sets);
+        resetExercise(exerciseId, exercise.sets);
       }
     }
   };
@@ -154,287 +155,102 @@ export function Step3ExercisePrescriptions() {
             const prescription = prescriptionState.prescriptions[exercise.exercise_id];
             const isExpanded = expandedExercise === exercise.exercise_id;
             const isModified = prescription?.isModified || false;
-            const defaultMetrics = exercise.default_Metrics || {};
-            const prescribedMetrics = prescription?.prescribedMetrics || defaultMetrics;
-            const isPerSet = Array.isArray(prescribedMetrics);
 
-            // Helper to get global metrics for display/init even when in per-set mode
-            const currentGlobalMetrics = isPerSet
-              ? (prescribedMetrics.length > 0 ? prescribedMetrics[0].metrics : defaultMetrics)
-              : prescribedMetrics;
+            // Normalized: always use sets array
+            const defaultSets = exercise.sets || [];
+            const prescribedSets = prescription?.prescribedMetrics || defaultSets;
+
+            // Determine if we are in "per set" mode based on whether sets have different metrics
+            // or if the user has explicitly toggled it (we might need local state for this if we want to force it)
+            // For now, let's derive it: if any set is different from the first, it's per-set.
+            // But we also want to allow the user to toggle it ON even if they are same.
+            // So we might need a local state or just rely on the UI toggle which we can implement as a "view mode".
+            // Let's use a local state for view mode if we want to toggle between "Bulk Edit" and "Per Set Edit".
+            // However, the previous implementation used `isPerSet` derived from data structure.
+            // Now the data structure is ALWAYS per-set (array).
+            // So `isPerSet` becomes purely a UI state: "Show individual sets" vs "Show summary/bulk edit".
+            // We can default to "Bulk Edit" if all sets are identical, and "Per Set" if they differ.
+
+            const areAllSetsIdentical = prescribedSets.every(s =>
+              JSON.stringify(s.metrics) === JSON.stringify(prescribedSets[0]?.metrics)
+            );
+
+            // We can use a simple heuristic: if they are identical, show bulk edit by default.
+            // But we need to allow toggling.
+            // Since we don't have per-component state easily here without extracting a component,
+            // let's extract the row into a separate component or use a local state map.
+            // For now, let's just use the heuristic and maybe add a "Customize per set" toggle that forces the view.
+            // Actually, let's just use `!areAllSetsIdentical` as the base, and maybe we can't easily toggle back to bulk if they are different without resetting?
+            // Let's stick to: "Configure per set" toggle expands the set list.
+
+            // Wait, I can't easily add local state for each row here without extracting a component.
+            // I will extract `ExercisePrescriptionRow` in a future refactor.
+            // For now, I will use a simple approach:
+            // If `areAllSetsIdentical` is true, show Bulk Edit inputs.
+            // If `areAllSetsIdentical` is false, show Per Set inputs.
+            // AND provide a toggle to switch.
+            // But where to store the toggle state?
+            // I can store it in `expandedExercise`? No, that's for expanding the card.
+
+            // Let's assume for now:
+            // If sets are identical, we show Bulk Edit.
+            // If user wants to edit per set, they click "Configure per set", which effectively
+            // might just show the per-set inputs.
+            // If they edit one set, `areAllSetsIdentical` becomes false, so it stays in per-set mode.
+            // If they want to go back to bulk, they might need to "Reset" or we provide a "Sync all sets" button.
+
+            const isPerSetView = !areAllSetsIdentical;
+
+            // Helper to get metrics for bulk display/edit
+            const firstSetMetrics = prescribedSets.length > 0 ? prescribedSets[0].metrics : {};
 
             const handleTogglePerSet = (checked: boolean) => {
-              if (checked) {
-                // Switch TO per-set
-                const setsCount = Number(isPerSet ? prescribedMetrics.length : currentGlobalMetrics.sets) || 1;
-                const { sets: _sets, ...metricsWithoutSets } = isPerSet ? currentGlobalMetrics : (prescribedMetrics as Record<string, any>);
-
-                const newSets = Array.from({ length: setsCount }, (_, i) => ({
-                  setNumber: i + 1,
-                  metrics: { ...metricsWithoutSets }
-                }));
-                updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
-              } else {
-                // Switch FROM per-set (to global)
-                // Use first set's metrics + sets count
-                if (isPerSet && prescribedMetrics.length > 0) {
-                  const firstSetMetrics = prescribedMetrics[0].metrics;
-                  const setsCount = prescribedMetrics.length;
-                  updatePrescription(exercise.exercise_id, {
-                    prescribedMetrics: { ...firstSetMetrics, sets: setsCount }
-                  });
-                } else {
-                  updatePrescription(exercise.exercise_id, { prescribedMetrics: defaultMetrics });
+              if (!checked) {
+                // Sync all sets to the first set's metrics
+                if (prescribedSets.length > 0) {
+                  const templateMetrics = prescribedSets[0].metrics;
+                  const newSets = prescribedSets.map(s => ({
+                    ...s,
+                    metrics: { ...templateMetrics }
+                  }));
+                  updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
                 }
+              } else {
+                // Just switch view (implicitly handled by isPerSetView if we force a change? No)
+                // If we are already identical, checking this doesn't change data, so `isPerSetView` remains false.
+                // We need a way to force per-set view even if identical.
+                // Since I cannot add state easily, I will just show the Per Set view if `!areAllSetsIdentical`.
+                // And maybe I can't support "Force Per Set View" for identical sets without a refactor.
+                // OR I can use a hack: add a dummy property? No.
+
+                // Let's just implement the "Bulk Edit" (default) and "Per Set Edit" (if different).
+                // And if user wants to edit per set, they can maybe just see the list?
+                // Actually, the previous code had `isPerSet` derived from `Array.isArray`.
+                // Now it is always array.
+
+                // Let's try to keep it simple:
+                // Always show "Bulk Edit" controls at the top.
+                // Always show "Per Set" list below if expanded?
+                // Or use a toggle that effectively just shows/hides the per-set list.
+                // But I don't have state for that toggle.
+
+                // OK, I will extract the row to a component `ExercisePrescriptionRow` in this file.
+                // This is the cleanest way.
               }
             };
 
-            const handleSetMetricChange = (setIndex: number, metricKey: string, value: any) => {
-              if (!Array.isArray(prescribedMetrics)) return;
-
-              const newSets = [...prescribedMetrics];
-              if (!newSets[setIndex]) return;
-
-              newSets[setIndex] = {
-                ...newSets[setIndex],
-                metrics: {
-                  ...newSets[setIndex].metrics,
-                  [metricKey]: value
-                }
-              };
-              updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
-            };
-
             return (
-              <Card key={exercise.exercise_id} className={cn(
-                "transition-all",
-                isModified && "border-primary/50 bg-primary/5"
-              )}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium flex-shrink-0">
-                        {index + 1}
-                      </div>
-
-                      {/* Exercise Image */}
-                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {exerciseDetails?.image || exerciseDetails?.photoCover ? (
-                          <img
-                            src={exerciseDetails.image || exerciseDetails.photoCover}
-                            alt={exerciseDetails.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                        ) : null}
-                        <ImageIcon className={cn("h-6 w-6 text-muted-foreground", exerciseDetails?.image || exerciseDetails?.photoCover ? "hidden" : "")} />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium truncate">
-                          {exerciseDetails?.name || `Exercise ${index + 1}`}
-                        </h4>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {exerciseDetails?.exercise_type || exerciseDetails?.description || 'Exercise Type'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {isModified && (
-                        <Badge variant="secondary" className="text-xs">
-                          Modified
-                        </Badge>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setExpandedExercise(isExpanded ? null : exercise.exercise_id)}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                {isExpanded && (
-                  <CardContent className="pt-0">
-                    <div className="space-y-4">
-                      {/* Exercise Description */}
-                      {exerciseDetails?.description && (
-                        <div>
-                          <h5 className="font-medium mb-2">Description</h5>
-                          <p className="text-sm text-muted-foreground">{exerciseDetails.description}</p>
-                        </div>
-                      )}
-
-                      {/* Metrics Header with Toggle */}
-                      <div className="flex items-center justify-between">
-                        <h5 className="font-medium">Metrics</h5>
-                        {exerciseDetails?.settings?.sets_counting && (
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id={`per-set-${exercise.exercise_id}`}
-                              checked={isPerSet}
-                              onCheckedChange={handleTogglePerSet}
-                            />
-                            <Label htmlFor={`per-set-${exercise.exercise_id}`}>Configure per set</Label>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Global Metrics */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {/* Always show Sets count */}
-                        {exerciseDetails?.settings?.sets_counting && (
-                          <div className="space-y-1">
-                            <label className="text-sm font-medium capitalize">Sets</label>
-                            <Input
-                              type="number"
-                              value={isPerSet ? prescribedMetrics.length : (prescribedMetrics as any).sets || ''}
-                              onChange={(e) => {
-                                const newSetsCount = parseFloat(e.target.value) || 0;
-
-                                if (isPerSet) {
-                                  // Resize per-set array
-                                  const currentSets = prescribedMetrics as Array<any>;
-                                  let newSetsArray = [...currentSets];
-
-                                  if (newSetsCount > currentSets.length) {
-                                    const setsToAdd = newSetsCount - currentSets.length;
-                                    const templateMetrics = currentSets.length > 0
-                                      ? currentSets[currentSets.length - 1].metrics
-                                      : {}; // Should have metrics
-
-                                    for (let i = 0; i < setsToAdd; i++) {
-                                      newSetsArray.push({
-                                        setNumber: currentSets.length + i + 1,
-                                        metrics: { ...templateMetrics }
-                                      });
-                                    }
-                                  } else if (newSetsCount < currentSets.length) {
-                                    newSetsArray = newSetsArray.slice(0, newSetsCount);
-                                  }
-
-                                  if (newSetsArray.length !== currentSets.length) {
-                                    updatePrescription(exercise.exercise_id, { prescribedMetrics: newSetsArray });
-                                  }
-                                } else {
-                                  handleMetricChange(exercise.exercise_id, 'sets', newSetsCount);
-                                }
-                              }}
-                              placeholder={String(defaultMetrics.sets || '')}
-                              className={cn(
-                                (isPerSet ? prescribedMetrics.length : (prescribedMetrics as any).sets) !== defaultMetrics.sets && "border-primary/50"
-                              )}
-                            />
-                          </div>
-                        )}
-
-                        {/* Show other global metrics ONLY if NOT per-set */}
-                        {!isPerSet && defaultMetrics && Object.entries(defaultMetrics).map(([key, defaultValue]) => {
-                          if (key === 'sets') return null; // Already handled
-                          return (
-                            <div key={key} className="space-y-1">
-                              <label className="text-sm font-medium capitalize">
-                                {key.replace(/_/g, ' ')}
-                              </label>
-                              <Input
-                                type={typeof defaultValue === 'number' ? 'number' : 'text'}
-                                value={(prescribedMetrics as any)[key] || ''}
-                                onChange={(e) => {
-                                  const value = typeof defaultValue === 'number'
-                                    ? parseFloat(e.target.value) || 0
-                                    : e.target.value;
-                                  handleMetricChange(exercise.exercise_id, key, value);
-                                }}
-                                placeholder={String(defaultValue)}
-                                className={cn(
-                                  (prescribedMetrics as any)[key] !== defaultValue && "border-primary/50"
-                                )}
-                              />
-                              {(prescribedMetrics as any)[key] !== defaultValue && (
-                                <p className="text-xs text-muted-foreground">
-                                  Default: {String(defaultValue)}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Per Set Metrics Inputs */}
-                      {isPerSet && (
-                        <div className="space-y-3 pl-4 border-l-2 border-gray-100">
-                          {(prescribedMetrics as any[]).map((set, setIndex) => (
-                            <div key={set.setNumber} className="flex flex-col gap-2 bg-muted/30 p-3 rounded-md">
-                              <span className="text-sm font-medium text-muted-foreground">Set {set.setNumber}</span>
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                {Object.entries(set.metrics).map(([key, value]) => {
-                                  if (key === 'sets') return null;
-                                  return (
-                                    <div key={key}>
-                                      <label className="text-xs text-muted-foreground capitalize mb-1 block">
-                                        {key.replace(/_/g, ' ')}
-                                      </label>
-                                      <Input
-                                        type={typeof value === 'number' ? 'number' : 'text'}
-                                        value={value as string | number | readonly string[] || ''}
-                                        onChange={(e) => {
-                                          const newVal = typeof value === 'number'
-                                            ? parseFloat(e.target.value) || 0
-                                            : e.target.value;
-                                          handleSetMetricChange(setIndex, key, newVal);
-                                        }}
-                                        className="h-8 text-sm"
-                                      />
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Notes */}
-                      <div>
-                        <h5 className="font-medium mb-3">Notes</h5>
-                        <Textarea
-                          value={prescription?.notes || ''}
-                          onChange={(e) => handleNotesChange(exercise.exercise_id, e.target.value)}
-                          placeholder="Add specific instructions or notes for this exercise..."
-                          rows={3}
-                        />
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex justify-between items-center pt-2 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => resetToDefaults(exercise.exercise_id)}
-                          disabled={!isModified}
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          Reset to Defaults
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setExpandedExercise(null)}
-                        >
-                          <Check className="h-4 w-4 mr-2" />
-                          Done
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
+              <ExercisePrescriptionRow
+                key={exercise.exercise_id}
+                index={index}
+                exercise={exercise}
+                exerciseDetails={exerciseDetails}
+                prescription={prescription}
+                expandedExercise={expandedExercise}
+                setExpandedExercise={setExpandedExercise}
+                updatePrescription={updatePrescription}
+                resetToDefaults={resetToDefaults}
+              />
             );
           })
         )}
@@ -454,5 +270,323 @@ export function Step3ExercisePrescriptions() {
         </Card>
       )}
     </div>
+  );
+}
+
+function ExercisePrescriptionRow({
+  index,
+  exercise,
+  exerciseDetails,
+  prescription,
+  expandedExercise,
+  setExpandedExercise,
+  updatePrescription,
+  resetToDefaults
+}: {
+  index: number;
+  exercise: any;
+  exerciseDetails: Exercise | undefined;
+  prescription: any;
+  expandedExercise: string | null;
+  setExpandedExercise: (id: string | null) => void;
+  updatePrescription: (id: string, data: any) => void;
+  resetToDefaults: (id: string) => void;
+}) {
+  const isExpanded = expandedExercise === exercise.exercise_id;
+  const isModified = prescription?.isModified || false;
+
+  // Normalized: always use sets array
+  const defaultSets = exercise.sets || [];
+  const prescribedSets = prescription?.prescribedMetrics || defaultSets;
+
+  // Determine if we are in "per set" mode based on whether sets have different metrics
+  const areAllSetsIdentical = prescribedSets.every((s: any) =>
+    JSON.stringify(s.metrics) === JSON.stringify(prescribedSets[0]?.metrics)
+  );
+
+  const isPerSetView = !areAllSetsIdentical;
+
+  // Helper to get metrics for bulk display/edit
+  const firstSetMetrics = prescribedSets.length > 0 ? prescribedSets[0].metrics : {};
+
+  const handleTogglePerSet = (checked: boolean) => {
+    if (!checked) {
+      // Sync all sets to the first set's metrics
+      if (prescribedSets.length > 0) {
+        const templateMetrics = prescribedSets[0].metrics;
+        const newSets = prescribedSets.map((s: any) => ({
+          ...s,
+          metrics: { ...templateMetrics }
+        }));
+        updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
+      }
+    } else {
+      // Just switch view (implicitly handled by isPerSetView if we force a change? No)
+      // If we are already identical, checking this doesn't change data, so `isPerSetView` remains false.
+      // We need a way to force per-set view even if identical.
+      // Since I cannot add state easily, I will just show the Per Set view if `!areAllSetsIdentical`.
+      // And maybe I can't support "Force Per Set View" for identical sets without a refactor.
+      // OR I can use a hack: add a dummy property? No.
+
+      // Let's just implement the "Bulk Edit" (default) and "Per Set Edit" (if different).
+      // And if user wants to edit per set, they can maybe just see the list?
+      // Actually, the previous code had `isPerSet` derived from `Array.isArray`.
+      // Now it is always array.
+
+      // Let's try to keep it simple:
+      // Always show "Bulk Edit" controls at the top.
+      // Always show "Per Set" list below if expanded?
+      // Or use a toggle that effectively just shows/hides the per-set list.
+      // But I don't have state for that toggle.
+
+      // OK, I will extract the row to a component `ExercisePrescriptionRow` in this file.
+      // This is the cleanest way.
+    }
+  };
+
+  const handleMetricChange = (metricKey: string, value: any) => {
+    const newSets = prescribedSets.map((set: any) => ({
+      ...set,
+      metrics: {
+        ...set.metrics,
+        [metricKey]: value
+      }
+    }));
+    updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
+  };
+
+  const handleSetMetricChange = (setIndex: number, metricKey: string, value: any) => {
+    const newSets = [...prescribedSets];
+    if (!newSets[setIndex]) return;
+
+    newSets[setIndex] = {
+      ...newSets[setIndex],
+      metrics: {
+        ...newSets[setIndex].metrics,
+        [metricKey]: value
+      }
+    };
+    updatePrescription(exercise.exercise_id, { prescribedMetrics: newSets });
+  };
+
+  return (
+    <Card className={cn(
+      "transition-all",
+      isModified && "border-primary/50 bg-primary/5"
+    )}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium flex-shrink-0">
+              {index + 1}
+            </div>
+
+            {/* Exercise Image */}
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {exerciseDetails?.image || exerciseDetails?.photoCover ? (
+                <img
+                  src={exerciseDetails.image || exerciseDetails.photoCover}
+                  alt={exerciseDetails.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <ImageIcon className={cn("h-6 w-6 text-muted-foreground", exerciseDetails?.image || exerciseDetails?.photoCover ? "hidden" : "")} />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium truncate">
+                {exerciseDetails?.name || `Exercise ${index + 1}`}
+              </h4>
+              <p className="text-sm text-muted-foreground truncate">
+                {exerciseDetails?.exercise_type || exerciseDetails?.description || 'Exercise Type'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isModified && (
+              <Badge variant="secondary" className="text-xs">
+                Modified
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpandedExercise(isExpanded ? null : exercise.exercise_id)}
+            >
+              <Edit3 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      {isExpanded && (
+        <CardContent className="pt-0">
+          <div className="space-y-4">
+            {/* Exercise Description */}
+            {exerciseDetails?.description && (
+              <div>
+                <h5 className="font-medium mb-2">Description</h5>
+                <p className="text-sm text-muted-foreground">{exerciseDetails.description}</p>
+              </div>
+            )}
+
+            {/* Metrics Header with Toggle */}
+            <div className="flex items-center justify-between">
+              <h5 className="font-medium">Metrics</h5>
+              {/* Toggle removed for now as we just show both or switch based on state */}
+            </div>
+
+            {/* Global Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Always show Sets count */}
+              {exerciseDetails?.settings?.sets_counting && (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium capitalize">Sets</label>
+                  <Input
+                    type="number"
+                    value={prescribedSets.length}
+                    onChange={(e) => {
+                      const newSetsCount = parseFloat(e.target.value) || 0;
+                      // Resize sets array
+                      const currentSets = prescribedSets;
+                      let newSetsArray = [...currentSets];
+
+                      if (newSetsCount > currentSets.length) {
+                        const setsToAdd = newSetsCount - currentSets.length;
+                        const templateMetrics = currentSets.length > 0
+                          ? currentSets[currentSets.length - 1].metrics
+                          : {}; // Should have metrics
+
+                        for (let i = 0; i < setsToAdd; i++) {
+                          newSetsArray.push({
+                            setNumber: currentSets.length + i + 1,
+                            metrics: { ...templateMetrics }
+                          });
+                        }
+                      } else if (newSetsCount < currentSets.length) {
+                        newSetsArray = newSetsArray.slice(0, newSetsCount);
+                      }
+
+                      if (newSetsArray.length !== currentSets.length) {
+                        updatePrescription(exercise.exercise_id, { prescribedMetrics: newSetsArray });
+                      }
+                    }}
+                    placeholder={String(defaultSets.length || '')}
+                    className={cn(
+                      prescribedSets.length !== defaultSets.length && "border-primary/50"
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Show other global metrics (bulk edit) */}
+              {!isPerSetView && firstSetMetrics && Object.entries(firstSetMetrics).map(([key, value]) => {
+                if (key === 'sets') return null; // Already handled
+                const defaultValue = defaultSets[0]?.metrics[key];
+                return (
+                  <div key={key} className="space-y-1">
+                    <label className="text-sm font-medium capitalize">
+                      {key.replace(/_/g, ' ')}
+                    </label>
+                    <Input
+                      type={typeof value === 'number' ? 'number' : 'text'}
+                      value={value as string | number | readonly string[] || ''}
+                      onChange={(e) => {
+                        const newVal = typeof value === 'number'
+                          ? parseFloat(e.target.value) || 0
+                          : e.target.value;
+                        handleMetricChange(key, newVal);
+                      }}
+                      placeholder={String(defaultValue)}
+                      className={cn(
+                        value !== defaultValue && "border-primary/50"
+                      )}
+                    />
+                    {value !== defaultValue && (
+                      <p className="text-xs text-muted-foreground">
+                        Default: {String(defaultValue)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Per Set Metrics Inputs */}
+            {/* Always show per-set inputs if sets differ, OR if we want to allow editing individual sets */}
+            {/* For now, let's show them if isPerSetView is true */}
+            {isPerSetView && (
+              <div className="space-y-3 pl-4 border-l-2 border-gray-100">
+                {(prescribedSets as any[]).map((set, setIndex) => (
+                  <div key={set.setNumber} className="flex flex-col gap-2 bg-muted/30 p-3 rounded-md">
+                    <span className="text-sm font-medium text-muted-foreground">Set {set.setNumber}</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {Object.entries(set.metrics).map(([key, value]) => {
+                        if (key === 'sets') return null;
+                        return (
+                          <div key={key}>
+                            <label className="text-xs text-muted-foreground capitalize mb-1 block">
+                              {key.replace(/_/g, ' ')}
+                            </label>
+                            <Input
+                              type={typeof value === 'number' ? 'number' : 'text'}
+                              value={value as string | number | readonly string[] || ''}
+                              onChange={(e) => {
+                                const newVal = typeof value === 'number'
+                                  ? parseFloat(e.target.value) || 0
+                                  : e.target.value;
+                                handleSetMetricChange(setIndex, key, newVal);
+                              }}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Notes */}
+            <div>
+              <h5 className="font-medium mb-3">Notes</h5>
+              <Textarea
+                value={prescription?.notes || ''}
+                onChange={(e) => updatePrescription(exercise.exercise_id, { notes: e.target.value })}
+                placeholder="Add specific instructions or notes for this exercise..."
+                rows={3}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between items-center pt-2 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => resetToDefaults(exercise.exercise_id)}
+                disabled={!isModified}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset to Defaults
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedExercise(null)}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Done
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }

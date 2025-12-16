@@ -76,7 +76,7 @@ export function WorkoutSessionProvider({
     activeExerciseId,
     setActiveExerciseId,
     fetchExercises,
-    metricsByExercise,
+    setsByExercise,
   } = useExercisesData({
     sessionId,
     workoutExercises: workoutState.data?.flow?.exercises ?? [],
@@ -147,7 +147,7 @@ export function WorkoutSessionProvider({
           const exerciseIds = workoutExercises.map((exercise) => exercise.exercise_id);
           return fetchExercises(exerciseIds);
         },
-        metricsByExercise,
+        setsByExercise,
       },
       ui: {
         currentStep,
@@ -174,7 +174,7 @@ export function WorkoutSessionProvider({
       updateSessionProgress,
       saveSession,
       workoutState,
-      metricsByExercise,
+      setsByExercise,
       setSessionState,
       setAssignmentState,
       setWorkoutState,

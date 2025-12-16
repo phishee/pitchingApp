@@ -325,17 +325,6 @@ export function ExerciseSessionMobile() {
         return activeExerciseDef?.metrics || [];
     }, [activeExerciseDef]);
 
-    // DEBUG LOGGING
-    // useEffect(() => {
-    //     console.log('[Mobile] Active Exercise ID:', activeExerciseId);
-    //     console.log('[Mobile] Active Session Exercise:', activeSessionExercise);
-    //     console.log('[Mobile] Active Exercise Def:', activeExerciseDef);
-    //     console.log('[Mobile] Exercise Metrics:', exerciseMetrics);
-    //     if (activeSessionExercise) {
-    //         console.log('[Mobile] Sets:', activeSessionExercise.sets);
-    //     }
-    // }, [activeExerciseId, activeSessionExercise, activeExerciseDef, exerciseMetrics]);
-
     // Derived state
     const sets = activeSessionExercise?.sets || [];
     const completedSetsCount = sets.filter(s => s.status === 'completed').length;
@@ -395,9 +384,25 @@ export function ExerciseSessionMobile() {
 
         // Update summary
         const sets = newSession.exercises[exerciseIndex].sets;
-        newSession.exercises[exerciseIndex].summary.completedSets = sets.filter((s: any) => s.status === 'completed').length;
-        newSession.exercises[exerciseIndex].summary.compliancePercent =
-            Math.round((newSession.exercises[exerciseIndex].summary.completedSets / newSession.exercises[exerciseIndex].summary.totalSets) * 100);
+
+        // Ensure global summary.exercises exists
+        if (!newSession.summary.exercises) {
+            newSession.summary.exercises = {};
+        }
+
+        // Initialize exercise summary if missing
+        if (!newSession.summary.exercises[activeExerciseId]) {
+            newSession.summary.exercises[activeExerciseId] = {
+                metrics: {},
+                totalSets: sets.length,
+                completedSets: 0,
+                compliancePercent: 0
+            };
+        }
+
+        newSession.summary.exercises[activeExerciseId].completedSets = sets.filter((s: any) => s.status === 'completed').length;
+        newSession.summary.exercises[activeExerciseId].compliancePercent =
+            Math.round((newSession.summary.exercises[activeExerciseId].completedSets / newSession.summary.exercises[activeExerciseId].totalSets) * 100);
 
         // Save to server
         await session.saveSession({ exercises: newSession.exercises });
@@ -420,7 +425,7 @@ export function ExerciseSessionMobile() {
             setNumber: lastSet.setNumber + 1,
             status: 'pending',
             isAdded: true,
-            prescribed: { ...newPrescribed },
+            prescribed: {}, // Extra sets have no prescription
             performed: { ...newPrescribed } // Pre-fill performed with same values
         };
 

@@ -25,48 +25,50 @@ export function WorkoutExercisesStep() {
   // Memoize the helper function to prevent unnecessary re-renders
   const getDefaultMetricsForExerciseId = useCallback((exerciseId: string) => {
     const workoutExercise = exercises.find(ex => ex.exercise_id === exerciseId);
-    return workoutExercise?.default_Metrics || {};
+    return workoutExercise?.sets || [];
   }, [exercises]);
 
   // Helper function to determine which metrics to include based on exercise settings
   const getDefaultMetricsForExercise = useCallback((exercise: Exercise) => {
-    const defaultMetrics: { [key: string]: any } = {};
-
-    // Add sets if sets_counting is enabled
-    if (exercise.settings.sets_counting) {
-      defaultMetrics.sets = 3;
-    }
+    const metrics: { [key: string]: any } = {};
 
     // Add reps if reps_counting is enabled
     if (exercise.settings.reps_counting) {
-      defaultMetrics.reps = 10;
+      metrics.reps = 10;
     }
 
     // Add duration for time-based exercises
     if (exercise.exercise_type === 'cardio' || exercise.structure !== 'sets') {
-      defaultMetrics.duration = 60;
+      metrics.duration = 60;
     }
 
     // Add rest time
-    defaultMetrics.rest = 30;
+    metrics.rest = 30;
 
     // Add custom metrics from the exercise definition
     if (exercise.metrics) {
       exercise.metrics.forEach(metric => {
         // Avoid overwriting existing standard metrics if they were already set
-        if (defaultMetrics[metric.id] === undefined) {
-          defaultMetrics[metric.id] = metric.defaultValue ?? null;
+        if (metrics[metric.id] === undefined) {
+          metrics[metric.id] = metric.defaultValue ?? null;
         }
       });
     }
 
-    return defaultMetrics;
+    // Determine number of sets
+    const setsCount = exercise.settings.sets_counting ? 3 : 1;
+
+    // Generate sets array
+    return Array.from({ length: setsCount }, (_, i) => ({
+      setNumber: i + 1,
+      metrics: { ...metrics }
+    }));
   }, []);
 
   const handleAddExercise = useCallback((exercise: Exercise) => {
     const exerciseWithConfig: WorkoutExercise = {
       exercise_id: exercise.id,
-      default_Metrics: getDefaultMetricsForExercise(exercise)
+      sets: getDefaultMetricsForExercise(exercise)
     };
     addExercise(exerciseWithConfig, exercise);
   }, [addExercise, getDefaultMetricsForExercise]);

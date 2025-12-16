@@ -26,6 +26,12 @@ export interface Exercise {
 
   metrics: ExerciseMetric[];
 
+  rpe?: {
+    type: string;
+    range: string;
+    description: string;
+  };
+
 }
 
 // Query parameters interface

@@ -185,7 +185,9 @@ function ExerciseSequence({
         <div className="space-y-3">
           {workoutFlow.exercises.map((workoutExercise: any, index: number) => {
             const exerciseInfo = getExerciseById(workoutExercise.exercise_id);
-            const defaultMetrics = getDefaultMetricsForExerciseId(workoutExercise.exercise_id);
+            const sets = getDefaultMetricsForExerciseId(workoutExercise.exercise_id);
+            // Use first set for display summary
+            const displayMetrics = sets.length > 0 ? sets[0].metrics : {};
 
             if (!exerciseInfo) {
               return null; // Skip if exercise info not found
@@ -205,18 +207,18 @@ function ExerciseSequence({
                   </div>
                   <div className="text-sm text-gray-500">
                     {exerciseInfo.settings.sets_counting && (
-                      <span>{defaultMetrics.sets || 3} sets</span>
+                      <span>{sets.length} sets</span>
                     )}
                     {exerciseInfo.settings.sets_counting && exerciseInfo.settings.reps_counting && (
                       <span> × </span>
                     )}
                     {exerciseInfo.settings.reps_counting && (
-                      <span>{defaultMetrics.reps || 10} reps</span>
+                      <span>{displayMetrics.reps || 10} reps</span>
                     )}
                     {(exerciseInfo.exercise_type === 'cardio' || exerciseInfo.structure !== 'sets') && (
-                      <span> • {defaultMetrics.duration || 60}s duration</span>
+                      <span> • {displayMetrics.duration || 60}s duration</span>
                     )}
-                    <span> • {defaultMetrics.rest || 30}s rest</span>
+                    <span> • {displayMetrics.rest || 30}s rest</span>
                   </div>
                 </div>
               </div>
@@ -243,16 +245,21 @@ export function WorkoutPreviewStep() {
   // Helper function to get default metrics for a specific exercise
   const getDefaultMetricsForExerciseId = (exerciseId: string) => {
     const workoutExercise = workoutFlow.exercises?.find(ex => ex.exercise_id === exerciseId);
-    return workoutExercise?.default_Metrics || {};
+    return workoutExercise?.sets || [];
   };
 
   const calculateTotalTime = () => {
     return workoutFlow.exercises.reduce((total: number, exercise: any) => {
-      const defaultMetrics = getDefaultMetricsForExerciseId(exercise.exercise_id);
-      const sets = Number(defaultMetrics.sets) || 3;
-      const duration = Number(defaultMetrics.duration) || 60;
-      const rest = Number(defaultMetrics.rest) || 30;
-      return total + (sets * duration) + (sets * rest);
+      const sets = getDefaultMetricsForExerciseId(exercise.exercise_id);
+      if (sets.length === 0) return total;
+
+      // Use first set as representative for duration/rest if they are consistent
+      // Or sum them up if we want to be precise. Let's sum them up.
+      return sets.reduce((setTotal: number, set: any) => {
+        const duration = Number(set.metrics.duration) || 60;
+        const rest = Number(set.metrics.rest) || 30;
+        return setTotal + duration + rest;
+      }, total);
     }, 0);
   };
 

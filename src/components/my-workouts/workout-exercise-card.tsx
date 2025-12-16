@@ -5,10 +5,10 @@ import { MetricValue } from '@/models/Metric';
 
 interface WorkoutExerciseCardProps {
   exercise: Exercise | undefined;
-  metrics: Record<string, MetricValue> | Array<{ setNumber: number; metrics: Record<string, MetricValue> }> | undefined;
+  sets: Array<{ setNumber: number; metrics: Record<string, MetricValue> }> | undefined;
 }
 
-export function WorkoutExerciseCard({ exercise, metrics }: WorkoutExerciseCardProps) {
+export function WorkoutExerciseCard({ exercise, sets }: WorkoutExerciseCardProps) {
   // Get exercise image - prefer image, then photoCover, then default
   const imageUrl = exercise?.image || exercise?.photoCover || '/assets/images/default_profile.png';
   const exerciseName = exercise?.name || 'Unknown Exercise';
@@ -22,21 +22,17 @@ export function WorkoutExerciseCard({ exercise, metrics }: WorkoutExerciseCardPr
   // Determine display text based on metrics
   let displayText = '';
 
-  if (metrics) {
-    const isPerSet = Array.isArray(metrics);
-    // Use first set metrics for display if per-set, otherwise use metrics object directly
-    const displayMetrics = isPerSet
-      ? (metrics.length > 0 ? metrics[0].metrics : {})
-      : (metrics as Record<string, MetricValue>);
+  if (sets && sets.length > 0) {
+    // Use first set metrics for display
+    const displayMetrics = sets[0].metrics;
 
     const parts: string[] = [];
 
     // 1. Sets
-    // If per-set, use array length. If global, use 'sets' property.
-    const sets = isPerSet ? metrics.length : Number(displayMetrics.sets);
+    const setsCount = sets.length;
 
-    if (!isNaN(sets) && sets > 1) {
-      parts.push(`${sets} Sets`);
+    if (setsCount > 1) {
+      parts.push(`${setsCount} Sets`);
     }
 
     // 2. Primary Metric (Reps, Duration, Distance, etc.)

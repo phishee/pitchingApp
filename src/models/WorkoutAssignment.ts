@@ -18,7 +18,7 @@ export interface WorkoutAssignment {
   defaultTimeSlot: { start: string; end: string };
 
   prescriptions: Record<string, {
-    prescribedMetrics: Record<string, MetricValue> | Array<{
+    prescribedMetrics: Array<{
       setNumber: number;
       metrics: Record<string, MetricValue>;
     }>;

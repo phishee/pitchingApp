@@ -117,11 +117,13 @@ export class SessionInitializer implements ISessionInitializer {
         completedExercises: 0,
         totalSets,
         completedSets: 0,
+        extraSets: 0,
         compliancePercent: 0,
         totalVolumeLifted: undefined,
         averageIntensityPercent: undefined,
         sessionRPE: 0,
         averageExerciseRPE: 0,
+        exercises: {},
       },
       flags: {
         highRPE: false,

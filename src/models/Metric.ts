@@ -1,6 +1,6 @@
 export type MetricValue = string | number | boolean;
 
-export type MetricUnit = 
+export type MetricUnit =
   | "count"      // reps, pitch_count
   | "lbs" | "kg" // weight
   | "seconds" | "minutes" | "hours" // duration
@@ -8,9 +8,11 @@ export type MetricUnit =
   | "mph" | "m/s" | "km/h" // velocity
   | "min/mile" | "min/km" // pace
   | "rpm"        // spin rate
+  | "reps/min" | "skips/min" // cadence
   | "degrees"    // angles
   | "bpm"        // heart rate
   | "watts"      // power
+  | "power"      // generic power score
   | "newtons"    // force
   | "kcal"       // calories
   | "%"          // percentages
@@ -33,34 +35,34 @@ export interface ExerciseMetric {
   id: string;
   unit: MetricUnit;
   input: "manual" | "formula";
-  
+
   // Display
   label: string;                    // User-facing name
   description: string;              // Tooltip/help text
-  
+
   // Manual metrics only
   required?: boolean;
   prescribable?: boolean;
-  
+
   // UI Rendering hints
   inputType?: MetricInputType;      // How to render the input
-  
+
   // Validation & Constraints
   min?: number;                     // Minimum allowed value
   max?: number;                     // Maximum allowed value
   step?: number;                    // Increment step (0.5, 1, 5, etc.)
-  
+
   // Advanced UI hints
   quickIncrements?: number[];       // Quick add buttons [5, 10, 25, 45]
   defaultValue?: number | string;   // Pre-fill value
   placeholder?: string;             // Input placeholder
-  
+
   // Select/dropdown options
   options?: Array<{
     value: string | number;
     label: string;
   }>;
-  
+
   // Formula metrics only
   formula?: string;
 }
