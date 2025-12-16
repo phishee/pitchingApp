@@ -57,6 +57,7 @@ export class SessionInitializer implements ISessionInitializer {
 
         return {
           exerciseId,
+          supersetId: workoutExercise.supersetId,
           exerciseName: exercise.name,
           exerciseType: exercise.exercise_type,
           exerciseImage: exercise.image ?? exercise.photoCover,

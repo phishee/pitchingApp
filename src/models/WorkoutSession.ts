@@ -157,6 +157,8 @@ export type WorkoutSessionStep =
 // ==========================================
 export interface WorkoutSessionExercise {
   exerciseId: string;
+  supersetId?: string; // UUID shared by exercises in the same group
+  supersetColorId?: string; // ID from COLOR_PALETTE
 
   // Denormalized for AI/display (snapshot at creation)
   exerciseName: string;

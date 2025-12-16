@@ -10,6 +10,8 @@ export interface WorkoutFlow {
 
 export interface WorkoutExercise {
   exercise_id: string;
+  supersetId?: string; // UUID shared by exercises in the same group
+  supersetColorId?: string; // ID from COLOR_PALETTE
   // The Single Source of Truth for prescription
   sets: Array<{
     setNumber: number;
