@@ -5,6 +5,7 @@ export interface IWorkoutSessionService {
   getActiveSession(athleteUserId: string): Promise<WorkoutSession | null>;
   getSessionById(sessionId: string): Promise<WorkoutSession | null>;
   getSessionByEventId(calendarEventId: string): Promise<WorkoutSession | null>;
+  getWorkoutSessions(filter: { userId: string; organizationId?: string; status?: string; limit?: number }): Promise<{ sessions: WorkoutSession[]; total: number }>;
 }
 
 export interface ValidationResult {

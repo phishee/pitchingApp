@@ -146,6 +146,38 @@ export class WorkoutSessionController {
       );
     }
   }
+  async getWorkoutSessions(req: AuthenticatedRequest): Promise<NextResponse> {
+    try {
+      const athleteUserId = req.user?.uid;
+
+      if (!athleteUserId) {
+        return NextResponse.json(
+          { error: 'Authenticated user context is required' },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(req.url);
+      const status = searchParams.get('status') || undefined;
+      const organizationId = searchParams.get('organizationId') || undefined;
+      const limitParam = searchParams.get('limit');
+      const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
+      const result = await this.workoutSessionService.getWorkoutSessions({
+        userId: athleteUserId,
+        organizationId,
+        status,
+        limit,
+      });
+
+      return NextResponse.json(result);
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error?.message ?? 'Failed to fetch workout sessions' },
+        { status: 500 }
+      );
+    }
+  }
 
   async updateSessionProgress(
     req: AuthenticatedRequest,

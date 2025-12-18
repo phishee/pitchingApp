@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AthleteDashboard } from '@/app/components/dashboard/athlete-dashboard';
+import { AthleteDashboard } from '@/components/dashboard/AthleteDashboard';
 import { CoachDashboard } from '@/app/components/dashboard/coach-dashboard';
 import { useUser } from '@/providers/user.context';
 

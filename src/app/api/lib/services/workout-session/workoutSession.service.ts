@@ -118,6 +118,38 @@ export class WorkoutSessionService implements IWorkoutSessionService {
     return session ? this.normalizeSession(session) : null;
   }
 
+  async getWorkoutSessions(filter: { userId: string; organizationId?: string; status?: string; limit?: number }): Promise<{ sessions: WorkoutSession[]; total: number }> {
+    const filters: any[] = [
+      { field: 'athleteInfo.userId', operator: '$eq', value: filter.userId }
+    ];
+
+    if (filter.organizationId) {
+      filters.push({ field: 'organizationId', operator: '$eq', value: filter.organizationId });
+    }
+
+    if (filter.status) {
+      filters.push({ field: 'status', operator: '$eq', value: filter.status });
+    }
+
+    const options: any = {
+      sort: { completedAt: -1, updatedAt: -1 }, // Most recent first
+    };
+
+    if (filter.limit) {
+      options.limit = filter.limit;
+    }
+
+    const sessions = await this.mongoProvider.findWithFilters(this.sessionsCollection, filters, options);
+    // We might want to get total count too, but for now let's just return what we have. 
+    // If mongoProvider doesn't support count easily with find, we might skip total or do a separate count.
+    // Assuming we just return the array length as total for now if pagination isn't strictly required by the provider interface yet.
+
+    return {
+      sessions: sessions.map(s => this.normalizeSession(s)),
+      total: sessions.length // This is just a placeholder for total if we aren't doing full pagination with count
+    };
+  }
+
   async updateSessionProgress(
     sessionId: string,
     progress: Partial<WorkoutSession['progress']>
