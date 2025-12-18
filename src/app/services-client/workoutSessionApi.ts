@@ -31,6 +31,14 @@ class WorkoutSessionApi {
     return response.data;
   }
 
+  async getWorkoutSessions(params: { organizationId?: string; status?: string; limit?: number }): Promise<{ sessions: WorkoutSession[]; total: number }> {
+    const response = await apiClient.get<{ sessions: WorkoutSession[]; total: number }>(
+      this.baseUrl,
+      { params }
+    );
+    return response.data;
+  }
+
   async getSession(sessionId: string): Promise<WorkoutSession | null> {
     try {
       const response = await apiClient.get<WorkoutSession>(

@@ -87,14 +87,14 @@ export const eventApi = {
 
     // Date filters
     if (filters.startDate) {
-      const startDate = filters.startDate instanceof Date 
-        ? filters.startDate.toISOString() 
+      const startDate = filters.startDate instanceof Date
+        ? filters.startDate.toISOString()
         : filters.startDate;
       params.append('startDate', startDate);
     }
     if (filters.endDate) {
-      const endDate = filters.endDate instanceof Date 
-        ? filters.endDate.toISOString() 
+      const endDate = filters.endDate instanceof Date
+        ? filters.endDate.toISOString()
         : filters.endDate;
       params.append('endDate', endDate);
     }
@@ -146,11 +146,11 @@ export const eventApi = {
    * PATCH /api/v1/events/group/:groupId
    */
   async bulkUpdateEventGroup(
-    groupId: string, 
+    groupId: string,
     data: Partial<Event>
   ): Promise<BulkUpdateResponse> {
     const res = await apiClient.patch<BulkUpdateResponse>(
-      `${API_BASE}/group/${groupId}`, 
+      `${API_BASE}/group/${groupId}`,
       data
     );
     return res.data;
@@ -309,7 +309,7 @@ export const eventApi = {
   ): Promise<CreateEventsResponse> {
     // Note: Recurrence validation is now handled by the source objects (WorkoutAssignment, etc.)
     // The Event model no longer contains recurrence information directly
-    
+
     return this.createEvents({
       events: [event]
     });
@@ -326,7 +326,7 @@ export const eventApi = {
     events.forEach((event, index) => {
       // Note: Recurrence validation is now handled by the source objects (WorkoutAssignment, etc.)
       // The Event model no longer contains recurrence information directly
-      
+
       if (!event.participants?.athletes?.length) {
         throw new Error(`Event at index ${index} missing athlete participant`);
       }
@@ -341,8 +341,8 @@ export const eventApi = {
   async cancelEventInstance(eventId: string, reason?: string): Promise<Event> {
     return this.updateEvent(eventId, {
       status: 'cancelled',
-      description: reason 
-        ? `Cancelled: ${reason}` 
+      description: reason
+        ? `Cancelled: ${reason}`
         : 'Cancelled'
     });
   },
@@ -351,13 +351,13 @@ export const eventApi = {
    * Cancel entire recurring event series
    */
   async cancelEventSeries(
-    groupId: string, 
+    groupId: string,
     reason?: string
   ): Promise<BulkUpdateResponse> {
     return this.bulkUpdateEventGroup(groupId, {
       status: 'cancelled',
-      description: reason 
-        ? `Series cancelled: ${reason}` 
+      description: reason
+        ? `Series cancelled: ${reason}`
         : 'Series cancelled'
     });
   },
@@ -417,7 +417,7 @@ export const eventApi = {
       limit: options?.limit || 50
     });
 
-    return events.filter(event => 
+    return events.filter(event =>
       event.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
