@@ -7,3 +7,5 @@ export * from './Calendar';
 export * from './WorkoutAssignment';
 export * from './Facility';
 export * from './Metric';
+export * from './Questionaire';
+
