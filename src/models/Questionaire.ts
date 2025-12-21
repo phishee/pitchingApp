@@ -38,7 +38,8 @@ export interface QuestionnaireTemplate {
 export type QuestionType =
     | 'single_choice'      // Radio buttons
     | 'multiple_choice'    // Checkboxes
-    | 'numeric_scale'      // Slider (1-10, 1-5, etc.)
+    | 'numeric_scale'      // Scale Buttons (1-5, etc.)
+    | 'numeric_slider'     // Slider component
     | 'numeric_input'      // Free number entry
     | 'text_input'         // Free text
     | 'time_input';        // Time picker (HH:MM)
@@ -51,7 +52,7 @@ export interface ChoiceOption {
     emoji?: string;        // "🟢"
 }
 
-export interface NumericScaleConfig {
+export interface NumericConfig {
     min: number;           // 1
     max: number;           // 10
     step: number;          // 1
@@ -78,7 +79,7 @@ export interface Question {
 
     // Type-specific config
     options?: ChoiceOption[];        // For single_choice, multiple_choice
-    scaleConfig?: NumericScaleConfig; // For numeric_scale
+    configs?: NumericConfig;          // For numeric_scale, numeric_slider
     placeholder?: string;            // For text_input, numeric_input
 
     // Conditional display

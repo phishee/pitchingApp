@@ -22,5 +22,12 @@ export const questionnaireApi = {
         }
     },
 
-    // Placeholder for search or other methods if needed
+    async getTemplate(id: string): Promise<QuestionnaireTemplate> {
+        const res = await apiClient.get<QuestionnaireTemplate>(`${API_BASE}/${id}`);
+        return res.data;
+    },
+
+    async submitResult(payload: any): Promise<void> {
+        await apiClient.post(`/questionnaire-results`, payload);
+    }
 };

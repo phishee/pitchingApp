@@ -27,7 +27,7 @@ export const sleepQualityQuestionnaire: QuestionnaireTemplate = {
             description: "Consider how rested you feel and if you woke up during the night",
             type: "numeric_scale",
             required: true,
-            scaleConfig: {
+            configs: {
                 min: 1,
                 max: 5,
                 step: 1,
@@ -42,7 +42,7 @@ export const sleepQualityQuestionnaire: QuestionnaireTemplate = {
             description: "Estimate your total sleep time, not time in bed",
             type: "numeric_scale",
             required: true,
-            scaleConfig: {
+            configs: {
                 min: 0,
                 max: 12,
                 step: 0.5,

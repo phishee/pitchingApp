@@ -100,3 +100,8 @@ export const QUESTIONNAIRE_ASSIGNMENT_TYPES = {
   QuestionnaireAssignmentService: Symbol.for('QuestionnaireAssignmentService'),
   QuestionnaireAssignmentController: Symbol.for('QuestionnaireAssignmentController'),
 } as const;
+
+export const QUESTIONNAIRE_RESULT_TYPES = {
+  QuestionnaireResultService: Symbol.for('QuestionnaireResultService'),
+  QuestionnaireResultController: Symbol.for('QuestionnaireResultController'),
+} as const;

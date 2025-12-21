@@ -54,5 +54,40 @@ export const questionnaireAssignmentApi = {
 
     async toggleAssignmentStatus(id: string, isActive: boolean): Promise<void> {
         await apiClient.patch(`${API_BASE}/${id}/status`, { isActive });
+    },
+
+    async updateAssignment(id: string, data: Partial<AssignQuestionnaireData>): Promise<void> {
+        // Construct payload similar to create, but using Partial
+        const payload: any = {};
+
+        if (data.schedule) {
+            payload.recurrence = {
+                pattern: data.schedule.pattern,
+                startDate: data.schedule.startDate,
+                endDate: data.schedule.endDate,
+                daysOfWeek: data.schedule.daysOfWeek
+            };
+            if (data.schedule.time) {
+                payload.expiresAtTime = data.schedule.time;
+            }
+        }
+
+        if (data.teamId) payload.teamId = data.teamId;
+        if (data.targetType === 'individual' && data.targetMembers) {
+            payload.targetMembers = data.targetMembers;
+        } else if (data.targetType === 'team' && data.targetMembers) {
+            payload.targetMembers = data.targetMembers;
+        }
+
+        // Add other fields as needed based on what we allow editing.
+        // For now, schedule and targets are main ones.
+
+        await apiClient.patch(`${API_BASE}/${id}`, payload);
+    },
+
+    async getPendingAssignments(userId: string, memberId: string, teamId: string): Promise<QuestionnaireAssignment[]> {
+        const params = new URLSearchParams({ userId, memberId, teamId, date: new Date().toISOString() });
+        const res = await apiClient.get<QuestionnaireAssignment[]>(`${API_BASE}/pending?${params.toString()}`);
+        return res.data;
     }
 };

@@ -41,4 +41,31 @@ export class QuestionnaireAssignmentController {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
     }
+
+    async updateAssignment(id: string, payload: any) {
+        try {
+            if (!id) {
+                return NextResponse.json({ error: "Assignment ID required" }, { status: 400 });
+            }
+            // Basic validation could be added here
+            const data = await this.service.updateAssignment(id, payload);
+            return NextResponse.json(data);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
+
+    async getPendingAssignments(userId: string, memberId: string | null, teamId: string, dateStr: string | null) {
+        try {
+            if (!userId || !teamId) {
+                return NextResponse.json({ error: "userId and teamId are required" }, { status: 400 });
+            }
+
+            const date = dateStr ? new Date(dateStr) : new Date();
+            const pending = await this.service.getPendingAssignments(userId, memberId || undefined, teamId, date);
+            return NextResponse.json(pending);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
 }
