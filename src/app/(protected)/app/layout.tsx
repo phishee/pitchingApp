@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { NO_TEAM_CONFIG } from '@/config/no-team.config';
 import NoTeamWrapper from "@/components/common/no-team/no-team-wrapper";
 
+import { PendingQuestionnaireManager } from "@/components/questionnaires/flow/PendingQuestionnaireManager";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useUser();
   const { isMobile, sidebarOpen } = useLayout();
@@ -55,17 +57,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="relative h-screen w-full">
+      <PendingQuestionnaireManager />
       {/* Mobile Header - Fixed at top */}
       <MobileHeader />
-      
+
       {/* Main Layout Container */}
       <div className="flex h-full w-full">
         {/* Desktop Sidebar */}
         {!isMobile && sidebarOpen && <Sidebar />}
-        
+
         {/* Main Content */}
         <main className={`grow ${isMobile ? 'pt-20 pb-16' : 'ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md'}`}>
-          <NoTeamWrapper 
+          <NoTeamWrapper
             excludePages={NO_TEAM_CONFIG.EXCLUDED_PAGES}
             excludePatterns={NO_TEAM_CONFIG.EXCLUDED_PATTERNS}
             showForAdmins={NO_TEAM_CONFIG.SHOW_FOR_ADMINS}
@@ -74,13 +77,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </NoTeamWrapper>
         </main>
       </div>
-      
+
       {/* Bottom Navigation for Mobile - Fixed at bottom */}
       <BottomNavigation />
-      
+
       {/* PWA Install Prompt */}
       <InstallPrompt />
-      
+
       {/* Offline Indicator */}
       <OfflineIndicator />
     </div>

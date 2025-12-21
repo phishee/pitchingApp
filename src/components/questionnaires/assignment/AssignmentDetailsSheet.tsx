@@ -8,6 +8,8 @@ import { useMemo, useState } from 'react';
 import { questionnaireAssignmentApi } from '@/app/services-client/questionnaireAssignmentApi';
 import { toast } from 'sonner';
 
+import { AssignQuestionnaireDialog } from './AssignQuestionnaireDialog';
+
 interface AssignmentDetailsSheetProps {
     assignment: QuestionnaireAssignment | null;
     open: boolean;
@@ -16,9 +18,28 @@ interface AssignmentDetailsSheetProps {
 
 export function AssignmentDetailsSheet({ assignment, open, onClose }: AssignmentDetailsSheetProps) {
     const { teamMembers, loadTeamMembers } = useTeam();
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
     // Hooks should generally be at top level
     const [isUpdating, setIsUpdating] = useState(false);
+
+    const handleEdit = () => {
+        setIsEditOpen(true);
+        // We can keep the sheet open behind it or close it. 
+        // Keeping it open might be weird with two overlays.
+        // Let's close sheet when editing starts? Or just layer dialog on top (z-50).
+        // Sheet has z-50. Dialog has z-50. Might conflict.
+        // Let's hide sheet while editing?
+        // Simple: Close sheet, then open dialog.
+        // But then we lose context.
+        // Let's rely on z-index (Dialog usually higher 50 vs Sheet 50).
+        // If conflict, check styles.
+        // Dialog has z-50. Sheet container has... fixed inset-0 z-50.
+        // Same z-index. DOM order matters. Dialog rendered AFTER sheet container will be on top.
+        // My previous ReplaceContent put Dialog INSIDE the Sheet container div?
+        // No, I put it at the end of the return, which is inside `fixed inset-0 z-50`.
+        // So it's inside the same stacking context.
+    };
 
     const handleToggleStatus = async (newStatus: boolean) => {
         if (!assignment) return;
@@ -44,7 +65,7 @@ export function AssignmentDetailsSheet({ assignment, open, onClose }: Assignment
         if (!assignment.targetMembers || assignment.targetMembers.length === 0) {
             return [];
         }
-        return teamMembers.filter(m => assignment.targetMembers?.includes(m.userId) && 'user' in m && m.user);
+        return teamMembers.filter(m => assignment.targetMembers?.includes(m._id) && 'user' in m && m.user);
     }, [assignment, teamMembers]);
 
     if (!open || !assignment) return null;
@@ -178,7 +199,9 @@ export function AssignmentDetailsSheet({ assignment, open, onClose }: Assignment
 
                 {/* Footer Actions */}
                 <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-3">
-                    <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button
+                        onClick={handleEdit}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                         <Edit2 className="w-4 h-4" />
                         Edit Schedule
                     </button>
@@ -209,6 +232,17 @@ export function AssignmentDetailsSheet({ assignment, open, onClose }: Assignment
                     </button>
                 </div>
             </div>
+
+            {/* Edit Dialog */}
+            {isEditOpen && (
+                <AssignQuestionnaireDialog
+                    open={isEditOpen}
+                    onClose={() => setIsEditOpen(false)}
+                    questionnaire={null}
+                    teamId={assignment.teamId}
+                    initialData={assignment}
+                />
+            )}
         </div>
     );
 }

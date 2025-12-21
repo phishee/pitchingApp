@@ -6,12 +6,21 @@ import { Users, User, Check } from 'lucide-react';
 interface StepSelectTargetsProps {
     teamName: string;
     teamMembers: { id: string; name: string; avatarUrl?: string }[];
+    initialTargetType?: 'team' | 'athletes';
+    initialSelectedIds?: string[];
     onSelectionChange: (selection: { type: 'team' | 'athletes'; athleteIds: string[] }) => void;
 }
 
-export function StepSelectTargets({ teamName, teamMembers, onSelectionChange }: StepSelectTargetsProps) {
-    const [targetType, setTargetType] = useState<'team' | 'athletes'>('team');
-    const [selectedAthletes, setSelectedAthletes] = useState<string[]>([]);
+export function StepSelectTargets({ teamName, teamMembers, initialTargetType = 'team', initialSelectedIds = [], onSelectionChange }: StepSelectTargetsProps) {
+    const [targetType, setTargetType] = useState<'team' | 'athletes'>(initialTargetType);
+    const [selectedAthletes, setSelectedAthletes] = useState<string[]>(initialSelectedIds);
+
+    // Initial sync
+    React.useEffect(() => {
+        if (initialSelectedIds.length > 0) {
+            onSelectionChange({ type: initialTargetType, athleteIds: initialSelectedIds });
+        }
+    }, []);
 
     const handleTypeChange = (type: 'team' | 'athletes') => {
         setTargetType(type);
@@ -48,13 +57,10 @@ export function StepSelectTargets({ teamName, teamMembers, onSelectionChange }: 
         // Note: if in team mode and we add (impossible since all selected), but handled above.
     };
 
-    // Initialize with all selected if team mode default?
-    // Actually simpler: useEffect to set all selected on mount if default is team?
-    // Doing it on button click is safer.
-
     // Auto-select all on mount if team mode is default and empty selection?
     React.useEffect(() => {
-        if (targetType === 'team' && selectedAthletes.length === 0 && teamMembers.length > 0) {
+        // Only auto-select if NO initial selection was provided and we are in team mode
+        if (targetType === 'team' && selectedAthletes.length === 0 && teamMembers.length > 0 && initialSelectedIds.length === 0) {
             const allIds = teamMembers.map(m => m.id);
             setSelectedAthletes(allIds);
             onSelectionChange({ type: 'team', athleteIds: allIds });

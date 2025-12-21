@@ -1,0 +1,13 @@
+
+import container from '@/app/api/lib/container';
+import { QuestionnaireAssignmentController } from '@/app/api/lib/controllers/questionnaireAssignment.controller';
+import { QUESTIONNAIRE_ASSIGNMENT_TYPES } from '@/app/api/lib/symbols/Symbols';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const body = await request.json();
+
+    const controller = container.get<QuestionnaireAssignmentController>(QUESTIONNAIRE_ASSIGNMENT_TYPES.QuestionnaireAssignmentController);
+    return await controller.updateAssignment(id, body);
+}

@@ -4,13 +4,14 @@ import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, Repeat } from 'lucide-react';
 
 interface StepScheduleProps {
+    initialSchedule?: { pattern: 'daily' | 'weekly' | 'once'; startDate: Date; endDate?: Date };
     onScheduleChange: (schedule: { pattern: 'daily' | 'weekly' | 'once'; startDate: Date; endDate?: Date }) => void;
 }
 
-export function StepSchedule({ onScheduleChange }: StepScheduleProps) {
-    const [pattern, setPattern] = useState<'daily' | 'weekly' | 'once'>('daily');
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState<string>('');
+export function StepSchedule({ initialSchedule, onScheduleChange }: StepScheduleProps) {
+    const [pattern, setPattern] = useState<'daily' | 'weekly' | 'once'>(initialSchedule?.pattern || 'daily');
+    const [startDate, setStartDate] = useState(initialSchedule?.startDate ? new Date(initialSchedule.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState<string>(initialSchedule?.endDate ? new Date(initialSchedule.endDate).toISOString().split('T')[0] : '');
 
     const handleUpdate = (newPattern: typeof pattern, newStart: string, newEnd: string) => {
         setPattern(newPattern);
@@ -35,8 +36,8 @@ export function StepSchedule({ onScheduleChange }: StepScheduleProps) {
                             key={p}
                             onClick={() => handleUpdate(p as any, startDate, endDate)}
                             className={`flex items-center justify-center py-2.5 rounded-lg border text-sm font-medium capitalize transition-all ${pattern === p
-                                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-600'
                                 }`}
                         >
                             {p}

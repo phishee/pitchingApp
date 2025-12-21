@@ -129,7 +129,6 @@ export default function QuestionnairesPage() {
                 onClose={() => setAssigningQuestionnaire(null)}
                 teamId={currentTeam?._id}
                 teamName={currentTeam?.name}
-                organizationId={currentOrganization?._id}
             />
         </div>
     );

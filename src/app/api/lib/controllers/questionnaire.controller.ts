@@ -29,4 +29,19 @@ export class QuestionnaireController {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
     }
+
+    async getQuestionnaireById(id: string) {
+        try {
+            if (!id) {
+                return NextResponse.json({ error: "ID is required" }, { status: 400 });
+            }
+            const data = await this.questionnaireService.getQuestionnaireById(id);
+            if (!data) {
+                return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
+            }
+            return NextResponse.json(data);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
 }
