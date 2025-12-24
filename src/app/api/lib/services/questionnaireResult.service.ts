@@ -33,12 +33,6 @@ export class QuestionnaireResultService {
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999);
 
-        // We check 'scheduledDate' or 'submittedAt'?
-        // The assignment logic implies "daily" means "for today". 
-        // A result is usually linked to a specific scheduled date if it's an assignment fulfillment.
-        // Let's assume we query by scheduledDate range OR submittedAt range if ad-hoc?
-        // For assignment enforcement, we care if they did it FOR today.
-
         const query = {
             questionnaireTemplateId,
             'athleteInfo.userId': userId,
@@ -50,5 +44,27 @@ export class QuestionnaireResultService {
 
         const count = await this.mongoProvider.getCollection(this.collectionName).countDocuments(query);
         return count > 0;
+    }
+
+    async getResults(userId: string, templateId?: string, startDate?: Date, endDate?: Date): Promise<QuestionnaireResult[]> {
+        const query: any = {
+            'athleteInfo.userId': userId
+        };
+
+        if (templateId) {
+            query.questionnaireTemplateId = templateId;
+        }
+
+        if (startDate || endDate) {
+            query.scheduledDate = {};
+            if (startDate) {
+                query.scheduledDate.$gte = startDate;
+            }
+            if (endDate) {
+                query.scheduledDate.$lte = endDate;
+            }
+        }
+
+        return await this.mongoProvider.findQuery(this.collectionName, query) as QuestionnaireResult[];
     }
 }
