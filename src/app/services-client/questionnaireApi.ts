@@ -29,5 +29,19 @@ export const questionnaireApi = {
 
     async submitResult(payload: any): Promise<void> {
         await apiClient.post(`/questionnaire-results`, payload);
+    },
+
+    async getResults(userId: string, templateId?: string, startDate?: Date, endDate?: Date): Promise<any[]> {
+        const params = new URLSearchParams();
+        params.append('userId', userId);
+        if (templateId) params.append('templateId', templateId);
+        if (startDate) params.append('startDate', startDate.toISOString());
+        if (endDate) params.append('endDate', endDate.toISOString());
+
+        // Note: endpoint is relative to API_BASE? No, API_BASE is /questionnaires. Result route is /api/v1/questionnaire-results.
+        // submitResult uses `/questionnaire-results` which assumes absolute path relative to Axios baseURL.
+        // Adjusting to match.
+        const res = await apiClient.get<any[]>(`/questionnaire-results?${params.toString()}`);
+        return res.data;
     }
 };

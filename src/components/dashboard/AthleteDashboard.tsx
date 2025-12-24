@@ -17,6 +17,12 @@ const DEFAULT_CONFIG: DashboardConfig = {
             settings: {}
         },
         {
+            id: 'sleep-module-1',
+            moduleId: 'sleep-module',
+            size: 'medium',
+            settings: {}
+        },
+        {
             id: 'upcoming-workout-1',
             moduleId: 'upcoming-workout',
             size: 'medium',

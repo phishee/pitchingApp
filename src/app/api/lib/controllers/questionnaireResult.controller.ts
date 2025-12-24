@@ -22,4 +22,20 @@ export class QuestionnaireResultController {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
     }
+
+    async getResults(userId: string, templateId?: string, startDate?: string, endDate?: string) {
+        try {
+            if (!userId) {
+                return NextResponse.json({ error: "User ID required" }, { status: 400 });
+            }
+
+            const start = startDate ? new Date(startDate) : undefined;
+            const end = endDate ? new Date(endDate) : undefined;
+
+            const data = await this.service.getResults(userId, templateId, start, end);
+            return NextResponse.json(data);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
 }
