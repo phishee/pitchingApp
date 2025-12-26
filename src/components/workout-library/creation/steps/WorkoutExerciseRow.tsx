@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { X, ChevronDown, ChevronUp, Link, Unlink } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X, ChevronDown, ChevronUp, Link, Unlink, Trash2 } from 'lucide-react';
 import { getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
 import { getColorTheme } from '@/lib/colorPalette';
 import { Exercise, WorkoutExercise } from '@/models';
@@ -18,6 +19,9 @@ interface WorkoutExerciseRowProps {
     onLink: (index: number) => void;
     onUnlink: (index: number) => void;
     isLast: boolean;
+    itemLabel?: string;
+    forcePerSet?: boolean;
+    globalMetricIds?: string[];
 }
 
 export function WorkoutExerciseRow({
@@ -28,12 +32,17 @@ export function WorkoutExerciseRow({
     onRemove,
     onLink,
     onUnlink,
-    isLast
+    isLast,
+    itemLabel = 'Set',
+    forcePerSet = false,
+    globalMetricIds = []
 }: WorkoutExerciseRowProps) {
     const [showFormulas, setShowFormulas] = useState(false);
     // Local state to toggle between simple (bulk edit) and per-set (detailed) view
     // We default to simple if all sets are identical, otherwise per-set
     const [isPerSet, setIsPerSet] = useState(() => {
+        if (forcePerSet) return true;
+
         const sets = workoutExercise?.sets || [];
         if (sets.length <= 1) return false;
 
@@ -98,11 +107,50 @@ export function WorkoutExerciseRow({
         onUpdateConfig(exercise.id, 'sets', newSets);
     };
 
+    const handleRemoveSet = (indexToRemove: number) => {
+        const newSets = sets
+            .filter((_, i) => i !== indexToRemove)
+            .map((set, i) => ({ ...set, setNumber: i + 1 }));
+        onUpdateConfig(exercise.id, 'sets', newSets);
+    };
+
     const renderMetricInput = (metric: any, value: any, onChange: (val: any) => void, isSmall = false) => {
+        const isEnum = metric.unit === 'enum' || (metric.options && metric.options.length > 0);
+
+        if (isEnum && metric.options) {
+            return (
+                <div key={metric.id}>
+                    <label className={`${isSmall ? 'text-xs text-gray-400' : 'text-gray-600'} capitalize`}>
+                        {metric.label || metric.id} {metric.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <Select
+                        value={String(value ?? '')}
+                        onValueChange={(val) => {
+                            // Find the option to get the correct type (number vs string)
+                            const option = metric.options?.find((opt: any) => String(opt.value) === val);
+                            const finalVal = option ? option.value : val;
+                            onChange(finalVal);
+                        }}
+                    >
+                        <SelectTrigger className={isSmall ? 'h-8 text-sm mt-0' : 'mt-1'}>
+                            <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {metric.options.map((opt: any) => (
+                                <SelectItem key={opt.id || opt.value} value={String(opt.value)}>
+                                    {opt.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            );
+        }
+
         return (
             <div key={metric.id}>
                 <label className={`${isSmall ? 'text-xs text-gray-400' : 'text-gray-600'} capitalize`}>
-                    {metric.label || metric.id} {metric.unit ? `(${metric.unit})` : ''}
+                    {metric.label || metric.id} {metric.unit ? `(${metric.unit})` : ''} {metric.required && <span className="text-red-500">*</span>}
                 </label>
                 <Input
                     type={metric.inputType === 'text' ? 'text' : 'number'}
@@ -121,7 +169,8 @@ export function WorkoutExerciseRow({
     };
 
     const formulaMetrics = exercise.metrics?.filter(m => m.input === 'formula') || [];
-    const regularMetrics = exercise.metrics?.filter(m => m.input !== 'formula' && !['sets', 'reps', 'duration', 'rest'].includes(m.id)) || [];
+    const regularMetrics = exercise.metrics?.filter(m => m.input !== 'formula' && !['sets', 'reps', 'duration', 'rest'].includes(m.id) && !globalMetricIds.includes(m.id)) || [];
+    const globalMetricsDefinition = exercise.metrics?.filter(m => globalMetricIds.includes(m.id)) || [];
 
     const isSuperset = !!workoutExercise?.supersetId;
     const colorTheme = getColorTheme(workoutExercise?.supersetColorId);
@@ -159,16 +208,31 @@ export function WorkoutExerciseRow({
                                     id={`per-set-${exercise.id}`}
                                     checked={isPerSet}
                                     onCheckedChange={handleTogglePerSet}
+                                    disabled={forcePerSet}
                                 />
-                                <Label htmlFor={`per-set-${exercise.id}`}>Configure per set</Label>
+                                <Label htmlFor={`per-set-${exercise.id}`}>
+                                    {forcePerSet ? `Configure per ${itemLabel.toLowerCase()}` : 'Configure per set'}
+                                </Label>
                             </div>
                         )}
                     </div>
 
+                    {/* Global Metrics Section */}
+                    {globalMetricsDefinition.length > 0 && (
+                        <div className="grid grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-md border border-gray-100">
+                            {globalMetricsDefinition.map(metric => (
+                                <div key={metric.id}>
+                                    {renderMetricInput(metric, defaultMetrics[metric.id], (val) => handleUpdateAllSetsMetric(metric.id, val))}
+                                    <p className="text-xs text-gray-400 mt-1">Applies to all {itemLabel.toLowerCase()}s</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-4 gap-4 text-sm">
                         {exercise.settings.sets_counting && (
                             <div>
-                                <label className="text-gray-600">Sets</label>
+                                <label className="text-gray-600">{itemLabel}s</label>
                                 <Input
                                     type="number"
                                     value={setsCount}
@@ -282,7 +346,7 @@ export function WorkoutExerciseRow({
                     {sets.map((set, setIndex) => (
                         <div key={set.setNumber} className="flex flex-col gap-2 bg-white p-3 rounded border border-gray-100">
                             <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-gray-500 w-12">Set {set.setNumber}</span>
+                                <span className="text-sm font-medium text-gray-500 w-12">{itemLabel} {set.setNumber}</span>
 
                                 <div className="grid grid-cols-4 gap-4 flex-1">
                                     {exercise.settings.reps_counting && (
@@ -327,9 +391,26 @@ export function WorkoutExerciseRow({
                                         />
                                     </div>
                                 </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveSet(setIndex)}
+                                    className="text-gray-400 hover:text-red-600 h-8 w-8 p-0"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
                             </div>
                         </div>
                     ))}
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUpdateSetsCount(setsCount + 1)}
+                        className="w-full border-dashed text-gray-500 hover:text-gray-900 gap-2"
+                    >
+                        <span className="text-xl leading-none">+</span> Add {itemLabel}
+                    </Button>
 
                     {formulaMetrics.length > 0 && (
                         <div className="pl-16">

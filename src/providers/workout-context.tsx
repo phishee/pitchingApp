@@ -9,6 +9,7 @@ import { useUser } from './user.context';
 import { useTeam } from './team-context';
 
 import { RPEConfig } from '@/models/RPE';
+import { SessionConfig } from '@/models/Session_Type';
 
 interface WorkoutContextType {
   // Core workout metadata
@@ -18,6 +19,7 @@ interface WorkoutContextType {
     description: string;
     coverImage: string;
     tags: string[];
+    config?: SessionConfig;
   };
 
   // Flow-specific data
@@ -140,6 +142,9 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
         coverImage: workoutData.coverImage || '',
         organizationId: orgId,
         teamIds: workoutData.teamIds || [],
+        sessionType: workoutData.sessionType,
+        config: workoutData.config,
+        duration: workoutData.duration,
         createdBy: {
           userId: user?.userId,
           memberId: currentTeamMember?._id
@@ -318,6 +323,7 @@ export function WorkoutProvider({ children, workoutId, organizationId }: Workout
       description: workout?.description || '',
       coverImage: workout?.coverImage || '',
       tags: workout?.tags || [],
+      config: workout?.config,
     },
 
     // Flow-specific data
@@ -397,6 +403,7 @@ export function useWorkoutMetadata() {
     updateDescription: (description: string) => updateWorkoutField('description', description),
     updateTags: (tags: string[]) => updateWorkoutField('tags', tags),
     updateCoverImage: (coverImage: string) => updateWorkoutField('coverImage', coverImage),
+    updateConfig: (config: SessionConfig) => updateWorkoutField('config', config),
   };
 }
 

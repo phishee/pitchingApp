@@ -1,34 +1,21 @@
 import React from 'react';
 import { Calculator, Activity } from 'lucide-react';
 
-// Types
-interface Metric {
-  id: string;
-  unit: string;
-  input: 'manual' | 'formula';
-  required?: boolean;
-  prescribable?: boolean;
-  formula?: string;
-}
-
-
-
-interface Exercise {
-  metrics?: Metric[];
-}
+import { Exercise } from '@/models/Exercise';
+import { ExerciseMetric } from '@/models/Metric';
 
 interface ExerciseMetricsTabProps {
   exercise: Exercise;
 }
 
 // Utility functions
-const getMetricIcon = (metric: Metric) => {
+const getMetricIcon = (metric: ExerciseMetric) => {
   if (metric.input === 'formula') return Calculator;
   if (metric.required) return Activity;
   return Activity;
 };
 
-const getMetricColor = (metric: Metric) => {
+const getMetricColor = (metric: ExerciseMetric) => {
   if (metric.input === 'formula') return 'text-purple-600 bg-purple-100';
   if (metric.required) return 'text-blue-600 bg-blue-100';
   return 'text-gray-600 bg-gray-100';
@@ -63,7 +50,7 @@ function MetricBadge({ type, children }: MetricBadgeProps) {
 
 // Metric Header Component
 interface MetricHeaderProps {
-  metric: Metric;
+  metric: ExerciseMetric;
 }
 
 function MetricHeader({ metric }: MetricHeaderProps) {
@@ -132,7 +119,7 @@ function InputTypeInfo({ input }: InputTypeInfoProps) {
 
 // Individual Metric Card Component
 interface MetricCardProps {
-  metric: Metric;
+  metric: ExerciseMetric;
   index: number;
 }
 
@@ -185,7 +172,7 @@ function SummaryStat({ value, label, color }: SummaryStatProps) {
 
 // Metrics Summary Component
 interface MetricsSummaryProps {
-  metrics: Metric[];
+  metrics: ExerciseMetric[];
 }
 
 function MetricsSummary({ metrics }: MetricsSummaryProps) {

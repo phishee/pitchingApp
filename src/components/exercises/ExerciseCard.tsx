@@ -47,13 +47,13 @@ export function ExerciseCard({ exercise, onClick, onEdit }: ExerciseCardProps) {
               <span className={`text-xs px-2 py-1 rounded-md font-medium ${getTypeColor(exercise.exercise_type)}`}>
                 {exercise.exercise_type}
               </span>
-              {exercise.tags.slice(0, 2).map((tag, index) => (
+              {(exercise.tags || []).slice(0, 2).map((tag, index) => (
                 <span key={index} className="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded-md">
                   {tag}
                 </span>
               ))}
-              {exercise.tags.length > 2 && (
-                <span className="text-xs text-gray-500">+{exercise.tags.length - 2} more</span>
+              {(exercise.tags || []).length > 2 && (
+                <span className="text-xs text-gray-500">+{(exercise.tags || []).length - 2} more</span>
               )}
             </div>
           </div>

@@ -145,18 +145,19 @@ export class ExerciseService {
     // Text search
     if (params.search) {
       const searchTerm = params.search.toLowerCase();
-      filtered = filtered.filter(exercise =>
-        exercise.name.toLowerCase().includes(searchTerm) ||
-        exercise.description.toLowerCase().includes(searchTerm) ||
-        exercise.tags.some(tag => tag.toLowerCase().includes(searchTerm))
-      );
+      filtered = filtered.filter(exercise => {
+        const nameMatch = (exercise.name || '').toLowerCase().includes(searchTerm);
+        const descMatch = (exercise.description || '').toLowerCase().includes(searchTerm);
+        const tagsMatch = (exercise.tags || []).some(tag => tag && tag.toLowerCase().includes(searchTerm));
+        return nameMatch || descMatch || tagsMatch;
+      });
     }
 
     // Name search
     if (params.name) {
       const nameTerm = params.name.toLowerCase();
       filtered = filtered.filter(exercise =>
-        exercise.name.toLowerCase().includes(nameTerm)
+        (exercise.name || '').toLowerCase().includes(nameTerm)
       );
     }
 
@@ -170,8 +171,8 @@ export class ExerciseService {
       const requestedTags = params.tags.split(',').map(tag => tag.trim().toLowerCase());
       filtered = filtered.filter(exercise =>
         requestedTags.every(tag =>
-          exercise.tags.some(exerciseTag =>
-            exerciseTag.toLowerCase().includes(tag)
+          (exercise.tags || []).some(exerciseTag =>
+            exerciseTag && exerciseTag.toLowerCase().includes(tag)
           )
         )
       );
@@ -185,19 +186,19 @@ export class ExerciseService {
     // Media filters
     if (params.hasVideo !== undefined) {
       filtered = filtered.filter(exercise =>
-        params.hasVideo ? !!exercise.instructions.video : !exercise.instructions.video
+        params.hasVideo ? !!(exercise.instructions && exercise.instructions.video) : !(exercise.instructions && exercise.instructions.video)
       );
     }
 
     if (params.hasAnimation !== undefined) {
       filtered = filtered.filter(exercise =>
-        params.hasAnimation ? !!exercise.instructions.animationPicture : !exercise.instructions.animationPicture
+        params.hasAnimation ? !!(exercise.instructions && exercise.instructions.animationPicture) : !(exercise.instructions && exercise.instructions.animationPicture)
       );
     }
 
     // Metrics filter
     if (params.minMetrics !== undefined) {
-      filtered = filtered.filter(exercise => exercise.metrics.length >= params.minMetrics!);
+      filtered = filtered.filter(exercise => (exercise.metrics || []).length >= params.minMetrics!);
     }
 
     return filtered;
@@ -209,16 +210,16 @@ export class ExerciseService {
 
       switch (sortBy) {
         case 'name':
-          comparison = a.name.localeCompare(b.name);
+          comparison = (a.name || '').localeCompare(b.name || '');
           break;
         case 'type':
-          comparison = a.exercise_type.localeCompare(b.exercise_type);
+          comparison = (a.exercise_type || '').localeCompare(b.exercise_type || '');
           break;
         case 'created':
-          comparison = a.id.localeCompare(b.id);
+          comparison = (a.id || '').localeCompare(b.id || '');
           break;
         default:
-          comparison = a.name.localeCompare(b.name);
+          comparison = (a.name || '').localeCompare(b.name || '');
       }
 
       return order === 'desc' ? -comparison : comparison;
@@ -253,8 +254,8 @@ export class ExerciseService {
 
   // Fix getAvailableFilters to work with MongoDB data
   private getAvailableFilters(exercises: Exercise[]) {
-    const types = [...new Set(exercises.map(ex => ex.exercise_type))];
-    const tags = [...new Set(exercises.flatMap(ex => ex.tags))];
+    const types = [...new Set(exercises.map(ex => ex.exercise_type || 'Unknown'))];
+    const tags = [...new Set(exercises.flatMap(ex => ex.tags || []))];
 
     return {
       availableTypes: types.sort(),
