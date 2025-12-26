@@ -9,7 +9,7 @@ export interface Exercise {
   description: string;
   exercise_type: string;
   tags: string[];
-  owner: string;
+  owner?: string;
 
   instructions: {
     text?: string[];

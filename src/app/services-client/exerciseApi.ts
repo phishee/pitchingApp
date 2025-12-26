@@ -96,7 +96,7 @@ export const exerciseApi = {
     );
 
     // 6. Return the exercise fetched earlier by the id
-    return response[0];
+    return response;
   }, { ttl: 2000 }),
 
   // Search exercises with caching

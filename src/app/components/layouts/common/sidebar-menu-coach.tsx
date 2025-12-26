@@ -1,7 +1,7 @@
 // src/app/components/layouts/common/sidebar-menu-coach.tsx
 'use client';
 
-import { Home, Users, Dumbbell, Calendar, Settings, BarChart3, Library, BookOpen, ClipboardList } from 'lucide-react';
+import { Home, Users, Dumbbell, Calendar, Settings, BarChart3, Library, BookOpen, ClipboardList, Repeat } from 'lucide-react';
 import { SidebarMenu } from './sidebar-menu';
 
 const COACH_MENU = [
@@ -46,6 +46,11 @@ const COACH_MENU = [
         title: 'Workout Library',
         path: '/app/workout-library',
         icon: BookOpen,
+      },
+      {
+        title: 'Sessions',
+        path: '/app/sessions',
+        icon: Repeat,
       },
       {
         title: 'Questionnaires',

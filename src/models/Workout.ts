@@ -1,5 +1,7 @@
 import { ExerciseMetric, MetricValue } from "./Metric";
 import { RPEConfig } from "./RPE";
+import { SessionConfig, SessionType } from "./Session_Type";
+
 
 export interface WorkoutFlow {
   questionnaires: string[];
@@ -35,6 +37,8 @@ export interface WorkoutUserProfile {
 export interface Workout {
   id: string;
   coverImage: string;
+  sessionType?: SessionType | "workout";
+  config?: SessionConfig;
   organizationId: string;
   teamIds: string[];
   createdBy: WorkoutUser;

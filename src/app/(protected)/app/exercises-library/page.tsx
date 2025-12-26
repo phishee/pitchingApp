@@ -224,9 +224,9 @@ export default function ExercisesLibraryPage() {
           </h2>
         </div>
         <div className="space-y-4 md:space-y-6">
-          {filteredExercises.map((exercise) => (
+          {filteredExercises.map((exercise, index) => (
             <ExerciseCard
-              key={exercise.id}
+              key={exercise.id || `exercise-${index}`}
               exercise={exercise}
               onClick={handleViewExercise}
               onEdit={handleEditExercise}

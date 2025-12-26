@@ -17,7 +17,8 @@ export type MetricUnit =
   | "kcal"       // calories
   | "%"          // percentages
   | "string"     // text (like tempo "3-1-2-0")
-  | "boolean";   // true/false
+  | "boolean"    // true/false
+  | "enum";      // dropdown/select options
 
 
 export type MetricInputType =
@@ -59,6 +60,7 @@ export interface ExerciseMetric {
 
   // Select/dropdown options
   options?: Array<{
+    id?: string;
     value: string | number;
     label: string;
   }>;
