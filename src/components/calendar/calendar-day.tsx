@@ -12,11 +12,11 @@ interface CalendarDayProps {
 
 export function CalendarDayComponent({ day, onEventClick, view }: CalendarDayProps) {
   const isWeekView = view === 'week';
-  
+
   return (
     <div className={cn(
-      "p-2 border-r border-b border-gray-200 flex flex-col",
-      isWeekView ? "h-full" : "min-h-24"
+      "p-1 border-r border-b border-gray-200 flex flex-col h-full min-h-[140px]",
+      isWeekView ? "h-full" : "min-h-32"
     )}>
       <div className={cn(
         'text-sm font-medium mb-2 flex-shrink-0',
@@ -26,7 +26,7 @@ export function CalendarDayComponent({ day, onEventClick, view }: CalendarDayPro
         {day.date}
       </div>
       <ScrollArea className="flex-1">
-        <div className="space-y-1">
+        <div className="space-y-3 px-1 pb-1">
           {day.events.map((event) => (
             <EventCard
               key={event._id}
