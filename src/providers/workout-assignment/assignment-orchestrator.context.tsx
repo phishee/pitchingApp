@@ -87,8 +87,8 @@ function OrchestratorLogic({
       workoutState.selectedWorkout !== null &&
       scheduleState.recurrenceConfig.pattern !== 'none' &&
       scheduleState.recurrenceConfig.startDate !== undefined &&
-      (scheduleState.recurrenceConfig.pattern !== 'weekly' || 
-       (scheduleState.recurrenceConfig.daysOfWeek && scheduleState.recurrenceConfig.daysOfWeek.length > 0))
+      (scheduleState.recurrenceConfig.pattern !== 'weekly' ||
+        (scheduleState.recurrenceConfig.daysOfWeek && scheduleState.recurrenceConfig.daysOfWeek.length > 0))
     );
   }, [athleteState, workoutState, scheduleState]);
 
@@ -107,8 +107,8 @@ function OrchestratorLogic({
     if (!scheduleState.recurrenceConfig.startDate) {
       errors.push('Start date is required');
     }
-    if (scheduleState.recurrenceConfig.pattern === 'weekly' && 
-        (!scheduleState.recurrenceConfig.daysOfWeek || scheduleState.recurrenceConfig.daysOfWeek.length === 0)) {
+    if (scheduleState.recurrenceConfig.pattern === 'weekly' &&
+      (!scheduleState.recurrenceConfig.daysOfWeek || scheduleState.recurrenceConfig.daysOfWeek.length === 0)) {
       errors.push('At least one day of the week must be selected for weekly recurrence');
     }
 
@@ -117,7 +117,7 @@ function OrchestratorLogic({
 
   // ==================== BUILD PAYLOAD ====================
 
-  const buildPayload = useCallback((): CreateWorkoutAssignmentPayload | { athletes: any[]; [key: string]: any } => {
+  const buildPayload = useCallback((): CreateWorkoutAssignmentPayload | { athletes: any[];[key: string]: any } => {
     if (!isValid()) {
       throw new Error('Cannot build payload: validation failed');
     }
@@ -144,12 +144,13 @@ function OrchestratorLogic({
         ? { userId: currentUserId, memberId: 'TODO' }
         : undefined,
       notes: scheduleState.notes,
-      
+
       // Add workout data for event generation
       workoutData: {
         name: selectedWorkout.name,
         description: selectedWorkout.description,
-        coverImage: selectedWorkout.coverImage
+        coverImage: selectedWorkout.coverImage,
+        sessionType: selectedWorkout.sessionType
       }
     };
 
@@ -195,9 +196,9 @@ function OrchestratorLogic({
 
       if (isMultipleAthletes) {
         // Multiple athletes: use the multiple athlete endpoint
-        const { athletes, ...basePayload } = payload as { athletes: any[]; [key: string]: any };
+        const { athletes, ...basePayload } = payload as { athletes: any[];[key: string]: any };
         result = await workoutAssignmentService.createAssignmentsForMultipleAthletes(
-          basePayload as Omit<CreateWorkoutAssignmentPayload, 'athleteInfo'>, 
+          basePayload as Omit<CreateWorkoutAssignmentPayload, 'athleteInfo'>,
           athletes
         );
       } else {
@@ -234,7 +235,7 @@ function OrchestratorLogic({
 
   const getTotalEvents = useCallback((): number => {
     const athleteCount = athleteState.selectedAthletes.length;
-    
+
     // If no athletes selected, return 0
     if (athleteCount === 0) return 0;
 
@@ -249,7 +250,7 @@ function OrchestratorLogic({
     if (recurrenceConfig.pattern === 'weekly') {
       const daysCount = recurrenceConfig.daysOfWeek?.length || 0;
       if (daysCount === 0) return 0; // No days selected yet
-      
+
       const occurrences = recurrenceConfig.occurrences || 12;
       return athleteCount * occurrences;
     }

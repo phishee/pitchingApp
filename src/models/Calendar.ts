@@ -2,7 +2,7 @@ import { UserInfo } from "./User";
 
 // ===== BASE TYPES =====
 
-export type EventType = 'workout' | 'gameday' | 'assessment' | 'coaching_session';
+export type EventType = 'workout' | 'gameday' | 'assessment' | 'coaching_session' | 'bullpen' | 'drill';
 export type EventStatus = 'scheduled' | 'in_progress' | 'completed' | 'abandoned' | 'skipped' | 'cancelled';
 export type EventVisibility = 'public' | 'private' | 'team_only';
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
@@ -33,7 +33,7 @@ export interface Event {
   type: EventType;
   organizationId: string;
   teamId: string;
-  
+
   // Calendar Properties
   title: string;
   description: string;
@@ -41,7 +41,7 @@ export interface Event {
   endTime: Date;
   location?: string;
   coverPhotoUrl?: string;
-  
+
   // Participants
   participants: {
     athletes: UserInfo[];
@@ -53,12 +53,12 @@ export interface Event {
   // Reference to source (foreign key approach)
   sourceId: string; // FK to WorkoutAssignment | GameSchedule | AssessmentPlan | CoachingBooking
   sourceType: 'workout_assignment' | 'game_schedule' | 'assessment' | 'coaching_session';
-  
+
   // Event instance tracking
   sequenceNumber: number; // 1st occurrence, 2nd occurrence, etc.
   totalInSequence: number; // Total events in this group
   isModified: boolean; // Track if individually changed
-  
+
   // Status & Metadata
   status: EventStatus;
   visibility: EventVisibility;
@@ -70,21 +70,21 @@ export interface Event {
 export interface RecurrenceConfig {
   pattern: 'daily' | 'weekly' | 'monthly' | 'none';
   interval: number;
-  
+
   // Start date for the recurrence
   startDate?: Date;
-  
+
   // For weekly recurrence
   daysOfWeek?: number[];
-  
+
   // For monthly recurrence - choose ONE:
   weekOfMonth?: number[];  // Week-based: "1st Monday"
   dayOfMonth?: number;     // Date-based: "15th of month"
-  
+
   // Termination
   endDate?: Date;
   occurrences?: number;
-  
+
   exceptions?: Date[];
 }
 
@@ -130,12 +130,16 @@ export interface CalendarEvent {
   color: string; // Type-specific or user-defined
   location?: string;
   coverPhotoUrl?: string;
-  
+
   // Quick access to common details without fetching full event
   workoutType?: string; // "Upper Body Strength"
   opponent?: string; // For games
   assessmentType?: string; // "Bullpen Assessment"
-  
+
+  // New fields for card redesign
+  sourceType?: 'workout_assignment' | 'game_schedule' | 'assessment' | 'coaching_session';
+  assignees?: UserInfo[];
+
   // Booking info for workouts
   isBookable?: boolean;
   bookingStatus?: 'none' | 'pending' | 'approved' | 'rejected' | 'cancelled';
@@ -174,23 +178,23 @@ export type EventTemplate = Omit<Event, '_id' | 'groupId' | 'startTime' | 'endTi
   participants?: Partial<Event['participants']>;
 };
 
-export type CreateEventRequest = 
+export type CreateEventRequest =
   | {
-      creationType: 'simple';
-      event: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>;
-    }
+    creationType: 'simple';
+    event: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>;
+  }
   | {
-      creationType: 'repeated-single-user';
-      eventTemplate: EventTemplate;
-      repetitionConfig: RepetitionConfig;
-      participant: UserInfo;
-    }
+    creationType: 'repeated-single-user';
+    eventTemplate: EventTemplate;
+    repetitionConfig: RepetitionConfig;
+    participant: UserInfo;
+  }
   | {
-      creationType: 'repeated-multiple-users';
-      eventTemplate: EventTemplate;
-      repetitionConfig: RepetitionConfig;
-      participants: UserInfo[];
-    };
+    creationType: 'repeated-multiple-users';
+    eventTemplate: EventTemplate;
+    repetitionConfig: RepetitionConfig;
+    participants: UserInfo[];
+  };
 
 export interface CreateEventResponse {
   success: boolean;
@@ -267,7 +271,7 @@ export interface CalendarFilter {
 
 export class ConflictError extends Error {
   conflicts: EventConflict[];
-  
+
   constructor(message: string, conflicts: EventConflict[]) {
     super(message);
     this.name = 'ConflictError';
@@ -277,7 +281,7 @@ export class ConflictError extends Error {
 
 export class BookingError extends Error {
   code: 'ADVANCE_NOTICE' | 'COACH_UNAVAILABLE' | 'ALREADY_BOOKED' | 'UNAUTHORIZED';
-  
+
   constructor(message: string, code: BookingError['code']) {
     super(message);
     this.name = 'BookingError';
@@ -315,6 +319,18 @@ export const EVENT_COLORS = {
     scheduled: '#00BCD4',
     in_progress: '#009688',
     completed: '#4CAF50',
+    cancelled: '#757575'
+  },
+  bullpen: {
+    scheduled: '#FF5722', // Deep Orange
+    in_progress: '#E64A19',
+    completed: '#BF360C',
+    cancelled: '#757575'
+  },
+  drill: {
+    scheduled: '#009688', // Teal
+    in_progress: '#00796B',
+    completed: '#004D40',
     cancelled: '#757575'
   }
 } as const;

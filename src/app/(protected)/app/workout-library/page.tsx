@@ -36,7 +36,8 @@ export default function WorkoutLibraryPage() {
       setError(null);
 
       const response = await workoutApi.getWorkouts({}, organizationId);
-      setWorkouts(response.data);
+      // Filter out bullpen sessions (only show standard workouts or legacy workouts without type)
+      setWorkouts(response.data.filter(w => w.sessionType !== 'bullpen'));
     } catch (err) {
       console.error('Failed to load workouts:', err);
       setError(err instanceof Error ? err.message : 'Failed to load workouts');

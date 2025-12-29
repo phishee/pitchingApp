@@ -54,6 +54,10 @@ export default function SessionsLibraryPage() {
         router.push(`/app/sessions/bullpen/${id}/edit`);
     };
 
+    const handleAssignSession = (id: string) => {
+        router.push(`/app/workout-library/assign?workoutId=${id}`);
+    };
+
     const handleStartSession = (id: string) => {
         // Placeholder for starting session
         console.log('Start session', id);
@@ -109,9 +113,8 @@ export default function SessionsLibraryPage() {
                             workout={session}
                             onView={handleViewSession}
                             onEdit={handleEditSession}
-                            onAssign={handleStartSession}
-                            actionLabel="Start Session"
-                            ActionIcon={Play}
+                            onAssign={handleAssignSession}
+                            onStart={handleStartSession}
                         />
                     ))}
                 </div>

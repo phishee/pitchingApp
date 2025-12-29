@@ -52,7 +52,7 @@ export function WorkoutAssignmentFlow({
         state
     } = useAssignmentOrchestrator();
 
-    const { selectWorkout, clearWorkout } = useWorkoutSelection();
+    const { selectWorkout, clearWorkout, state: workoutState } = useWorkoutSelection();
     const { setSelectedAthletes, clearSelection } = useAthleteSelection();
     const { resetSchedule } = useScheduleConfig();
     const { resetPrescriptions } = useExercisePrescription();
@@ -102,13 +102,21 @@ export function WorkoutAssignmentFlow({
         }
     };
 
-    const steps: { id: WizardStep; title: string; icon?: React.ReactNode }[] = [
+    const allSteps: { id: WizardStep; title: string; icon?: React.ReactNode }[] = [
         { id: 'athletes', title: 'Select Athletes' },
         { id: 'workout', title: 'Select Workout' },
         { id: 'prescriptions', title: 'Exercise Prescriptions' },
         { id: 'schedule', title: 'Configure Schedule' },
         { id: 'review', title: 'Review & Customize' }
     ];
+
+    const steps = allSteps.filter(step => {
+        if (step.id === 'prescriptions') {
+            // Skip prescription step for bullpen assignments as they have their own configuration flow
+            return workoutState.selectedWorkout?.sessionType !== 'bullpen';
+        }
+        return true;
+    });
 
     const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 

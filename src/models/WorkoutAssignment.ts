@@ -58,6 +58,8 @@ export interface CreateWorkoutAssignmentPayload {
     name: string;
     description: string;
     coverImage: string;
+    sessionType?: string;
+    config?: any;
   };
 }
 

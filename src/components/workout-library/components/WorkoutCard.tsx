@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Eye, Edit3, Target, Clock } from 'lucide-react';
+import { Plus, Eye, Edit3, Target, Clock, Play } from 'lucide-react';
 import { getWorkoutIcon, getWorkoutColor, formatTagName } from '@/lib/workoutLibraryUtils';
 
 interface WorkoutCardProps {
@@ -10,8 +10,7 @@ interface WorkoutCardProps {
   onView: (workoutId: string) => void;
   onEdit: (workoutId: string) => void;
   onAssign: (workoutId: string) => void;
-  actionLabel?: string;
-  ActionIcon?: React.ElementType;
+  onStart?: (workoutId: string) => void;
 }
 
 export function WorkoutCard({
@@ -19,11 +18,11 @@ export function WorkoutCard({
   onView,
   onEdit,
   onAssign,
-  actionLabel = 'Assign',
-  ActionIcon = Plus
+  onStart,
 }: WorkoutCardProps) {
   const WorkoutIcon = getWorkoutIcon(workout.tags);
   const workoutColor = getWorkoutColor(workout.tags);
+
 
   return (
     <Card
@@ -122,17 +121,32 @@ export function WorkoutCard({
           )}
         </div>
 
-        {/* Action Button */}
-        <Button
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs font-medium py-2 shadow-sm hover:shadow-md transition-all duration-200 mt-auto rounded-full mt-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAssign(workout.id);
-          }}
-        >
-          <ActionIcon className="w-3 h-3 mr-1" />
-          {actionLabel}
-        </Button>
+        {/* Action Buttons */}
+        <div className="mt-4 pt-2 flex gap-2 w-full">
+          <Button
+            className={`flex-1 ${onStart ? 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50' : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'} text-xs font-medium py-2 shadow-sm transition-all duration-200 rounded-full`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAssign(workout.id);
+            }}
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            Assign
+          </Button>
+
+          {onStart && (
+            <Button
+              className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-xs font-medium py-2 shadow-sm hover:shadow-md transition-all duration-200 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStart(workout.id);
+              }}
+            >
+              <Play className="w-3 h-3 mr-1" />
+              Start
+            </Button>
+          )}
+        </div>
       </CardContent>
 
       {/* Hover border effect */}

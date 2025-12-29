@@ -1,4 +1,4 @@
-import { Event, RecurrenceConfig } from '@/models/Calendar';
+import { Event, RecurrenceConfig, EventType } from '@/models/Calendar';
 import { WorkoutAssignment } from '@/models/WorkoutAssignment';
 import { UserInfo } from '@/models/User';
 import { RecurrenceCalculatorService } from './recurrenceCalculator.service';
@@ -18,6 +18,7 @@ export interface EventGenerationOptions {
     name: string;
     description: string;
     coverImage: string;
+    sessionType?: string;
   };
 }
 
@@ -37,7 +38,7 @@ export class EventGeneratorService {
     private readonly mongoProvider: MongoDBProvider,
     @inject('RecurrenceCalculatorService')
     private readonly recurrenceCalculator: RecurrenceCalculatorService
-  ) {}
+  ) { }
 
   /**
    * Generate events from a workout assignment
@@ -48,7 +49,7 @@ export class EventGeneratorService {
   ): Promise<Event[]> {
     try {
       const { recurrence, startDate, endDate, defaultTimeSlot } = assignment;
-      
+
       // Calculate all event dates
       const eventDates = this.calculateEventDates(recurrence, {
         startDate,
@@ -118,7 +119,7 @@ export class EventGeneratorService {
   ): Promise<Event[]> {
     try {
       const { recurrence, startDate, endDate, defaultTimeSlot } = template;
-      
+
       // Calculate all event dates
       const eventDates = this.calculateEventDates(recurrence, {
         startDate,
@@ -202,9 +203,17 @@ export class EventGeneratorService {
     const description = workoutData?.description || `Assigned workout for ${assignment.athleteInfo.userId}`;
     const coverPhotoUrl = workoutData?.coverImage;
 
-  return {
+    // Determine event type based on workout session type
+    let eventType: EventType = 'workout';
+    if (workoutData?.sessionType === 'bullpen') {
+      eventType = 'bullpen';
+    } else if (workoutData?.sessionType === 'drill') {
+      eventType = 'drill';
+    }
+
+    return {
       groupId: options.groupId,
-      type: 'workout',
+      type: eventType,
       organizationId: options.organizationId,
       teamId: options.teamId,
       title,
@@ -256,7 +265,7 @@ export class EventGeneratorService {
     const startTime = this.createDateTime(eventDate, defaultTimeSlot.start);
     const endTime = this.createDateTime(eventDate, defaultTimeSlot.end);
 
-  return {
+    return {
       groupId: options.groupId,
       type: 'workout',
       organizationId: options.organizationId,
@@ -322,10 +331,10 @@ export class EventGeneratorService {
   calculateEventDuration(startTime: string, endTime: string): number {
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
-    
+
     const startTotalMinutes = startHours * 60 + startMinutes;
     const endTotalMinutes = endHours * 60 + endMinutes;
-    
+
     return endTotalMinutes - startTotalMinutes;
   }
 
