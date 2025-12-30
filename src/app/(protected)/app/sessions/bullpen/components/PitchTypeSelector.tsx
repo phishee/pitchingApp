@@ -20,7 +20,7 @@ export function PitchTypeSelector({ selectedType, onSelect, prescribedType }: Pi
             {typesToRender.map((type) => (
                 <Button
                     key={type.id}
-                    variant={selectedType === type.value ? 'default' : 'secondary'}
+                    variant={selectedType === type.value ? 'primary' : 'secondary'}
                     className={cn(
                         "h-10 text-xs font-medium transition-all shadow-sm",
                         selectedType === type.value
