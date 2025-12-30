@@ -9,7 +9,7 @@ import { useUser } from "@/providers/user.context";
 import { useLayout } from "@/providers/layout-context";
 import { useHeader } from "@/providers/header-context";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { NO_TEAM_CONFIG } from '@/config/no-team.config';
 import NoTeamWrapper from "@/components/common/no-team/no-team-wrapper";
 
@@ -20,6 +20,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isMobile, sidebarOpen } = useLayout();
   const { setVariant, setTitle } = useHeader();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isBullpenSession = pathname?.includes('/bullpen-session');
 
   // Set the no-background header for all pages in this layout
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {!isMobile && sidebarOpen && <Sidebar />}
 
         {/* Main Content */}
-        <main className={`grow ${isMobile ? 'pt-20 pb-16' : 'ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md'}`}>
+        <main className={`grow ${isMobile ? `pt-20 ${isBullpenSession ? '' : 'pb-16'}` : 'ml-64 p-4 bg-white rounded-3xl m-4 overflow-y-auto shadow-md'}`}>
           <NoTeamWrapper
             excludePages={NO_TEAM_CONFIG.EXCLUDED_PAGES}
             excludePatterns={NO_TEAM_CONFIG.EXCLUDED_PATTERNS}
@@ -79,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Bottom Navigation for Mobile - Fixed at bottom */}
-      <BottomNavigation />
+      {!isBullpenSession && <BottomNavigation />}
 
       {/* PWA Install Prompt */}
       <InstallPrompt />

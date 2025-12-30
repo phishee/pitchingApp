@@ -55,7 +55,7 @@ export function WorkoutAssignmentFlow({
     const { selectWorkout, clearWorkout, state: workoutState } = useWorkoutSelection();
     const { setSelectedAthletes, clearSelection } = useAthleteSelection();
     const { resetSchedule } = useScheduleConfig();
-    const { resetPrescriptions } = useExercisePrescription();
+    const { resetPrescriptions, initializePrescriptions } = useExercisePrescription();
 
     // Fetch workouts on mount
     useEffect(() => {
@@ -68,9 +68,13 @@ export function WorkoutAssignmentFlow({
             const workout = availableWorkouts.find(w => w.id === initialWorkoutId);
             if (workout) {
                 selectWorkout(workout);
+                // Ensure prescriptions are initialized for the auto-selected workout
+                if (workout.flow?.exercises) {
+                    initializePrescriptions(workout.flow.exercises);
+                }
             }
         }
-    }, [initialWorkoutId, availableWorkouts, selectWorkout]);
+    }, [initialWorkoutId, availableWorkouts, selectWorkout, initializePrescriptions]);
 
     // Auto-select athlete if initialAthleteId is provided
     useEffect(() => {
