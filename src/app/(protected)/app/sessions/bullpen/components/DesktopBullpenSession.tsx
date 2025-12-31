@@ -33,7 +33,7 @@ export function DesktopBullpenSession({ sessionId }: DesktopBullpenSessionProps)
     const [velocity, setVelocity] = useState('');
     const [spinRate, setSpinRate] = useState('');
     const [selectedZone, setSelectedZone] = useState<string | null>(null);
-    const [isStrike, setIsStrike] = useState(true);
+    const [isStrike, setIsStrike] = useState(false);
 
     // Derived State
     const currentPitchIndex = session?.pitches.length ?? 0;
@@ -95,7 +95,24 @@ export function DesktopBullpenSession({ sessionId }: DesktopBullpenSessionProps)
     const handleEndSession = async () => {
         if (confirm('Are you sure you want to end this session?')) {
             await bullpenSessionService.endSession(sessionId);
-            router.push('/app/dashboard');
+
+            // Mark event as completed if linked
+            if (session?.calendarEventId) {
+                try {
+                    // We need to import eventApi at the top first!
+                    // But wait, I can just dynamically import or assume it's available?
+                    // Better to add import. Since this is a partial replace, I'll need to double check imports.
+                    // I'll assume I need to add the import in a separate step or included here if the file is small enough? 
+                    // The file is large. I'll stick to logic here and add import separately if needed.
+                    // Actually, let's use the dynamic import or just standard import.
+                    const { eventApi } = await import('@/app/services-client/eventApi');
+                    await eventApi.updateEvent(session.calendarEventId, { status: 'completed' });
+                } catch (e) {
+                    console.error('Failed to update event status', e);
+                }
+            }
+
+            router.push(`/app/bullpen-session/${sessionId}/summary`);
         }
     };
 
@@ -122,12 +139,16 @@ export function DesktopBullpenSession({ sessionId }: DesktopBullpenSessionProps)
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="gap-2 text-gray-600 border-gray-300">
-                        <PauseCircle className="w-4 h-4" /> Pause
-                    </Button>
-                    <Button variant="destructive" className="gap-2 bg-red-600 hover:bg-red-700 shadow-sm" onClick={handleEndSession}>
-                        <StopCircle className="w-4 h-4" /> End Session
-                    </Button>
+
+                    {session.script && session.pitches.length >= session.script.length ? (
+                        <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm rounded-full" onClick={handleEndSession}>
+                            <StopCircle className="w-4 h-4" /> Complete Session
+                        </Button>
+                    ) : (
+                        <Button variant="destructive" className="gap-2 bg-red-600 hover:bg-red-700 shadow-sm rounded-full" onClick={handleEndSession}>
+                            <StopCircle className="w-4 h-4" /> End Session
+                        </Button>
+                    )}
                 </div>
             </header>
             {/* STATS BAR */}
@@ -135,24 +156,29 @@ export function DesktopBullpenSession({ sessionId }: DesktopBullpenSessionProps)
                 <StatsBar summary={session.summary} pitchCount={session.pitches.length} />
             </div>
 
-            {/* PROGRESS BAR */}
-            <div className="px-4">
-                <div className="flex justify-between items-end mb-2">
-                    <span className="text-sm font-bold text-slate-700">
-                        Current Pitch: <span className="text-slate-900">
-                            {currentPrescription
-                                ? `${currentPrescription.pitchType} to Zone ${currentPrescription.targetZone}`
-                                : 'Free Throw'}
+            {/* PROGRESS BAR - Only show if there is a script */}
+            {session.script && session.script.length > 0 && (
+                <div className="px-4">
+                    <div className="flex justify-between items-end mb-2">
+                        <span className="text-sm font-bold text-slate-700">
+                            Current Pitch: <span className="text-slate-900">
+                                {currentPrescription
+                                    ? `${currentPrescription.pitchType} to Zone ${currentPrescription.targetZone}`
+                                    : 'Free Throw'}
+                            </span>
                         </span>
-                    </span>
-                    <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">
-                        Script: {session ? Math.round((session.pitches.length / (session.summary.totalPitchPrescribed || 1)) * 100) : 0}%
-                    </span>
+                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                            Script: {Math.round((session.pitches.length / session.script.length) * 100)}%
+                        </span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min((session.pitches.length / session.script.length) * 100, 100)}%` }}
+                        />
+                    </div>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 w-[47%] rounded-full" />
-                </div>
-            </div>
+            )}
 
             <div className="flex-1 p-6 max-w-[1600px] mx-auto w-full grid grid-cols-12 gap-6 items-start">
 
@@ -221,13 +247,22 @@ export function DesktopBullpenSession({ sessionId }: DesktopBullpenSessionProps)
                             </div>
                         </div>
                         <div className='m-4'>
-                            <Button
-                                className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-full"
-                                onClick={handleLogPitch}
-                                disabled={!velocity || !selectedZone}
-                            >
-                                Log Pitch <ArrowRight className="ml-2 w-5 h-5" />
-                            </Button>
+                            {session.script && session.pitches.length >= session.script.length ? (
+                                <Button
+                                    className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-full"
+                                    onClick={handleEndSession}
+                                >
+                                    Complete Session <ArrowRight className="ml-2 w-5 h-5" />
+                                </Button>
+                            ) : (
+                                <Button
+                                    className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-full"
+                                    onClick={handleLogPitch}
+                                    disabled={!velocity || !selectedZone}
+                                >
+                                    Log Pitch <ArrowRight className="ml-2 w-5 h-5" />
+                                </Button>
+                            )}
                         </div>
 
                     </Card>

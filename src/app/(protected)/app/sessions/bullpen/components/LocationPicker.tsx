@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { TARGET_ZONES } from '@/models/Bullpen';
 
 interface LocationPickerProps {
     selectedZone: string | null;
@@ -11,8 +12,14 @@ interface LocationPickerProps {
 export function LocationPicker({ selectedZone, onSelect, prescribedZone, className }: LocationPickerProps) {
     // Helper to render a zone button
     const renderZone = (id: string, label: string, extraClasses: string = "") => {
-        const isPrescribed = prescribedZone === id;
-        const isSelected = selectedZone === id;
+        // Map simplified IDs (e.g. '1') to full Zone IDs (e.g. 'zone_1') for comparison if needed
+        // The props might pass 'zone_1' or just '1'. Let's normalize.
+        const normalizedId = id.startsWith('zone_') ? id : `zone_${id}`;
+        const normalizedPrescribed = prescribedZone ? (prescribedZone.startsWith('zone_') ? prescribedZone : `zone_${prescribedZone}`) : null;
+
+        // Check exact match using normalized IDs
+        const isPrescribed = normalizedPrescribed === normalizedId;
+        const isSelected = selectedZone === normalizedId;
 
         let bgClass = "bg-white text-slate-800 hover:bg-blue-50"; // Default
 
@@ -35,13 +42,13 @@ export function LocationPicker({ selectedZone, onSelect, prescribedZone, classNa
 
         return (
             <button
-                key={id}
+                key={normalizedId}
                 className={cn(
                     "flex items-center justify-center transition-all duration-200 focus:outline-none relative",
                     bgClass,
                     extraClasses
                 )}
-                onClick={() => onSelect(id)}
+                onClick={() => onSelect(normalizedId)}
             >
                 <span className={cn("text-lg", isSelected ? "text-white font-black" : (isPrescribed ? "font-bold text-slate-600 opacity-50" : "font-bold text-slate-900"))}>
                     {label}

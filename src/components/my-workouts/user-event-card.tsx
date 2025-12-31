@@ -57,9 +57,12 @@ export function UserEventCard({ enrichedEvent, onClick }: UserEventCardProps) {
         {/* Middle: Event Details */}
         <div className="flex-1 min-w-0 overflow-hidden">
           {/* Event type badge for assessments */}
-          {isAssessment && (
-            <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium mb-1">
-              {eventTypeLabel}
+          {(isAssessment || event.type === 'bullpen') && (
+            <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mb-1 ${event.type === 'bullpen'
+                ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+              }`}>
+              {event.type === 'bullpen' ? 'Bullpen' : eventTypeLabel}
             </div>
           )}
 

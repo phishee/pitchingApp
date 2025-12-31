@@ -14,7 +14,7 @@ export function StatsBar({ summary, pitchCount }: StatsBarProps) {
         {
             label: 'Pitch Count',
             value: pitchCount,
-            subtext: `/ ${summary.totalPitchPrescribed}`,
+            subtext: summary.totalPitchPrescribed > 0 ? `/ ${summary.totalPitchPrescribed}` : undefined,
             icon: Activity,
             color: 'text-slate-500'
         },
@@ -39,10 +39,17 @@ export function StatsBar({ summary, pitchCount }: StatsBarProps) {
             icon: Flame,
             color: 'text-orange-500'
         },
+        {
+            label: 'Compliance',
+            value: `${summary.compliance}%`,
+            icon: Target, // Reusing Target icon or maybe CheckCircle if available
+            color: 'text-purple-500',
+            success: summary.compliance >= 80
+        }
     ];
 
     return (
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-5 gap-4 mb-6">
             {stats.map((stat, i) => (
                 <Card key={i} className="p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start mb-2">

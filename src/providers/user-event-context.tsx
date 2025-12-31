@@ -65,7 +65,7 @@ export function UserEventProvider({ children, organizationId, userId }: UserEven
       const events = await eventApi.getEvents({
         organizationId,
         athleteIds: [userId],
-        types: ['workout', 'assessment'],
+        types: ['workout', 'assessment', 'bullpen'],
         startDate: monthStart,
         endDate: monthEnd,
         includeDetails: true
@@ -117,7 +117,7 @@ export function UserEventProvider({ children, organizationId, userId }: UserEven
       });
 
       const enriched = await Promise.all(enrichedPromises);
-      
+
       // Merge with existing events, avoiding duplicates
       setEnrichedEvents(prevEvents => {
         const existingIds = new Set(prevEvents.map(e => e.event._id));
@@ -137,7 +137,7 @@ export function UserEventProvider({ children, organizationId, userId }: UserEven
   const getEventsForWeek = useCallback((startDate: Date): EnrichedEvent[] => {
     const weekStart = new Date(startDate);
     const dayOfWeek = weekStart.getDay();
-    
+
     // Adjust to Sunday
     weekStart.setDate(weekStart.getDate() - dayOfWeek);
     weekStart.setHours(0, 0, 0, 0);

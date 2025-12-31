@@ -15,7 +15,7 @@ export function WelcomeAthleteModule() {
     const firstName = user?.name?.split(' ')[0] || 'Athlete';
 
     return (
-        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none shadow-md">
+        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none shadow-md rounded-4xl">
             <CardContent className="p-6">
                 <h2 className="text-2xl font-bold">
                     {getGreeting()}, {firstName}!

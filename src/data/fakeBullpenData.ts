@@ -26,6 +26,7 @@ export const FAKE_BULLPEN_SESSION: BullpenSession = {
         strikePct: 68
     },
     script: Array.from({ length: 30 }, (_, i) => ({
+        id: `script_${i}`,
         pitchType: i % 3 === 0 ? "4-Seam" : i % 3 === 1 ? "Slider" : "Changeup",
         targetZone: ((i % 9) + 1).toString()
     })),
