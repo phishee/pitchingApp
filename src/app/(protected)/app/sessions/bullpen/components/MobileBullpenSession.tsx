@@ -31,7 +31,7 @@ export function MobileBullpenSession({ sessionId }: MobileBullpenSessionProps) {
     const [velocity, setVelocity] = useState('');
     const [spinRate, setSpinRate] = useState('');
     const [selectedZone, setSelectedZone] = useState<string | null>(null);
-    const [isStrike, setIsStrike] = useState(true);
+    const [isStrike, setIsStrike] = useState(false);
 
     // Derived State
     const currentPitchIndex = session?.pitches.length ?? 0;
@@ -93,7 +93,18 @@ export function MobileBullpenSession({ sessionId }: MobileBullpenSessionProps) {
     const handleEndSession = async () => {
         if (confirm('Are you sure you want to end this session?')) {
             await bullpenSessionService.endSession(sessionId);
-            router.push('/app/dashboard');
+
+            // Mark event as completed if linked
+            if (session?.calendarEventId) {
+                try {
+                    const { eventApi } = await import('@/app/services-client/eventApi');
+                    await eventApi.updateEvent(session.calendarEventId, { status: 'completed' });
+                } catch (e) {
+                    console.error('Failed to update event status', e);
+                }
+            }
+
+            router.push(`/app/bullpen-session/${sessionId}/summary`);
         }
     };
 
@@ -103,7 +114,7 @@ export function MobileBullpenSession({ sessionId }: MobileBullpenSessionProps) {
     const progressPct = session ? Math.round((session.pitches.length / (session.summary.totalPitchPrescribed || 30)) * 100) : 0;
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
+        <div className="min-h-screen bg-slate-50 pb-24 w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
             <header className="bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 z-20">
                 <div className="flex items-center gap-3">
@@ -122,56 +133,75 @@ export function MobileBullpenSession({ sessionId }: MobileBullpenSessionProps) {
                         </p>
                     </div>
                 </div>
-                <Button
-                    variant="destructive"
-                    size="sm"
-                    className="h-8 rounded-full px-4 text-xs font-bold bg-red-500 hover:bg-red-600 shadow-sm"
-                    onClick={handleEndSession}
-                >
-                    End Session
-                </Button>
+                {session.script && session.pitches.length >= session.script.length ? (
+                    <Button
+                        size="sm"
+                        className="h-8 rounded-full px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 shadow-sm"
+                        onClick={handleEndSession}
+                    >
+                        Complete Session
+                    </Button>
+                ) : (
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-8 rounded-full px-4 text-xs font-bold bg-red-500 hover:bg-red-600 shadow-sm"
+                        onClick={handleEndSession}
+                    >
+                        End Session
+                    </Button>
+                )}
             </header>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-4 gap-2 px-3 py-3 bg-white border-b border-gray-100">
-                <div className="bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
+            <div className="flex w-full max-w-[100vw] gap-2 px-3 py-3 bg-white border-b border-gray-100 overflow-x-auto no-scrollbar">
+                <div className="min-w-[72px] flex-shrink-0 bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Count</span>
                     <span className="text-sm font-black text-slate-800">
-                        {session.pitches.length}<span className="text-gray-400 text-[10px] font-medium">/{session.summary.totalPitchPrescribed || 30}</span>
+                        {session.pitches.length}
+                        {session.summary.totalPitchPrescribed > 0 && <span className="text-gray-400 text-[10px] font-medium">/{session.summary.totalPitchPrescribed}</span>}
                     </span>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
+                <div className="min-w-[72px] flex-shrink-0 bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Strike %</span>
                     <span className="text-sm font-black text-green-600">
                         {session.summary.strikePct}%
                     </span>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
+                <div className="min-w-[72px] flex-shrink-0 bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Avg Velo</span>
                     <span className="text-sm font-black text-slate-800">
                         {session.summary.avgVelocity}
                     </span>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
+                <div className="min-w-[72px] flex-shrink-0 bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Top</span>
                     <span className="text-sm font-black text-orange-500">
                         {session.summary.topVelocity}
                     </span>
                 </div>
+                <div className="min-w-[72px] flex-shrink-0 bg-slate-50 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-100">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Comp %</span>
+                    <span className="text-sm font-black text-purple-600">
+                        {session.summary.compliance}%
+                    </span>
+                </div>
             </div>
 
-            {/* Progress */}
-            <div className="px-4 py-3 bg-white mb-2">
-                <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[11px] font-bold text-slate-600">
-                        Current: <span className="text-slate-900">{currentPrescription?.pitchType || 'Free Throw'} {currentPrescription?.targetZone ? `to Zone ${currentPrescription.targetZone}` : ''}</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-blue-600">{progressPct}%</span>
+            {/* Progress - Only show if there is a script */}
+            {session.script && session.script.length > 0 && (
+                <div className="px-4 py-3 bg-white mb-2">
+                    <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[11px] font-bold text-slate-600">
+                            Current: <span className="text-slate-900">{currentPrescription?.pitchType || 'Free Throw'} {currentPrescription?.targetZone ? `to Zone ${currentPrescription.targetZone}` : ''}</span>
+                        </span>
+                        <span className="text-[11px] font-bold text-blue-600">{progressPct}%</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
+                    </div>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
-                </div>
-            </div>
+            )}
 
             {/* Main Info */}
             <div className="px-3 pb-6">
@@ -241,13 +271,22 @@ export function MobileBullpenSession({ sessionId }: MobileBullpenSessionProps) {
 
             {/* Sticky Action Footer */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-30 pb- safe-area-bottom">
-                <Button
-                    className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl"
-                    onClick={handleLogPitch}
-                    disabled={!velocity || !selectedZone}
-                >
-                    LOG PITCH <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+                {session.script && session.pitches.length >= session.script.length ? (
+                    <Button
+                        className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl"
+                        onClick={handleEndSession}
+                    >
+                        COMPLETE SESSION <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                ) : (
+                    <Button
+                        className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl"
+                        onClick={handleLogPitch}
+                        disabled={!velocity || !selectedZone}
+                    >
+                        LOG PITCH <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                )}
             </div>
         </div>
     );

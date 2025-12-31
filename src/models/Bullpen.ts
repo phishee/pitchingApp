@@ -7,6 +7,7 @@ export interface BullpenSession {
     workoutAssignmentId: string;
     organizationId: string;
     teamId: string;
+    calendarEventId?: string;
 
     // Who
     athleteInfo: UserInfo;
@@ -64,9 +65,27 @@ export interface BullpenSummary {
 }
 
 export interface BullpenScriptItem {
+    id: string;
     pitchType: string;
     targetZone: string;
 }
+
+export const TARGET_ZONES = [
+    { id: "zone_0", label: "0 (Waste Pitch)", value: 0 },
+    { id: "zone_1", label: "1 (Top Left)", value: 1 },
+    { id: "zone_2", label: "2 (Top Middle)", value: 2 },
+    { id: "zone_3", label: "3 (Top Right)", value: 3 },
+    { id: "zone_4", label: "4 (Middle Left)", value: 4 },
+    { id: "zone_5", label: "5 (Middle Middle)", value: 5 },
+    { id: "zone_6", label: "6 (Middle Right)", value: 6 },
+    { id: "zone_7", label: "7 (Bottom Left)", value: 7 },
+    { id: "zone_8", label: "8 (Bottom Middle)", value: 8 },
+    { id: "zone_9", label: "9 (Bottom Right)", value: 9 },
+    { id: "zone_11", label: "11 (Top Left Corner)", value: 11 },
+    { id: "zone_12", label: "12 (Top Right Corner)", value: 12 },
+    { id: "zone_13", label: "13 (Bottom Left Corner)", value: 13 },
+    { id: "zone_14", label: "14 (Bottom Right Corner)", value: 14 }
+] as const;
 
 export const PITCH_TYPES = [
     { id: "fastball_4seam", label: "4-Seam Fastball", value: "4-Seam" },

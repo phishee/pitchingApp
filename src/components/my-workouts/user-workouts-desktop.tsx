@@ -46,6 +46,10 @@ export function UserWorkoutsDesktop() {
         console.error('Failed to fetch session for completed event:', error);
       }
     }
+    if (event.event.type === 'bullpen') {
+      router.push(`/app/bullpen/${event.event._id}`);
+      return;
+    }
     // Navigate to workout detail page
     router.push(`/app/my-workouts/${event.event._id}`);
   };

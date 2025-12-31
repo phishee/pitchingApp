@@ -105,3 +105,8 @@ export const QUESTIONNAIRE_RESULT_TYPES = {
   QuestionnaireResultService: Symbol.for('QuestionnaireResultService'),
   QuestionnaireResultController: Symbol.for('QuestionnaireResultController'),
 } as const;
+
+export const BULLPEN_SESSION_TYPES = {
+  BullpenSessionService: Symbol.for('BullpenSessionService'),
+  BullpenSessionController: Symbol.for('BullpenSessionController'),
+} as const;

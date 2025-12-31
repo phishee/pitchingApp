@@ -1,34 +1,49 @@
-import { BullpenSession } from '@/models/Bullpen';
+import apiClient from '@/lib/axios-config';
+import { BullpenSession, Pitch } from '@/models/Bullpen';
 import { FAKE_BULLPEN_SESSION } from '@/data/fakeBullpenData';
 
-export const bullpenSessionService = {
-    getSessionById: async (sessionId: string): Promise<BullpenSession> => {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+const BASE_URL = '/bullpen-sessions';
 
-        // In a real app, we'd fetch by ID. Here we return the fake session.
-        // If you want to simulate loading different sessions based on ID, 
-        // you could clone/modify FAKE_BULLPEN_SESSION here.
-        return { ...FAKE_BULLPEN_SESSION, id: sessionId };
+export const bullpenSessionService = {
+    createSession: async (session: Partial<BullpenSession>): Promise<BullpenSession> => {
+        const response = await apiClient.post<BullpenSession>(BASE_URL, session);
+        return response.data;
     },
 
-    logPitch: async (sessionId: string, pitch: any): Promise<BullpenSession> => {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 300));
+    getSessionById: async (sessionId: string): Promise<BullpenSession> => {
+        try {
+            const response = await apiClient.get<BullpenSession>(`${BASE_URL}/${sessionId}`);
+            console.log('Got session:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to fetch session, falling back to fake data for demo if 404", error);
+            // Fallback for demo purposes if backend isn't running or ID not found
+            // In production, throw error or return null
+            throw error;
+        }
+    },
 
-        console.log(`Logging pitch for session ${sessionId}:`, pitch);
-
-        // In a real app, this would return the updated session
-        return {
-            ...FAKE_BULLPEN_SESSION,
-            id: sessionId,
-            pitches: [pitch, ...FAKE_BULLPEN_SESSION.pitches]
-        };
+    logPitch: async (sessionId: string, pitch: Pitch): Promise<BullpenSession> => {
+        const response = await apiClient.post<BullpenSession>(`${BASE_URL}/${sessionId}/pitch`, pitch);
+        return response.data;
     },
 
     endSession: async (sessionId: string): Promise<BullpenSession> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log(`Ending session ${sessionId}`);
-        return { ...FAKE_BULLPEN_SESSION, id: sessionId, status: 'completed', completedAt: new Date() };
+        const response = await apiClient.patch<BullpenSession>(`${BASE_URL}/${sessionId}`, {
+            status: 'completed',
+            completedAt: new Date()
+        });
+        return response.data;
+    },
+
+    updateSession: async (sessionId: string, updates: Partial<BullpenSession>): Promise<BullpenSession> => {
+        const response = await apiClient.patch<BullpenSession>(`${BASE_URL}/${sessionId}`, updates);
+        return response.data;
+    },
+
+    getSessionsByAssignmentId: async (assignmentId: string): Promise<BullpenSession[]> => {
+        const response = await apiClient.get<BullpenSession[]>(`${BASE_URL}?workoutAssignmentId=${assignmentId}`);
+        return response.data;
     }
 };
+
